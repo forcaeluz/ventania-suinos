@@ -1,0 +1,37 @@
+{% load i18n %}
+<title>{% trans "Flock Information" %}{{ flock.flock_name }}</title>
+<h1>{% trans "Flock information" %}</h1>
+
+<h2>{% trans "General Information" %}</h2>
+<ul>
+    <li>{% trans "ID:" %} {{ flock.id }}</li>
+    <li>{% trans "Friendly Identifier:" %} {{ flock.flock_name }}</li>
+    <li>{% trans "Entry Date:" %} {{ flock.entry_date }}</li>
+    <li>{% trans "Entry Weight:" %} {{ flock.entry_weight }}</li>
+    <li>{% trans "Entry Count:" %} {{ flock.number_of_animals }}</li>
+    <li>{% trans "Average Entry Weight:" %} {{ flock.average_entry_weight }}</li>
+    <li>{% trans "Number of animals on farm" %} {{ flock.number_of_living_animals }}</li>
+    <li>{% trans "Expected Exit Date" %} {{ flock.expected_exit_date }}</li>
+</ul>
+
+<h2>{% trans "Animal Death Information" %}</h2>
+{% if list_deaths %}
+
+{% else %}
+<p>{% trans "No deaths in this flock." %}</p>
+{% endif %}
+
+<h2>{% trans "Sell Information" %}</h2>
+{% if list_deaths %}
+
+{% else %}
+<p>{% trans "No animals selled." %}</p>
+<a href="{% url "flocks:create_animal_exit" %}">{% trans "Register new Animal Death" %}</a>
+{% endif %}
+
+<h2>{% trans "Separation Information" %}</h2>
+{% if list_deaths %}
+
+{% else %}
+<p>{% trans "No animals separated from this flock." %}</p>
+{% endif %}

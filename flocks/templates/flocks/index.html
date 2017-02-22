@@ -1,0 +1,44 @@
+{% load i18n %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
+
+<title>{% trans "Flock Management" %}</title>
+<h1> {% trans "Flock Management" %} </h1>
+
+<h2> {% trans "Current Flocks in the Farm" %} </h2>
+{% if current_flocks %}
+    <table class="flock-list">
+        <thead>
+        <tr class="table-header">
+            <td>{% trans "Flock" %}</td>
+            <td>{% trans "Entry Date" %}</td>
+            <td>{% trans "Animals still on farm" %}</td>
+            <td>{% trans "Expected Exit Date" %}</td>
+        </tr>
+        </thead>
+        {% for flock in current_flocks %}
+            <tr class="table-row">
+            <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
+            <td>{{flock.entry_date}}</td>
+            <td>{{flock.number_of_living_animals}}</td>
+            <td>{{flock.expected_exit_date}}</td>
+            </tr>
+        {% endfor %}
+</table>
+{% else %}
+    <p>{% trans "No flocks at the farm." %}</p>
+{% endif %}
+
+<h2> {% trans "Previous flocks" %} </h2>
+{% if old_flocks %}
+    <ul>
+    {% for flock in old_flock_list %}
+        <li>Flock data</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>{% trans "No prevous flocks to show." %}</p>
+{% endif %}
+
+<a href="{% url 'flocks:create' %}">{%  trans "Register new flock" %}</a>
