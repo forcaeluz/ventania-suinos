@@ -29,16 +29,27 @@
 {% else %}
     <p>{% trans "No flocks at the farm." %}</p>
 {% endif %}
+<a href="{% url 'flocks:create' %}">{%  trans "Register new flock" %}</a>
 
 <h2> {% trans "Previous flocks" %} </h2>
 {% if old_flocks %}
-    <ul>
-    {% for flock in old_flock_list %}
-        <li>Flock data</li>
-    {% endfor %}
-    </ul>
+<table class="flock-list">
+    <thead>
+    <tr class="table-header">
+        <td>{% trans "Flock" %}</td>
+        <td>{% trans "Entry Date" %}</td>
+        <td>{% trans "Average Daily Grow" %}</td>
+        <td>{% trans "Death %" %}</td>
+    </tr>
+    </thead>
+{% for flock in old_flocks %}
+    <tr class="table-row">
+    <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
+    <td>{{flock.entry_date}}</td>
+    <td>{{flock.computed_daily_growth}}</td>
+    <td>0%</td>
+    </tr>
+{% endfor %}
 {% else %}
     <p>{% trans "No prevous flocks to show." %}</p>
 {% endif %}
-
-<a href="{% url 'flocks:create' %}">{%  trans "Register new flock" %}</a>
