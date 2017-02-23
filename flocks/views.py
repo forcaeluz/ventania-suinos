@@ -33,7 +33,8 @@ def save(request):
 
 def detail(request, flock_id):
     flock = get_object_or_404(Flock, pk=flock_id)
-    return render(request, 'flocks/detail.html', {'flock': flock})
+    exit_list = flock.animalexits_set.all()
+    return render(request, 'flocks/detail.html', {'flock': flock, 'list_exits': exit_list})
 
 
 def create_animal_death(request):

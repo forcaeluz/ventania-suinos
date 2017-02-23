@@ -1,4 +1,7 @@
 {% load i18n %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
 <title>{% trans "Flock Information" %}{{ flock.flock_name }}</title>
 <h1>{% trans "Flock information" %}</h1>
 
@@ -22,15 +25,37 @@
 {% endif %}
 
 <h2>{% trans "Sell Information" %}</h2>
-{% if list_deaths %}
+{% if list_exits %}
+<table class="flock-list">
+<thead>
+    <tr class="table-header">
+        <td>{% trans "Exit Date" %}</td>
+        <td>{% trans "Number of animals" %}</td>
+        <td>{% trans "Total weight" %}</td>
+        <td>{% trans "Average weight" %}</td>
+    </tr>
+    </thead>
+    {% for exit in list_exits %}
+        <tr class="table-row">
+        <td>{{exit.date}}</td>
+        <td>{{exit.number_of_animals}}</td>
+        <td>{{exit.total_weight}}</td>
+        <td>{{exit.average_weight}}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% for exit in list_exits %}
 
+{% endfor %}
 {% else %}
 <p>{% trans "No animals selled." %}</p>
-<a href="{% url "flocks:create_animal_exit" %}">{% trans "Register new Animal Death" %}</a>
+{% endif %}
+{% if flock.number_of_living_animals > 0 %}
+<a href="{% url "flocks:create_animal_exit" %}">{% trans "Register new Animal Exit" %}</a>
 {% endif %}
 
 <h2>{% trans "Separation Information" %}</h2>
-{% if list_deaths %}
+{% if list_separations %}
 
 {% else %}
 <p>{% trans "No animals separated from this flock." %}</p>
