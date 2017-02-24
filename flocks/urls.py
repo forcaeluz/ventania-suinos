@@ -10,4 +10,6 @@ urlpatterns = [
     url(r'^save', views.save, name='save'),
     url(r'animalexits/create', views.create_animal_exit, name='create_animal_exit'),
     url(r'animalexits/save', views.save_animal_exit, name='save_animal_exit'),
+    url(r'animaldeaths/create', views.create_animal_death, name='create_animal_death'),
+    url(r'animaldeaths/save', views.save_animal_death, name='save_animal_death'),
 ]

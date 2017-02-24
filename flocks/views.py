@@ -1,10 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseRedirect
-from .models import Flock, AnimalExits
-from .forms import FlockForm, AnimalExitsForm
+from .models import Flock
+from .forms import FlockForm, AnimalExitsForm, AnimalDeathForm
 
 
-# Create your views here.
 def index(request):
     current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
     old_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals == 0]
@@ -34,11 +33,27 @@ def save(request):
 def detail(request, flock_id):
     flock = get_object_or_404(Flock, pk=flock_id)
     exit_list = flock.animalexits_set.all()
-    return render(request, 'flocks/detail.html', {'flock': flock, 'list_exits': exit_list})
+    death_list = flock.animaldeath_set.all()
+    param_list = {
+        'flock': flock,
+        'exits_list': exit_list,
+        'death_list': death_list
+    }
+    return render(request, 'flocks/detail.html', param_list)
 
 
 def create_animal_death(request):
-    return render(request, 'flocks/index.html')
+    form = AnimalDeathForm()
+    return render(request, 'animaldeaths/create.html', {'form': form})
+
+
+def save_animal_death(request):
+    form = AnimalDeathForm(request.POST)
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect('/flocks/detail/%d' % form.cleaned_data['flock'].id)
+
+    return render(request, 'animaldeaths/create.html', {'form': form})
 
 
 def create_animal_exit(request):
@@ -54,3 +69,4 @@ def save_animal_exit(request):
         return HttpResponseRedirect('/flocks/detail/%d' % form.cleaned_data['flock'].id)
 
     return render(request, 'animalexits/create.html', {'form': form})
+
