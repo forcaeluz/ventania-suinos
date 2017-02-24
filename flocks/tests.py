@@ -1,5 +1,4 @@
 import datetime
-
 from django.utils import timezone
 from django.test import TestCase
 
@@ -14,11 +13,11 @@ class FlockTests(TestCase):
         """
         time = timezone.now() + datetime.timedelta(days=90)
         flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
-        self.assertEqual(time.date(), flock.get_expected_exit_date())
+        self.assertEqual(time.date(), flock.expected_exit_date)
 
     def test_flock_number_of_living_animals(self):
         flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
-        self.assertEqual(130, flock.get_number_of_living_animals())
+        self.assertEqual(130, flock.number_of_living_animals)
 
     def test_flock_number_of_living_animals_after_exit(self):
         entry_date = timezone.now().date()
@@ -26,7 +25,7 @@ class FlockTests(TestCase):
         flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
         flock.save()
         flock.animalexits_set.create(date=exit_date, total_weight=1000.000, number_of_animals=10)
-        self.assertEqual(120, flock.get_number_of_living_animals())
+        self.assertEqual(120, flock.number_of_living_animals)
 
     def test_flock_number_of_living_animals_after_multiple_exits(self):
         entry_date = timezone.now().date()
@@ -35,7 +34,7 @@ class FlockTests(TestCase):
         flock.save()
         flock.animalexits_set.create(date=exit_date, total_weight=6000.000, number_of_animals=65)
         flock.animalexits_set.create(date=exit_date, total_weight=6000.000, number_of_animals=65)
-        self.assertEqual(0, flock.get_number_of_living_animals())
+        self.assertEqual(0, flock.number_of_living_animals)
 
     def test_flock_number_of_living_animals_after_multiple_deaths(self):
         entry_date = timezone.now().date()
@@ -44,4 +43,4 @@ class FlockTests(TestCase):
         flock.save()
         flock.animaldeath_set.create(date=exit_date, weight=100.00)
         flock.animaldeath_set.create(date=exit_date, weight=100.00)
-        self.assertEqual(128, flock.get_number_of_living_animals())
+        self.assertEqual(128, flock.number_of_living_animals)
