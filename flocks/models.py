@@ -35,6 +35,10 @@ class Flock(models.Model):
     def computed_daily_growth(self):
         return 0.0
 
+    @property
+    def death_percentage(self):
+        return (self.animaldeath_set.count() / self.number_of_animals) * 100
+
     def __str__(self):
         return self.flock_name
 
@@ -42,6 +46,7 @@ class Flock(models.Model):
 class AnimalDeath(models.Model):
     date = models.DateField()
     weight = models.IntegerField()
+    cause = models.TextField()
     flock = models.ForeignKey(Flock)
 
 
