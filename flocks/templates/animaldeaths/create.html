@@ -1,0 +1,8 @@
+{% load i18n %}
+<h1>{% trans "Register new animal death" %}</h1>
+
+<form action="{% url 'flocks:save_animal_death' %}" method="post">
+{% csrf_token %}
+    {{ form.as_ul }}
+<input type="submit" value="Save" />
+</form>

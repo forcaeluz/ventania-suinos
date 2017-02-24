@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load l10n %}
 {% load static %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
@@ -14,6 +15,8 @@
             <td>{% trans "Flock" %}</td>
             <td>{% trans "Entry Date" %}</td>
             <td>{% trans "Animals still on farm" %}</td>
+            <td>{% trans "Estimated Avg. Weight" %}</td>
+            <td>{% trans "Death %" %}</td>
             <td>{% trans "Expected Exit Date" %}</td>
         </tr>
         </thead>
@@ -22,6 +25,8 @@
             <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
             <td>{{flock.entry_date}}</td>
             <td>{{flock.number_of_living_animals}}</td>
+            <td>{{flock.average_entry_weight|stringformat:".2f"}}</td>
+            <td>{{flock.death_percentage|stringformat:".2f"}}%</td>
             <td>{{flock.expected_exit_date}}</td>
             </tr>
         {% endfor %}
@@ -47,7 +52,7 @@
     <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
     <td>{{flock.entry_date}}</td>
     <td>{{flock.computed_daily_growth}}</td>
-    <td>0%</td>
+    <td>{{ flock.death_percentage }}%</td>
     </tr>
 {% endfor %}
 {% else %}
