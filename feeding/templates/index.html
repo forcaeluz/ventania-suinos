@@ -52,5 +52,5 @@
 {% else %}
     <p>{% trans "No feed entries registered." %}</p>
 {% endif %}
-<a href="{% url 'feeding:register_entry' %}">{%  trans "Register new feed entry" %}</a>
+<a href="{% url 'feeding:create_feed_entry' %}">{%  trans "Register new feed entry" %}</a>
 {% endif %}

@@ -7,6 +7,9 @@ class FeedType(models.Model):
     start_feeding_age = models.IntegerField()
     stop_feeding_age = models.IntegerField()
 
+    def __str__(self):
+        return self.name
+
 
 class FeedEntry(models.Model):
     date = models.DateField()

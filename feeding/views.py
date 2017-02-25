@@ -1,12 +1,15 @@
 from django.shortcuts import render, HttpResponseRedirect
-from .models import FeedType
-from .forms import FeedTypeForm
+from .models import FeedType, FeedEntry
+from .forms import FeedTypeForm, FeedEntryForm
 
 
 def index(request):
     feed_types = FeedType.objects.all()
+    feed_entries = FeedEntry.objects.all()
+
     parameters = {
-        'feed_types': feed_types
+        'feed_types': feed_types,
+        'feed_entries': feed_entries
     }
     return render(request, 'index.html', parameters)
 
@@ -27,8 +30,15 @@ def save_type(request):
 
 
 def create_feed_entry(request):
-    pass
+    form = FeedEntryForm()
+    return render(request, 'create_feed_entry.html', {'form': form})
 
 
 def save_feed_entry(request):
-    pass
+    form = FeedEntryForm(request.POST)
+
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect('/feeding/')
+
+    return render(request, 'create_feed_entry.html', {'form': form})
