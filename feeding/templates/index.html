@@ -1,0 +1,56 @@
+{% load i18n %}
+{% load l10n %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'suinos.css' %}" />
+
+<title>{% trans "Feed Management" %}</title>
+<h1> {% trans "Feed Management" %} </h1>
+
+<h2> {% trans "Registered Feed Types" %} </h2>
+{% if feed_types %}
+    <table class="flock-list">
+        <thead>
+        <tr class="table-header">
+            <td>{% trans "Type" %}</td>
+            <td>{% trans "Estimated Weight" %}</td>
+            <td>{% trans "Estimated availability end date" %}</td>
+        </tr>
+        </thead>
+        {% for feed in feed_types %}
+            <tr class="table-row">
+            <td>{{feed.name}}</td>
+            <td>Todo</td>
+            <td>Todo</td>
+            </tr>
+        {% endfor %}
+</table>
+{% else %}
+    <p>{% trans "No feed types registered" %}</p>
+{% endif %}
+<a href="{% url 'feeding:create_type' %}">{%  trans "Register new feed type" %}</a>
+
+{% if feed_types %}
+<h2> {% trans "Feed Entries" %} </h2>
+{% if feed_entries %}
+<table class="flock-list">
+    <thead>
+    <tr class="table-header">
+        <td>{% trans "Date" %}</td>
+        <td>{% trans "Type" %}</td>
+        <td>{% trans "Weight" %}</td>
+    </tr>
+    </thead>
+{% for entry in feed_entries %}
+    <tr class="table-row">
+    <td>{{entry.date}}</td>
+    <td>{{entry.feed_type}}</td>
+    <td>{{entry.weight}}</td>
+    </tr>
+{% endfor %}
+</table>
+{% else %}
+    <p>{% trans "No feed entries registered." %}</p>
+{% endif %}
+<a href="{% url 'feeding:register_entry' %}">{%  trans "Register new feed entry" %}</a>
+{% endif %}

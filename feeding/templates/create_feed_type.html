@@ -1,0 +1,8 @@
+{% load i18n %}
+<h1>{% trans "Register new feed-type" %}</h1>
+
+<form action="{% url 'feeding:save_type' %}" method="post">
+{% csrf_token %}
+    {{ form }}
+<input type="submit" value="Save" />
+</form>
