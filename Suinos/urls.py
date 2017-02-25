@@ -18,5 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^flocks/', include('flocks.urls')),
+    url(r'^feeding/', include('feeding.urls')),
     url(r'^admin/', admin.site.urls),
 ]
