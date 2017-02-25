@@ -1,0 +1,71 @@
+body
+{
+    background: whitesmoke
+}
+.farm-overview
+{
+    width: 100%;
+    display: table;
+    height: 105px;
+    padding-bottom: 10px;
+}
+
+.farm-overview-box-header
+{
+    padding: 5px 10px;
+    background: #548235;
+    color: white;
+    box-sizing: border-box;
+    display: block;
+}
+
+.menu-item
+{
+    font-size: 24;
+    padding: 10px;
+    list-style-type: none;
+}
+.farm-overview-box-value
+{
+    padding-left: 10px;
+    font-size: 42px;
+    background: #E2F0E9;
+    box-sizing: border-box;
+    display: block;
+}
+
+.farm-overview-box
+{
+    float: left;
+    width: 32%;
+    display: block;
+    margin: 10px
+}
+
+.farm-menu
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    width: 230px;
+    z-index: 817;
+    box-sizing: border-box;
+    padding-top: 100px;
+    background: #548235;
+}
+
+.main-content
+{
+    box-sizing: border-box;
+    margin-left: 230px;
+    z-index: 800;
+    position: relative;
+}
+
+a
+{
+    color: whitesmoke;
+}
