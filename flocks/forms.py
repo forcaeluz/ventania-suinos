@@ -1,8 +1,7 @@
 from django import forms
 from django.core.validators import ValidationError
 
-from flocks.models import AnimalDeath
-from .models import AnimalExits, Flock
+from .models import AnimalExits, Flock, AnimalDeath
 
 
 class FlockForm(forms.Form):
