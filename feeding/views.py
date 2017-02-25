@@ -11,12 +11,12 @@ def index(request):
         'feed_types': feed_types,
         'feed_entries': feed_entries
     }
-    return render(request, 'index.html', parameters)
+    return render(request, 'feeding/index.html', parameters)
 
 
 def create_type(request):
     form = FeedTypeForm()
-    return render(request, 'create_feed_type.html', {'form': form})
+    return render(request, 'feeding/create_feed_type.html', {'form': form})
 
 
 def save_type(request):
@@ -26,12 +26,12 @@ def save_type(request):
         form.save()
         return HttpResponseRedirect('/feeding/')
 
-    return render(request, 'create_feed_type.html', {'form': form})
+    return render(request, 'feeding/create_feed_type.html', {'form': form})
 
 
 def create_feed_entry(request):
     form = FeedEntryForm()
-    return render(request, 'create_feed_entry.html', {'form': form})
+    return render(request, 'feeding/create_feed_entry.html', {'form': form})
 
 
 def save_feed_entry(request):
@@ -41,4 +41,4 @@ def save_feed_entry(request):
         form.save()
         return HttpResponseRedirect('/feeding/')
 
-    return render(request, 'create_feed_entry.html', {'form': form})
+    return render(request, 'feeding/create_feed_entry.html', {'form': form})
