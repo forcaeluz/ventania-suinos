@@ -1,8 +1,10 @@
+{% extends "base.html" %}
 {% load i18n %}
 {% load static %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
 <title>{% trans "Flock Information" %}{{ flock.flock_name }}</title>
+{% block main-content %}
 <h1>{% trans "Flock information" %}</h1>
 
 <h2>{% trans "General Information" %}</h2>
@@ -77,3 +79,4 @@
 {% else %}
 <p>{% trans "No animals separated from this flock." %}</p>
 {% endif %}
+{% endblock %}

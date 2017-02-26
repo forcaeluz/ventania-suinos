@@ -1,10 +1,13 @@
+{% extends "base.html" %}
 {% load i18n %}
 {% load l10n %}
 {% load static %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
 
-<title>{% trans "Flock Management" %}</title>
+{% block title %}{% trans "Flock Management" %}{% endblock %}
+
+{% block main-content %}
 <h1> {% trans "Flock Management" %} </h1>
 
 <h2> {% trans "Current Flocks in the Farm" %} </h2>
@@ -59,3 +62,4 @@
 {% else %}
     <p>{% trans "No prevous flocks to show." %}</p>
 {% endif %}
+{% endblock %}
