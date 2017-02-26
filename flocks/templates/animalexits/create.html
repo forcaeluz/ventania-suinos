@@ -1,4 +1,7 @@
+{% extends "base.html" %}
 {% load i18n %}
+
+{% block main-content %}
 <h1>{% trans "Register new animal exit" %}</h1>
 
 <form action="{% url 'flocks:save_animal_exit' %}" method="post">
@@ -6,3 +9,4 @@
     {{ form.as_ul }}
 <input type="submit" value="Save" />
 </form>
+{% endblock %}
