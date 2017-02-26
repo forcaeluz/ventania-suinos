@@ -1,5 +1,6 @@
 .flock-list {
   table-layout: fixed;
+  padding: 20px;
   width: 100%;
   border-collapse: collapse;
   border: 3px solid black;

@@ -1,0 +1,53 @@
+{% load i18n %}
+{% load l10n %}
+{% load static %}
+
+<title>{% block title %}Chácara Ventania{% endblock %}</title>
+<link rel="stylesheet" type="text/css" href="{% static 'farm.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'suinos.css' %}" />
+<link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+{% block extra_head %}
+
+{% endblock %}
+
+<div class="farm-index">
+    <div class="farm-menu">
+        <section>
+            <ul>
+                <img src="{% static 'favicon.ico' %}" alt="Logo" class="logo"/>
+                <li class="menu-item"><a class="menu-item" href="{% url "farm:index" %}">{% trans "Home" %}</a></li>
+                <li class="menu-item"><a class="menu-item" href="{% url "flocks:index" %}">{% trans "Flocks" %}</a></li>
+                <li class="menu-item"><a class="menu-item" href="{% url "feeding:index" %}">{% trans "Feeding" %}</a></li>
+                <li class="menu-item">{% trans "Buildings" %}</li>
+                <li class="menu-item">{% trans "Reports" %}</li>
+            </ul>
+        </section>
+    </div>
+    <div class="farm-header">
+        <div class="farm-header-menu">
+            <ul class="farm-action-menu">
+                <li class="header-menu-show">
+                    +
+                </li>
+                <li class="header-menu-item">
+                    <a href="{% url "flocks:create" %}" class="menu-item">New flock</a>
+                </li>
+                <li class="header-menu-item">
+                    <a href="{% url "flocks:create_animal_exit" %}" class="menu-item">New exit</a>
+                </li>
+                <li class="header-menu-item">
+                    <a href="{% url "flocks:create_animal_death" %}" class="menu-item">New death</a>
+                </li>
+                <li class="header-menu-item">
+                    <a href="{% url "feeding:create_feed_entry" %}" class="menu-item">New feed delivery</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="main-content">
+        {% block main-content %}
+        {% endblock %}
+    </div>
+
+
+</div>

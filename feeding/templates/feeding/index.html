@@ -1,12 +1,16 @@
+{% extends "base.html" %}
+
 {% load i18n %}
 {% load l10n %}
 {% load static %}
 
+{% block extra_head %}
 <link rel="stylesheet" type="text/css" href="{% static 'suinos.css' %}" />
-
 <title>{% trans "Feed Management" %}</title>
-<h1> {% trans "Feed Management" %} </h1>
+{% endblock %}
 
+{% block main-content %}
+<h1> {% trans "Feed Management" %} </h1>
 <h2> {% trans "Registered Feed Types" %} </h2>
 {% if feed_types %}
     <table class="flock-list">
@@ -54,3 +58,4 @@
 {% endif %}
 <a href="{% url 'feeding:create_feed_entry' %}">{%  trans "Register new feed entry" %}</a>
 {% endif %}
+{% endblock %}
