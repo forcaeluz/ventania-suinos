@@ -5,7 +5,7 @@ import datetime
 class Flock(models.Model):
 
     entry_date = models.DateField()
-    entry_weight = models.DecimalField(decimal_places=3, max_digits=9)
+    entry_weight = models.FloatField()
     number_of_animals = models.IntegerField()
 
     @property
@@ -33,7 +33,16 @@ class Flock(models.Model):
 
     @property
     def computed_daily_growth(self):
-        return 0.0
+        total_number_of_animals = 0
+        average_grow = 0
+        for animal_exit in self.animalexits_set.all():
+            total_number_of_animals += animal_exit.number_of_animals
+            average_grow += animal_exit.grow_rate * animal_exit.number_of_animals
+
+        if total_number_of_animals == 0:
+            return None
+
+        return average_grow / total_number_of_animals
 
     @property
     def death_percentage(self):
@@ -45,20 +54,20 @@ class Flock(models.Model):
 
 class AnimalDeath(models.Model):
     date = models.DateField()
-    weight = models.IntegerField()
+    weight = models.FloatField()
     cause = models.TextField()
     flock = models.ForeignKey(Flock)
 
 
 class AnimalExits(models.Model):
     date = models.DateField()
-    total_weight = models.DecimalField(decimal_places=3, max_digits=9)
+    total_weight = models.FloatField()
     number_of_animals = models.IntegerField()
     flock = models.ForeignKey(Flock)
 
     @property
     def grow_rate(self):
-        entry_weight = self.flock.get_average_entry_weight()
+        entry_weight = self.flock.average_entry_weight
         exit_weight = self.average_weight
         time_interval = self.date - self.flock.entry_date
         return (exit_weight - entry_weight) / time_interval.days

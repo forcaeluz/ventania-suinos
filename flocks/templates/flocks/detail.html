@@ -16,7 +16,10 @@
     <li>{% trans "Entry Count:" %} {{ flock.number_of_animals }}</li>
     <li>{% trans "Average Entry Weight:" %} {{ flock.average_entry_weight }}</li>
     <li>{% trans "Number of animals on farm" %} {{ flock.number_of_living_animals }}</li>
+    {% if flock.number_of_living_animals > 0 %}
     <li>{% trans "Expected Exit Date" %} {{ flock.expected_exit_date }}</li>
+    {% endif %}
+
 </ul>
 
 <h2>{% trans "Animal Death Information" %}</h2>
@@ -61,8 +64,8 @@
         <tr class="table-row">
         <td>{{exit.date}}</td>
         <td>{{exit.number_of_animals}}</td>
-        <td>{{exit.total_weight}}</td>
-        <td>{{exit.average_weight}}</td>
+        <td>{{exit.total_weight|stringformat:".2f"}}</td>
+        <td>{{exit.average_weight|stringformat:".2f"}}</td>
         </tr>
     {% endfor %}
 </table>
