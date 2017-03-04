@@ -1,4 +1,5 @@
 from django.db import models
+from math import ceil
 import datetime
 
 
@@ -14,7 +15,14 @@ class Flock(models.Model):
 
     @property
     def expected_exit_date(self):
-        date = self.entry_date + datetime.timedelta(days=90)
+        date_year_before = self.entry_date - datetime.timedelta(days=365)
+        exits = AnimalExits.objects.filter(date__gte=date_year_before)
+        grow_rate = self.__compute_grow_rate_for_exits_set(exits)
+        if grow_rate is None:
+            grow_rate = 0.850
+
+        growing_days = ceil((115 - self.average_entry_weight) / grow_rate)
+        date = self.entry_date + datetime.timedelta(days=growing_days)
         return date
 
     @property
@@ -33,9 +41,14 @@ class Flock(models.Model):
 
     @property
     def computed_daily_growth(self):
+        exits_set = self.animalexits_set.all()
+        return self.__compute_grow_rate_for_exits_set(exits_set)
+
+    @staticmethod
+    def __compute_grow_rate_for_exits_set(exits_set):
         total_number_of_animals = 0
         average_grow = 0
-        for animal_exit in self.animalexits_set.all():
+        for animal_exit in exits_set:
             total_number_of_animals += animal_exit.number_of_animals
             average_grow += animal_exit.grow_rate * animal_exit.number_of_animals
 
@@ -43,6 +56,7 @@ class Flock(models.Model):
             return None
 
         return average_grow / total_number_of_animals
+
 
     @property
     def death_percentage(self):

@@ -11,9 +11,18 @@ class FlockTests(TestCase):
         """
         flock_predicted_exit_date() Should return the date 90 days after entry
         """
-        time = timezone.now() + datetime.timedelta(days=90)
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
+        time = timezone.now() + datetime.timedelta(days=112)
+        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
         self.assertEqual(time.date(), flock.expected_exit_date)
+
+    def test_flock_name(self):
+        """
+        flock_predicted_exit_date() Should return the date 90 days after entry
+        """
+        date = datetime.date(year=2016, month=3, day=9)
+        flock = Flock(entry_date=date, entry_weight=2600.00, number_of_animals=130)
+        flock.save()
+        self.assertEqual('2016_1', flock.flock_name)
 
     def test_flock_number_of_living_animals(self):
         flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
