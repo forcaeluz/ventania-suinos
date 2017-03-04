@@ -1,0 +1,31 @@
+.flock-list {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border: 3px solid black;
+  padding: 15px;
+}
+
+.feeding-table
+{
+    padding: 15px;
+}
+
+.table-header {
+
+}
+
+.table-row {
+    background: #E2F0E9;
+}
+
+td {
+    text-align: center;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  /*border: 3px solid black;*/
+}
