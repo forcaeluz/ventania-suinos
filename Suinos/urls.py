@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'admin/login.html'}),
+    url(r'^accounts/login/$', auth_views.login, {'template_name': 'farm/login.html'}),
     url(r'^flocks/', include('flocks.urls')),
     url(r'^feeding/', include('feeding.urls')),
     url(r'^', include('farm.urls')),

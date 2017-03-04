@@ -1,0 +1,17 @@
+{% load i18n %}
+{% load l10n %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'login.css' %}" />
+<div class="login-page">
+  <div class="form">
+    <img src="{% static 'favicon.ico' %}" alt="Logo"/>
+    <form class="login-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+  </div>
+</div>
+
+
