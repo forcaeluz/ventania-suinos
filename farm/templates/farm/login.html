@@ -5,8 +5,11 @@
 <link rel="stylesheet" type="text/css" href="{% static 'login.css' %}" />
 <div class="login-page">
   <div class="form">
+    {% if form.errors %}
+    <p class="error">Sorry, that's not a valid username or password</p>
+    {% endif %}
     <img src="{% static 'favicon.ico' %}" alt="Logo"/>
-    <form class="login-form">
+    <form class="login-form" method="post" action={% url 'login' %}>
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Login</button>

@@ -15,10 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
+from django.contrib.auth.views import login
 
 urlpatterns = [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'farm/login.html'}),
+    url(r'^accounts/login/$', login, {'template_name': 'farm/login.html'}, name='login'),
     url(r'^flocks/', include('flocks.urls')),
     url(r'^feeding/', include('feeding.urls')),
     url(r'^', include('farm.urls')),
