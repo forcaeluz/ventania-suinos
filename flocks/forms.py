@@ -1,11 +1,11 @@
 from django import forms
 from django.core.validators import ValidationError
-
+from ui_objects.widgets import DatePickerWidget
 from .models import AnimalExits, Flock, AnimalDeath
 
 
 class FlockForm(forms.Form):
-    entry_date = forms.DateField()
+    entry_date = forms.DateField(widget=DatePickerWidget())
     entry_weight = forms.DecimalField()
     number_of_animals = forms.IntegerField()
 
@@ -28,6 +28,7 @@ class AnimalExitsForm(forms.ModelForm):
     class Meta:
         model = AnimalExits
         fields = ['date', 'number_of_animals', 'total_weight', 'flock']
+        widgets = {'date': DatePickerWidget()}
 
 
 class AnimalDeathForm(forms.ModelForm):
@@ -39,3 +40,4 @@ class AnimalDeathForm(forms.ModelForm):
     class Meta:
         model = AnimalDeath
         fields = ['date', 'weight', 'cause', 'flock']
+        widgets = {'date': DatePickerWidget()}
