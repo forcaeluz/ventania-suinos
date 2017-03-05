@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
+
+{% block main-content %}
 <h1>{% trans "Register new feed-type" %}</h1>
 
 <form action="{% url 'feeding:save_type' %}" method="post">
@@ -7,3 +9,4 @@
     {{ form }}
 <input type="submit" value="Save" />
 </form>
+{% endblock %}
