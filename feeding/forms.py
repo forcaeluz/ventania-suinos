@@ -13,6 +13,8 @@ class FeedTypeForm(forms.ModelForm):
         if start_age >= stop_age:
             raise ValidationError(tr("Stop feeding age should be bigger than start feeding age."), code='Stop too soon')
 
+        return stop_age
+
     class Meta:
         model = FeedType
         fields = ['name', 'start_feeding_age', 'stop_feeding_age']
