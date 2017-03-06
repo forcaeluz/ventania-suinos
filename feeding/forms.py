@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext as tr
 from django.core.validators import ValidationError
-
+from ui_objects.widgets import DatePickerWidget
 from .models import FeedType, FeedEntry
 
 
@@ -25,3 +25,4 @@ class FeedEntryForm(forms.ModelForm):
     class Meta:
         model = FeedEntry
         fields = ['date', 'feed_type', 'weight']
+        widgets = {'date': DatePickerWidget()}

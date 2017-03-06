@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def index(request):
     feed_types = FeedType.objects.all()
-    feed_entries = FeedEntry.objects.all()
+    feed_entries = FeedEntry.objects.all().order_by('-date')
 
     parameters = {
         'feed_types': feed_types,

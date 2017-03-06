@@ -23,9 +23,9 @@
         </thead>
         {% for feed in feed_types %}
             <tr class="table-row">
-            <td>{{feed.name}}</td>
-            <td>Todo</td>
-            <td>Todo</td>
+            <td>{{ feed.name }}</td>
+            <td>{{ feed.remaining_weight|stringformat:".f1" }}</td>
+            <td>{{ feed.feed_end_date }}</td>
             </tr>
         {% endfor %}
 </table>
