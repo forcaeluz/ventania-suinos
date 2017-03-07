@@ -86,3 +86,29 @@ class FlockTests(TestCase):
         flock = Flock(entry_date=entry_date, entry_weight=20.00, number_of_animals=2)
         flock.save()
         self.assertEqual(None, flock.computed_daily_growth)
+
+
+class SeparationTests(TestCase):
+    def test_create_separation(self):
+        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
+        flock.save()
+        separation = flock.animalseparation_set.create(date=timezone.now().date(), reason='Sick.')
+        self.assertTrue(separation.active)
+
+    def test_death_after_separation(self):
+        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
+        flock.save()
+        separation = flock.animalseparation_set.create(date=timezone.now().date(), reason='Sick.')
+        separation.save()
+        death = flock.animaldeath_set.create(date=timezone.now().date(), weight=21)
+        separation.death = death
+        self.assertFalse(separation.active)
+
+    def test_exit_after_death(self):
+        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
+        flock.save()
+        separation = flock.animalseparation_set.create(date=timezone.now().date(), reason='Sick.')
+        separation.save()
+        animal_exit = flock.animalexits_set.create(date=timezone.now().date(), number_of_animals=1, total_weight=21)
+        separation.exit = animal_exit
+        self.assertFalse(separation.active)

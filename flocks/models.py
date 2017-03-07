@@ -89,3 +89,15 @@ class AnimalExits(models.Model):
     @property
     def average_weight(self):
         return self.total_weight / self.number_of_animals
+
+
+class AnimalSeparation(models.Model):
+    date = models.DateField()
+    reason = models.CharField(max_length=250)
+    flock = models.ForeignKey(Flock)
+    death = models.ForeignKey(AnimalDeath, null=True, blank=True)
+    exit = models.ForeignKey(AnimalExits, null=True, blank=True)
+
+    @property
+    def active(self):
+        return (self.death is None) and (self.exit is None)
