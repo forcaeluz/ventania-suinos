@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block extra_head %}
+{% endblock %}
+{% block main-content %}
+<h1>{% trans "Animal Separation" %}</h1>
+<h2>{% trans "Separation Data" %}</h2>
+<ul>
+    <li>{% trans "ID:" %} {{ separation.id }}</li>
+    <li>{% trans "Flock:" %} {{ separation.flock.flock_name }}</li>
+    <li>{% trans "Separation Date:" %} {{ separation.date }}</li>
+</ul>
+
+{% if separation.active %}
+<h2>{% trans "Separation Actions" %}</h2>
+<ul>
+    <li><a href="{% url 'flocks:make_animal_separation_died' %}">{% trans 'Register this animal as dead' %}</a></li>
+    <li><a href="{% url 'flocks:make_animal_separation_exit' %}">{% trans 'This animal left the farm' %}</a></li>
+</ul>
+{% endif %}
+
+
+{% endblock %}

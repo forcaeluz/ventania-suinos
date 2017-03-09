@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block extra_head %}
+{{ form.media }}
+{% endblock %}
+{% block main-content %}
+<h1>{% trans "Register new animal separation" %}</h1>
+
+<form action="{% url 'flocks:save_animal_separation' %}" method="post">
+{% csrf_token %}
+    {{ form.as_ul }}
+<input type="submit" value="Save" />
+</form>
+{% endblock %}
