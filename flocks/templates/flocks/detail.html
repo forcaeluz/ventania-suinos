@@ -76,9 +76,33 @@
 {% endif %}
 
 <h2>{% trans "Separation Information" %}</h2>
-{% if list_separations %}
-
+{% if separation_list %}
+<table class="flock-list">
+<thead>
+    <tr class="table-header">
+        <td>{% trans "Separation Date" %}</td>
+        <td>{% trans "Reason" %}</td>
+        <td>{% trans "Ended" %}</td>
+    </tr>
+    </thead>
+    {% for separation in separation_list %}
+        <tr class="table-row">
+        <td><a href="{% url 'flocks:separation_detail' separation.id %}">{{separation.date}}</a></td>
+        <td>{{separation.reason}}</td>
+        {% if separation.death %}
+            <td>{% trans "Died in:" %} {{separation.death.date}}</td>
+        {% elif separation.exit %}
+            <td>{% trans "Exit in:" %} {{separation.exit.date}}</td>
+        {% else %}
+            <td>{% trans "Still separated." %}</td>
+        {% endif %}
+        </tr>
+    {% endfor %}
+</table>
 {% else %}
 <p>{% trans "No animals separated from this flock." %}</p>
+{% endif %}
+{% if flock.number_of_living_animals > 0 %}
+<a href="{% url "flocks:create_animal_separation" %}?flockid={{ flock.id }}">{% trans "Register new Animal Separation" %}</a>
 {% endif %}
 {% endblock %}

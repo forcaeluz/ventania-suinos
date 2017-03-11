@@ -1,7 +1,8 @@
 from django import forms
+from django.forms.fields import HiddenInput
 from django.core.validators import ValidationError
 from ui_objects.widgets import DatePickerWidget
-from .models import AnimalExits, Flock, AnimalDeath
+from .models import AnimalExits, Flock, AnimalDeath, AnimalSeparation
 
 
 class FlockForm(forms.Form):
@@ -41,3 +42,65 @@ class AnimalDeathForm(forms.ModelForm):
         model = AnimalDeath
         fields = ['date', 'weight', 'cause', 'flock']
         widgets = {'date': DatePickerWidget()}
+
+
+class AnimalSeparationForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(AnimalSeparationForm, self).__init__(*args, **kwargs)
+        current_flocks = [obj.id for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        self.fields['flock'].queryset = Flock.objects.filter(pk__in=current_flocks)
+        if 'initial' in kwargs.keys():
+            initial_variables = kwargs['initial']
+            if initial_variables['flock'] is not None:
+                self.fields['flock'].initial = initial_variables['flock']
+
+    class Meta:
+        model = AnimalSeparation
+        fields = ['date', 'reason', 'flock']
+        widgets = {'date': DatePickerWidget()}
+
+
+class SeparationDeathForm(AnimalDeathForm):
+    separation_id = forms.IntegerField(widget=HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        sep_id = kwargs.pop('separation_id', None)
+        super().__init__(*args, **kwargs)
+        if sep_id is not None:
+            self.fields['separation_id'].initial = int(sep_id)
+
+    def clean(self):
+        sep_id = self.cleaned_data.get('separation_id')
+        separation = AnimalSeparation.objects.get(id=sep_id)
+        death_date = self.cleaned_data.get('date')
+        if separation.date > death_date:
+            raise ValidationError('Death happened before separation.', code='Death date before separation')
+
+    def save(self, commit=True):
+        death = super(AnimalDeathForm, self).save(commit)
+        separation = AnimalSeparation.objects.get(id=self.cleaned_data.get('separation_id'))
+        separation.death = death
+        separation.save()
+
+
+class SeparationExitForm(AnimalExitsForm):
+    separation_id = forms.IntegerField(widget=HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        sep_id = kwargs.pop('separation_id', None)
+        super().__init__(*args, **kwargs)
+        if sep_id is not None:
+            self.fields['separation_id'].initial = int(sep_id)
+
+    def clean(self):
+        sep_id = self.cleaned_data.get('separation_id')
+        separation = AnimalSeparation.objects.get(id=sep_id)
+        exit_date = self.cleaned_data.get('date')
+        if separation.date > exit_date:
+            raise ValidationError('Exit happened before separation.', code='Death date before separation')
+
+    def save(self, commit=True):
+        animal_exit = super(AnimalExitsForm, self).save(commit)
+        separation = AnimalSeparation.objects.get(id=self.cleaned_data.get('separation_id'))
+        separation.exit = animal_exit
+        separation.save()
