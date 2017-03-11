@@ -3,7 +3,7 @@
 {% block extra_head %}{{ form.media }}
 {% endblock %}
 {% block main-content %}
-<h1>{% trans "Separated Animal Death" %}</h1>
+<h1>{% trans "Separated Animal Exit" %}</h1>
 <h2>{% trans "Separation Data" %}</h2>
 <ul>
     <li>{% trans "ID:" %} {{ separation.id }}</li>
@@ -11,8 +11,8 @@
     <li>{% trans "Separation Date:" %} {{ separation.date }}</li>
 </ul>
 
-<h2>{% trans "Death data" %}</h2>
-<form action="{% url 'flocks:save_separation_death' %}" method="post">
+<h2>{% trans "Exit data" %}</h2>
+<form action="{% url 'flocks:save_separation_exit' %}" method="post">
 {% csrf_token %}
     <ul>
     {{ form.as_ul }}

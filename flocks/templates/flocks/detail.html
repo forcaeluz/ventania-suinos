@@ -90,9 +90,9 @@
         <td><a href="{% url 'flocks:separation_detail' separation.id %}">{{separation.date}}</a></td>
         <td>{{separation.reason}}</td>
         {% if separation.death %}
-            <td>{% trans "Died in:" %}{{separation.death.date}}</td>
+            <td>{% trans "Died in:" %} {{separation.death.date}}</td>
         {% elif separation.exit %}
-            <td>{% trans "Exit in:" %}{{separation.exit.date}}</td>
+            <td>{% trans "Exit in:" %} {{separation.exit.date}}</td>
         {% else %}
             <td>{% trans "Still separated." %}</td>
         {% endif %}
