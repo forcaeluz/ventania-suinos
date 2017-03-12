@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load l10n %}
+{% load static %}
+
+{% block extra_head %}
+<title>Medications</title>
+{% endblock %}
+
+{% block main-content %}
+<h1>Medications</h1>
+<h2>Ongoing Treatments</h2>
+{% if treatments %}
+<table class="flock-list">
+        <thead>
+        <tr class="table-header">
+            <td>{% trans "Flock" %}</td>
+            <td>{% trans "Start Date" %}</td>
+            <td>{% trans "Medicine" %}</td>
+        </tr>
+        </thead>
+        {% for treatment in treatments %}
+            <tr class="table-row">
+            <td><a href="{% url 'flocks:detail' flock.id %}">{{treatment.flock}}</a></td>
+            <td>{{treatment.start_date}}</td>
+            <td>{{treatment.medicine.name}}</td>
+            </tr>
+        {% endfor %}
+</table>
+{% else %}
+<p>{% trans 'No ongoing treatments.' %}</p>
+{% endif %}
+<a href="{% url 'medications:index' %}">Start new treatment</a>
+
+<h2>Medicine Stock</h2>
+{% if treatments %}
+<table class="flock-list">
+        <thead>
+        <tr class="table-header">
+            <td>{% trans "Name" %}</td>
+            <td>{% trans "Available Dosage" %}</td>
+            <td>{% trans "Medicine" %}</td>
+        </tr>
+        </thead>
+        {% for treatment in treatments %}
+            <tr class="table-row">
+            <td><a href="{% url 'flocks:detail' flock.id %}">{{treatment.flock}}</a></td>
+            <td>{{treatment.start_date}}</td>
+            <td>{{treatment.medicine.name}}</td>
+            </tr>
+        {% endfor %}
+</table>
+{% else %}
+<p>{% trans 'No medications registered' %}</p>
+{% endif %}
+
+{% endblock %}
