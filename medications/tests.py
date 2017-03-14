@@ -1,12 +1,17 @@
 from django.test import TestCase
 from django.core.validators import ValidationError
 from datetime import date
-from .models import Medicine, Treatment, MedicineApplication
+from .models import Medicine, Treatment, MedicineApplication, MedicineEntry, MedicineDiscard
 from flocks.models import Flock
-# Create your tests here.
 
 
 class MedicineModelTest(TestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.flock1 = Flock(entry_date='2017-01-01', entry_weight=2200, number_of_animals=100)
+        self.flock1.save()
+
     def test_creation(self):
         med = Medicine(name='Medicine1', recommended_age_start=20, recommended_age_stop=50, dosage_per_kg=3,
                        grace_period_days=10)
@@ -19,6 +24,39 @@ class MedicineModelTest(TestCase):
                        grace_period_days=10)
         with self.assertRaises(ValidationError):
             med.full_clean()
+
+    def test_stock_quantity(self):
+        med = Medicine(name='Medicine1', recommended_age_start=30, recommended_age_stop=20, dosage_per_kg=3,
+                       grace_period_days=10)
+        med.save()
+        med.medicineentry_set.create(date='2017-01-01', expiration_date='2017-10-01',
+                                     quantity=100)
+
+        self.assertEqual(100, med.availability)
+
+    def test_stock_quantity_after_application(self):
+        med = Medicine(name='Medicine1', recommended_age_start=30, recommended_age_stop=20, dosage_per_kg=3,
+                       grace_period_days=10)
+        med.save()
+        med.medicineentry_set.create(date='2017-01-01', expiration_date='2017-10-01',
+                                     quantity=100)
+
+        treatment = med.treatment_set.create(flock=self.flock1, start_date='2017-01-10')
+        treatment.save()
+
+        application = treatment.medicineapplication_set.create(date='2017-01-10', dosage=10)
+        application.save()
+        self.assertEqual(90, med.availability)
+
+    def test_stock_quantity_after_discard(self):
+        med = Medicine(name='Medicine1', recommended_age_start=30, recommended_age_stop=20, dosage_per_kg=3,
+                       grace_period_days=10)
+        med.save()
+        med.medicineentry_set.create(date='2017-01-01', expiration_date='2017-10-01',
+                                     quantity=100)
+
+        med.medicinediscard_set.create(date='2017-02-02', quantity=30, reason='Bad storage')
+        self.assertEqual(70, med.availability)
 
 
 class TreatmentModelTest(TestCase):
@@ -92,3 +130,20 @@ class TestMedicineApplication(TestCase):
     def test_creation(self):
         med_application = MedicineApplication(date='2017-01-10', dosage=10, treatment=self.treatment)
         med_application.save()
+
+
+class TestMedicineEntry(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.medicine1 = Medicine(name='Medicine1', recommended_age_start=20, recommended_age_stop=50,
+                                  dosage_per_kg=3,
+                                  grace_period_days=10)
+        self.medicine1.save()
+
+    def test_creation(self):
+        entry = MedicineEntry(medicine=self.medicine1, date='2017-01-01', expiration_date='2017-10-01',
+                              quantity=100)
+        entry.save()
+
+
+# class TestMedicineDiscard(TestCase):
