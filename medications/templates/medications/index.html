@@ -33,25 +33,24 @@
 <a href="{% url 'medications:index' %}">Start new treatment</a>
 
 <h2>Medicine Stock</h2>
-{% if treatments %}
+{% if medications %}
 <table class="flock-list">
         <thead>
         <tr class="table-header">
             <td>{% trans "Name" %}</td>
             <td>{% trans "Available Dosage" %}</td>
-            <td>{% trans "Medicine" %}</td>
         </tr>
         </thead>
-        {% for treatment in treatments %}
+        {% for medication in medications %}
             <tr class="table-row">
-            <td><a href="{% url 'flocks:detail' flock.id %}">{{treatment.flock}}</a></td>
-            <td>{{treatment.start_date}}</td>
-            <td>{{treatment.medicine.name}}</td>
+            <td>{{medication.name}}</td>
+            <td>{{medication.availability}}</td>
             </tr>
         {% endfor %}
 </table>
 {% else %}
 <p>{% trans 'No medications registered' %}</p>
 {% endif %}
-
+<a href="{% url 'medications:new_medication' %}">{% trans 'Register new medication' %}</a>
+<a href="{% url 'medications:new_entry' %}">{% trans 'Register new medication entry' %}</a>
 {% endblock %}

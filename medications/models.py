@@ -7,8 +7,8 @@ from flocks.models import Flock
 
 
 # Create your models here.
-class Medicine(models.Model):
-    name = models.TextField(unique=True, null=False)
+class Medication(models.Model):
+    name = models.CharField(max_length=140, unique=True, null=False)
     recommended_age_start = models.IntegerField()
     recommended_age_stop = models.IntegerField()
     dosage_per_kg = models.FloatField()
@@ -19,8 +19,6 @@ class Medicine(models.Model):
         if self.recommended_age_start >= self.recommended_age_stop:
             raise ValidationError('Start age should be smaller than stop age.', code='Start age bigger than stop age')
 
-        super(models.Model, self).clean()
-
     @property
     def availability(self):
         """
@@ -28,12 +26,15 @@ class Medicine(models.Model):
         :return: A float value, indicating how much. The units depend on the units used for this medicine.
         :rtype: float
         """
-        entry_quantity = self.medicineentry_set.all().aggregate(Sum('quantity'))['quantity__sum']
-        used_quantity = self.__get_used_medicine()
-        discarded_quantity = self.medicinediscard_set.all().aggregate(Sum('quantity'))['quantity__sum']
+        entry_quantity = self.medicationentry_set.all().aggregate(Sum('quantity'))['quantity__sum']
+        used_quantity = self.__get_used_medication()
+        discarded_quantity = self.medicationdiscard_set.all().aggregate(Sum('quantity'))['quantity__sum']
 
         if discarded_quantity is None:
             discarded_quantity = 0
+
+        if entry_quantity is None:
+            entry_quantity = 0
 
         return entry_quantity - (used_quantity + discarded_quantity)
 
@@ -50,7 +51,7 @@ class Medicine(models.Model):
         # suggested to this flock or not.
         return True
 
-    def __get_used_medicine(self):
+    def __get_used_medication(self):
         """
 
         :return:
@@ -58,7 +59,7 @@ class Medicine(models.Model):
         treatments = self.treatment_set.all()
         total_used = 0
         for treatment in treatments:
-            used = treatment.medicineapplication_set.all().aggregate(Sum('dosage'))['dosage__sum']
+            used = treatment.medicationapplication_set.all().aggregate(Sum('dosage'))['dosage__sum']
             total_used += used
 
         return total_used
@@ -67,7 +68,7 @@ class Medicine(models.Model):
 class Treatment(models.Model):
     start_date = models.DateField()
     stop_date = models.DateField(null=True)
-    medicine = models.ForeignKey(Medicine)
+    medication = models.ForeignKey(Medication)
     flock = models.ForeignKey(Flock)
     comments = models.TextField()
 
@@ -77,29 +78,29 @@ class Treatment(models.Model):
 
     @property
     def end_date_grace_period(self):
-        grace_period = self.medicine.grace_period_days
-        last_application = self.medicineapplication_set.order_by('date').last()
+        grace_period = self.medication.grace_period_days
+        last_application = self.medicationapplication_set.order_by('date').last()
         if last_application is None:
             return self.start_date
 
         return last_application.date + timedelta(days=grace_period)
 
 
-class MedicineApplication(models.Model):
+class MedicationApplication(models.Model):
     date = models.DateField()
     dosage = models.FloatField()
     treatment = models.ForeignKey(Treatment)
 
 
-class MedicineEntry(models.Model):
+class MedicationEntry(models.Model):
     date = models.DateField()
-    medicine = models.ForeignKey(Medicine)
+    medication = models.ForeignKey(Medication)
     quantity = models.FloatField()
     expiration_date = models.DateField()
 
 
-class MedicineDiscard(models.Model):
+class MedicationDiscard(models.Model):
     date = models.DateField()
-    medicine = models.ForeignKey(Medicine)
+    medication = models.ForeignKey(Medication)
     quantity = models.FloatField()
     reason = models.CharField(max_length=100)

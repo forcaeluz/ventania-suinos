@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block extra_head %}
+<title>Register new medication</title>
+{{ form.media }}
+{% endblock %}
+
+{% block main-content %}
+<h1>Register new medication entry</h1>
+<form action="{% url 'medications:save_entry' %}" method="post">
+{% csrf_token %}
+    <table>
+    {{ form.as_table }}
+    </table>
+<input type="submit" value="Save" />
+</form>
+{% endblock %}
