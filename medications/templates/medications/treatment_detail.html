@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
+<title>{% trans "Treatment Information" %}</title>
+{% block main-content %}
+<h1>{% trans "Treatment Information" %}</h1>
+
+<h2>{% trans "General Information" %}</h2>
+<ul>
+    <li>{% trans "Flock:" %} {{ treatment.flock }}</li>
+    <li>{% trans "Start Date:" %} {{ treatment.start_date }}</li>
+    <li>{% trans "Medication" %} {{ treatment.medication }}</li>
+    {% if treatment.stop_date %}
+    <li>{% trans "End Date:" %} {{ treatment.stop_date }}</li>
+    <li>{% trans "End Grace Period:" %} {{ treatment.end_date_grace_period }}</li>
+    {% endif %}
+    <li>{% trans "Total of medication applied:" %} {{ treatment.total_amount_used }}[{{ treatment.medication.quantity_unit }}]</li>
+</ul>
+{% if applications %}
+<h2>Medication Applications</h2>
+<table class="flock-list">
+        <thead>
+        <tr class="table-header">
+            <td>{% trans 'Date' %}</td>
+            <td>{% trans 'Dosage' %}</td>
+        </tr>
+        </thead>
+        {% for application in applications %}
+            <tr class="table-row">
+            <td>{{ application.date }}</td>
+            <td>{{ application.dosage }}[{{ treatment.medication.quantity_unit }}]</td>
+            </tr>
+        {% endfor %}
+</table>
+{% endif %}
+
+{% if not treatment.stop_date %}
+<h2>{% trans 'Actions:' %}</h2>
+<div class="actions">
+    <div class="single-action">
+    <a href="{% url 'medications:stop_treatment'  %}?treatment_id={{ treatment.id }}">
+    <div class="action-box">
+        <img src=""/>
+        <span class="action-text">{%  trans "Stop Treatment" %}</span>
+    </div>
+    </a>
+    </div>
+    <div class="single-action">
+    <a href="{% url 'medications:new_application' %}?treatment_id={{ treatment.id }}">
+    <div class="action-box">
+        <img src=""/>
+        <span class="action-text">{%  trans "New Application" %}</span>
+    </div>
+    </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

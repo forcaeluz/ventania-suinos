@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'buildings',
     'feeding',
     'farm',
+    'medications',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

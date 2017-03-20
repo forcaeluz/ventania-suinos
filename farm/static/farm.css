@@ -1,6 +1,6 @@
 body
 {
-    background: whitesmoke;
+    background: #e9e7e8;
     margin: 0px;
 }
 
@@ -170,4 +170,35 @@ a.menu-item
     padding: 0px;
     align-content: right;
     color: whitesmoke;
+}
+
+.actions
+{
+    width: 100%;
+    display: table;
+}
+
+.single-action
+{
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.action-box
+{
+    width: 150px;
+    height: 150px;
+    background-color: #70a83b;
+    color: whitesmoke;
+    display: inline-block;
+}
+
+.action-box:hover
+{
+    background-color: #548235;
+}
+.action-text
+{
+    display: flex;
 }

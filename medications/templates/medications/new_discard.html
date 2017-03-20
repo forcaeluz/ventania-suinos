@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block extra_head %}
+<title>{% trans 'New medication discard' %}</title>
+{{ form.media }}
+{% endblock %}
+
+{% block main-content %}
+<h1>Register new medication discard</h1>
+<form action="{% url 'medications:save_discard' %}" method="post">
+{% csrf_token %}
+    <table>
+    {{ form.as_table }}
+    </table>
+<input type="submit" value="Save" />
+</form>
+{% endblock %}

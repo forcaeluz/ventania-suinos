@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^accounts/login/$', login, {'template_name': 'farm/login.html'}, name='login'),
     url(r'^flocks/', include('flocks.urls')),
     url(r'^feeding/', include('feeding.urls')),
+    url(r'^medications/', include('medications.urls')),
     url(r'^', include('farm.urls')),
     url(r'^admin/', admin.site.urls),
 ]

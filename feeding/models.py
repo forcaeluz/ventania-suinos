@@ -55,10 +55,6 @@ class FeedType(models.Model):
         average_entry_interval = self.__get_average_entry_interval()
         last_entry = self.feedentry_set.order_by('date').last()
         remaining_time = average_entry_interval - self.days_since_last_deliver
-        print(remaining_time)
-        print(average_entry_interval)
-        print(last_entry.weight)
-        print(last_entry.weight/remaining_time)
         return max(0, last_entry.weight * remaining_time / average_entry_interval)
 
 
