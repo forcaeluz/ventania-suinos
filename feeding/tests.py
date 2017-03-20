@@ -19,3 +19,10 @@ class FeedingTests(TestCase):
             entry_date = datetime.today() - timedelta(days=7)
             feed_type.feedentry_set.create(date=entry_date.date(), weight=28)
             self.assertEqual(14, feed_type.remaining_weight)
+
+    def test_remaining_weight_single_delivery_after_end(self):
+            feed_type = FeedType(name='S2', start_feeding_age=0, stop_feeding_age=1)
+            feed_type.save()
+            entry_date = datetime.today() - timedelta(days=14)
+            feed_type.feedentry_set.create(date=entry_date.date(), weight=28)
+            self.assertEqual(0, feed_type.remaining_weight)
