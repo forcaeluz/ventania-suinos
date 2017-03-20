@@ -14,6 +14,7 @@ class Medication(models.Model):
     dosage_per_kg = models.FloatField()
     grace_period_days = models.IntegerField()
     instructions = models.TextField()
+    quantity_unit = models.CharField(max_length=4, default='ml')
 
     def clean(self):
         if self.recommended_age_start >= self.recommended_age_stop:
@@ -51,6 +52,9 @@ class Medication(models.Model):
         # suggested to this flock or not.
         return True
 
+    def __str__(self):
+        return self.name
+
     def __get_used_medication(self):
         """
 
@@ -59,8 +63,7 @@ class Medication(models.Model):
         treatments = self.treatment_set.all()
         total_used = 0
         for treatment in treatments:
-            used = treatment.medicationapplication_set.all().aggregate(Sum('dosage'))['dosage__sum']
-            total_used += used
+            total_used += treatment.total_amount_used
 
         return total_used
 
@@ -84,6 +87,18 @@ class Treatment(models.Model):
             return self.start_date
 
         return last_application.date + timedelta(days=grace_period)
+
+    @property
+    def total_amount_used(self):
+        used = self.medicationapplication_set.all().aggregate(Sum('dosage'))['dosage__sum']
+        if used is None:
+            used = 0
+
+        return used
+
+    @property
+    def number_of_application(self):
+        return self.medicationapplication_set.all().count()
 
 
 class MedicationApplication(models.Model):

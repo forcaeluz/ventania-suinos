@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.urls import reverse
@@ -6,7 +6,9 @@ from django.urls import reverse
 from .models import Medication
 from .models import Treatment
 
-from .forms import MedicationForm, MedicationEntryForm
+from .forms import MedicationForm, MedicationEntryForm, \
+    TreatmentForm, ApplicationForm, TreatmentEndedForm, DiscardForm
+
 
 @login_required()
 def index(request):
@@ -53,19 +55,103 @@ def save_entry(request):
 
 @login_required()
 def new_treatment(request):
-    return HttpResponseRedirect(reverse('medications:index'))
+    form = TreatmentForm()
+    return render(request, 'medications/new_treatment.html', {'form': form})
 
 
 @login_required()
 def save_treatment(request):
-    return HttpResponseRedirect(reverse('medications:index'))
+    form = TreatmentForm(request.POST)
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect(reverse('medications:index'))
+
+    return render(request, 'medications/new_treatment.html', {'form': form})
 
 
 @login_required()
 def new_application(request):
-    return HttpResponseRedirect(reverse('medications:index'))
+    treatment_id = request.GET.get('treatment_id', None)
+    if treatment_id is None:
+        return HttpResponseBadRequest()
+    form = ApplicationForm(treatment_id=treatment_id)
+    parameters = {
+        'form': form,
+    }
+    return render(request, 'medications/new_application.html', parameters)
 
 
 @login_required()
 def save_application(request):
-    return HttpResponseRedirect(reverse('medications:index'))
+    form = ApplicationForm(request.POST)
+    if form.is_valid():
+        form.save()
+        treatment_id = form.cleaned_data.get('treatment')
+        return HttpResponseRedirect(reverse('medications:view_treatment', kwargs={'treatment_id': treatment_id}))
+
+    parameters = {
+        'form': form,
+    }
+    return render(request, 'medications/new_application.html', parameters)
+
+
+@login_required()
+def view_treatment(request, treatment_id):
+    treatment = get_object_or_404(Treatment, pk=treatment_id)
+    applications = treatment.medicationapplication_set.all().order_by('-date')
+    params = {
+        'treatment': treatment,
+        'applications': applications
+    }
+    return render(request, 'medications/treatment_detail.html', params)
+
+
+@login_required()
+def stop_treatment(request):
+    treatment_id = request.GET.get('treatment_id', None)
+    if treatment_id is None:
+        return HttpResponseBadRequest()
+    form = TreatmentEndedForm(treatment_id=treatment_id)
+    parameters = {
+        'form': form,
+    }
+    return render(request, 'medications/stop_treatment.html', parameters)
+
+
+@login_required()
+def save_stop_treatment(request):
+    form = TreatmentEndedForm(request.POST)
+    if form.is_valid():
+        form.save()
+        treatment_id = form.cleaned_data.get('treatment')
+        return HttpResponseRedirect(reverse('medications:view_treatment', kwargs={'treatment_id': treatment_id}))
+
+    return render(request, 'medications/stop_treatment.html', {'form': form})
+
+
+@login_required()
+def new_discard(request):
+    form = DiscardForm()
+    return render(request, 'medications/new_discard.html', {'form': form})
+
+
+@login_required()
+def save_discard(request):
+    form = DiscardForm(request.POST)
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect(reverse('medications:index'))
+
+    return render(request, 'medications/new_discard.html', {'form': form})
+
+
+@login_required()
+def view_medication(request, medication_id):
+    medication = get_object_or_404(Medication, id=medication_id)
+    return render(request, 'medications/medication_detail.html', {'medication': medication})
+
+
+@login_required()
+def view_treatment_list(request):
+    treatments = Treatment.objects.all()
+    return render(request, 'medications/treatment_list.html', {'treatments': treatments})

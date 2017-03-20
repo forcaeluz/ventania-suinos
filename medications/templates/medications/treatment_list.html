@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load l10n %}
+{% load static %}
+
+{% block extra_head %}
+<title>Medications</title>
+{% endblock %}
+
+{% block main-content %}
+<h1>Medications</h1>
+<h2>Ongoing Treatments</h2>
+{% if treatments %}
+<table class="flock-list">
+        <thead>
+        <tr class="table-header">
+            <td>{% trans 'Flock' %}</td>
+            <td>{% trans 'Start Date' %}</td>
+            <td>{% trans 'End Date' %}</td>
+            <td>{% trans 'Medication' %}</td>
+            <td>{% trans 'Number of applications' %}</td>
+            <td>{% trans 'Total of medication used' %}</td>
+        </tr>
+        </thead>
+        {% for treatment in treatments %}
+            <tr class="table-row">
+                <td><a href="{% url 'medications:view_treatment' treatment.id %}">{{treatment.flock}}</a></td>
+                <td>{{ treatment.start_date }}</td>
+                <td>{{ treatment.stop_date }}</td>
+                <td>{{ treatment.medication.name }}</td>
+                <td>{{ treatment.number_of_application }}</td>
+                <td>{{ treatment.total_amount_used }}</td>
+            </tr>
+        {% endfor %}
+</table>
+{% endif %}
+{% endblock %}
