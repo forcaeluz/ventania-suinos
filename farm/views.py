@@ -21,3 +21,5 @@ def index(request):
         'death_perc': death_perc,
     }
     return render(request, 'farm/index.html', params)
+
+

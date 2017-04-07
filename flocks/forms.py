@@ -10,6 +10,22 @@ class FlockForm(forms.Form):
     entry_weight = forms.DecimalField()
     number_of_animals = forms.IntegerField()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
+
+        self.fields['entry_date'].widget.attrs.update({'data-provide': 'datepicker'})
+
+    def clean_entry_weight(self):
+        weight = self.cleaned_data.get('entry_weight')
+        if weight <= 0:
+            raise ValidationError('Entry weight should be bigger than 0')
+
+        return weight
+
 
 class AnimalExitsForm(forms.ModelForm):
 
@@ -30,6 +46,7 @@ class AnimalExitsForm(forms.ModelForm):
         model = AnimalExits
         fields = ['date', 'number_of_animals', 'total_weight', 'flock']
         widgets = {'date': DatePickerWidget()}
+
 
 
 class AnimalDeathForm(forms.ModelForm):
