@@ -20,92 +20,118 @@
 
     <h2 class="sub-header">{% trans 'Overviews' %}</h2>
     <div class="row placeholders">
-    <div class="col-xs-12 col-sm-12 placeholder">
-        <div class="panel panel-info">
-        <div class="panel-heading">
-            <h3 class="panel-title">{% trans 'Flocks' %}</h3>
+        <div class="col-xs-12 col-sm-12 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Flocks' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Flock" %}</th>
+                            <th>{% trans "Entry Date" %}</th>
+                            <th>{% trans "Animals still on farm" %}</th>
+                            <th>{% trans "Estimated Avg. Weight" %}</th>
+                            <th>{% trans 'Animals in Treatment' %}</th>
+                            <th>{% trans 'Animals separated' %}</th>
+                            <th>{% trans "Death %" %}</th>
+                            <th>{% trans "Expected Exit Date" %}</th>
+                        </tr>
+                        </thead>
+                        {% for flock in flocks %}
+                            <tr class="table-row">
+                                <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
+                                <td>{{flock.entry_date}}</td>
+                                <td>{{flock.number_of_living_animals}}</td>
+                                <td>{{flock.average_entry_weight|stringformat:".2f"}}</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>{{flock.death_percentage|stringformat:".2f"}}%</td>
+                                <td>{{flock.expected_exit_date}}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="panel-body">
-        <table class="table table-striped">
-            <thead>
-            <tr class="table-header">
-                <th>{% trans "Flock" %}</th>
-                <th>{% trans "Entry Date" %}</th>
-                <th>{% trans "Animals still on farm" %}</th>
-                <th>{% trans "Estimated Avg. Weight" %}</th>
-                <th>{% trans 'Animals in Treatment' %}</th>
-                <th>{% trans 'Animals separated' %}</th>
-                <th>{% trans "Death %" %}</th>
-                <th>{% trans "Expected Exit Date" %}</th>
-            </tr>
-            </thead>
-            {% for flock in flocks %}
-                <tr class="table-row">
-                    <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
-                    <td>{{flock.entry_date}}</td>
-                    <td>{{flock.number_of_living_animals}}</td>
-                    <td>{{flock.average_entry_weight|stringformat:".2f"}}</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>{{flock.death_percentage|stringformat:".2f"}}%</td>
-                    <td>{{flock.expected_exit_date}}</td>
-                </tr>
-            {% endfor %}
-        </table>
-        </div>
-        </div>
-    </div>
 
-    <div class="col-xs-12 col-sm-6 placeholder">
-        <div class="panel panel-info">
-        <div class="panel-heading">
-            <h3 class="panel-title">{% trans 'Feeding' %}</h3>
+        <div class="col-xs-12 col-sm-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Separations' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Flock" %}</th>
+                            <th>{% trans "Reason" %}</th>
+                        </tr>
+                        </thead>
+                        {% for separation in separations %}
+                            <tr class="table-row">
+                                <td>{{separation.date}}</td>
+                                <td>{{separation.flock}}</td>
+                                <td>{{separation.reason}}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="panel-body">
-        <table class="table table-striped">
-            <thead>
-            <tr class="table-header">
-                <th>{% trans "Feed" %}</th>
-                <th>{% trans "Estimated Availability" %}</th>
-                <th>{% trans "Estimated end date" %}</th>
-            </tr>
-            </thead>
-            {% for feed in feed_types %}
-                <tr class="table-row">
-                    <td>{{feed.name}}</td>
-                    <td>{{feed.remaining_weight|stringformat:'.2f'}}</td>
-                    <td>{{feed.feed_end_date}}</td>
-                </tr>
-            {% endfor %}
-        </table>
-        </div>
-        </div>
-    </div>
 
-    <div class="col-xs-12 col-sm-6 placeholder">
-        <div class="panel panel-info">
-        <div class="panel-heading">
-            <h3 class="panel-title">{% trans 'Medications' %}</h3>
+        <div class="col-xs-12 col-sm-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Feeding' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Feed" %}</th>
+                            <th>{% trans "Estimated Availability" %}</th>
+                            <th>{% trans "Estimated end date" %}</th>
+                        </tr>
+                        </thead>
+                        {% for feed in feed_types %}
+                            <tr class="table-row">
+                                <td>{{feed.name}}</td>
+                                <td>{{feed.remaining_weight|stringformat:'.2f'}}</td>
+                                <td>{{feed.feed_end_date}}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="panel-body">
-        <table class="table table-striped">
-            <thead>
-            <tr class="table-header">
-                <th>{% trans "Feed" %}</th>
-                <th>{% trans "Estimated Availability" %}</th>
-                <th>{% trans "Estimated end date" %}</th>
-            </tr>
-            </thead>
-            {% for feed in feed_types %}
-                <tr class="table-row">
-                    <td>{{feed.name}}</td>
-                    <td>{{feed.remaining_weight|stringformat:'.2f'}}</td>
-                    <td>{{feed.feed_end_date}}</td>
-                </tr>
-            {% endfor %}
-        </table>
+
+        <div class="col-xs-12 col-sm-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Medications' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Feed" %}</th>
+                            <th>{% trans "Estimated Availability" %}</th>
+                            <th>{% trans "Estimated end date" %}</th>
+                        </tr>
+                        </thead>
+                        {% for feed in feed_types %}
+                            <tr class="table-row">
+                                <td>{{feed.name}}</td>
+                                <td>{{feed.remaining_weight|stringformat:'.2f'}}</td>
+                                <td>{{feed.feed_end_date}}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
         </div>
-        </div>
-    </div>
     </div>
 {% endblock %}
