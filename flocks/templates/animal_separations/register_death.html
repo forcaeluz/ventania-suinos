@@ -1,22 +1,55 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
 {% block extra_head %}{{ form.media }}
 {% endblock %}
-{% block main-content %}
-<h1>{% trans "Separated Animal Death" %}</h1>
-<h2>{% trans "Separation Data" %}</h2>
-<ul>
-    <li>{% trans "ID:" %} {{ separation.id }}</li>
-    <li>{% trans "Flock:" %} {{ separation.flock.flock_name }}</li>
-    <li>{% trans "Separation Date:" %} {{ separation.date }}</li>
-</ul>
+{% block main_content %}
+    <h2 class="sub-header">{% trans "Separated Animal Death" %}</h2>
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'General Information' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>{% trans "ID:" %} {{ separation.id }}</li>
+                        <li>{% trans "Flock:" %} {{ separation.flock.flock_name }}</li>
+                        <li>{% trans "Separation Date:" %} {{ separation.date }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Death Information' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <form action="{% url 'flocks:save_separation_death' %}" method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+                                {% if field.is_hidden %}
+                                    {{ field }}
+                                {% else %}
+                                {{ field.label_tag }}
+                                {% if field.errors %}
+                                    <div class="alert alert-danger" role="alert">
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="help">{{ field.help_text|safe }}</p>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
 
-<h2>{% trans "Death data" %}</h2>
-<form action="{% url 'flocks:save_separation_death' %}" method="post">
-{% csrf_token %}
-    <ul>
-    {{ form.as_ul }}
-    </ul>
-<input type="submit" value="Save" />
-</form>
+                        <input type="submit" value="Save" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

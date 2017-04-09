@@ -1,28 +1,55 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
 {% block extra_head %}
 {% endblock %}
-{% block main-content %}
-<h1>{% trans "Animal Separation" %}</h1>
-<h2>{% trans "Separation Data" %}</h2>
-<ul>
-    <li>{% trans "ID:" %} {{ separation.id }}</li>
-    <li>{% trans "Flock:" %} {{ separation.flock.flock_name }}</li>
-    <li>{% trans "Separation Date:" %} {{ separation.date }}</li>
-</ul>
+{% block main_content %}
+    <h1>{% trans "Separation Information" %}</h1>
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'General Information' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>{% trans "ID:" %} {{ separation.id }}</li>
+                        <li>{% trans "Flock:" %} <a href="{% url "flocks:detail" separation.flock.id %}">{{ separation.flock.flock_name }}</a></li>
+                        <li>{% trans "Date:" %} {{ separation.date }}</li>
+                        <li>{% trans "Reason:" %} {{ separation.reason }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-{% if separation.active %}
-<h2>{% trans "Separation Actions" %}</h2>
-<ul>
-    <li><a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}">{% trans 'Register this animal as dead' %}</a></li>
-    <li><a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}">{% trans 'This animal left the farm' %}</a></li>
-</ul>
-{% endif %}
-{% if separation.death %}
-<h2>{% trans "Death Information" %}</h2>
-<ul>
-    <li>{% trans "Date:" %} {{ separation.death.date }}</li>
-    <li>{% trans "Cause:" %} {{ separation.death.cause }}</li>
-</ul>
-{% endif %}
+        {% if separation.death %}
+            <div class="col-sm-6 col-md-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Death Information' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul>
+                            <li>{% trans "Date:" %} {{ separation.death.date }}</li>
+                            <li>{% trans "Cause:" %} {{ separation.death.cause }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        {% elif separation.exit %}
+            <div class="col-sm-6 col-md-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Exit Information' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul>
+                            <li>{% trans "Date:" %} {{ separation.exit.date }}</li>
+                            <li>{% trans "Weight:" %} {{ separation.exit.average_weight }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
 {% endblock %}
