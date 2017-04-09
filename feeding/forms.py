@@ -3,9 +3,17 @@ from django.utils.translation import ugettext as tr
 from django.core.validators import ValidationError
 from ui_objects.widgets import DatePickerWidget
 from .models import FeedType, FeedEntry
+from datetime import datetime
 
 
 class FeedTypeForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
 
     def clean_stop_feeding_age(self):
         stop_age = self.cleaned_data.get('stop_feeding_age')
@@ -21,6 +29,15 @@ class FeedTypeForm(forms.ModelForm):
 
 
 class FeedEntryForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
+
+        self.fields['date'].initial = datetime.today().date()
 
     class Meta:
         model = FeedEntry

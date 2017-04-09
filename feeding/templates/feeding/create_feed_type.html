@@ -1,12 +1,37 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
 
-{% block main-content %}
-<h1>{% trans "Register new feed-type" %}</h1>
+{% block main_content %}
+    <h2 class="sub-header">{% trans 'Registrate new feed type' %}</h2>
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-body">
+                    <form action="{% url 'feeding:save_type' %}" method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+                                {% if field.is_hidden %}
+                                    {{ field }}
+                                {% else %}
+                                {{ field.label_tag }}
+                                {% if field.errors %}
+                                    <div class="alert alert-danger" role="alert">
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="help">{{ field.help_text|safe }}</p>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
 
-<form action="{% url 'feeding:save_type' %}" method="post">
-{% csrf_token %}
-    {{ form }}
-<input type="submit" value="Save" />
-</form>
-{% endblock %}
+                        <input type="submit" value="Save" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}}
