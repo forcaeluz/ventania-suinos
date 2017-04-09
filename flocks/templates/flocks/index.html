@@ -67,7 +67,7 @@
                                 <th>{% trans "Death %" %}</th>
                             </tr>
                             </thead>
-                            {% for flock in current_flocks %}
+                            {% for flock in previous_flocks %}
                                 <tr class="table-row">
                                     <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
                                     <td>{{flock.entry_date}}</td>
