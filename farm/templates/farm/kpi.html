@@ -1,10 +1,10 @@
 <div class="col-xs-4 col-sm-2 placeholder">
-    <div class="panel {{ kpi.class }}">
+    <div class="panel panel-{{ kpi.kpi_class }}">
         <div class="panel-heading">
             <h3 class="panel-title">{{ kpi.title }}</h3>
         </div>
         <div class="panel-body kpi-body">
-            {{ kpi.value }}
+            {{ kpi.value }} {{ kpi.unit }}
         </div>
     </div>
 </div>
