@@ -14,9 +14,12 @@ from .forms import MedicationForm, MedicationEntryForm, \
 def index(request):
     available_medications = Medication.objects.all()
     ongoing_treatment = [obj for obj in Treatment.objects.all() if obj.is_active is True]
+    old_treatments = [obj for obj in Treatment.objects.all() if obj.is_active is False]
+
     params = {
         'medications': available_medications,
-        'treatments': ongoing_treatment
+        'treatments': ongoing_treatment,
+        'old_treatments': old_treatments[:10]
     }
     return render(request, 'medications/index.html', params)
 
@@ -24,7 +27,12 @@ def index(request):
 @login_required()
 def new_medication(request):
     form = MedicationForm()
-    return render(request, 'medications/new_medication.html', {'form': form})
+    form_data = {
+        'form': form,
+        'action': reverse('medications:save_medication'),
+        'title': 'Medication Information'
+    }
+    return render(request, 'medications/new_medication.html', {'form_data': form_data})
 
 
 @login_required()
@@ -40,7 +48,12 @@ def save_medication(request):
 @login_required()
 def new_entry(request):
     form = MedicationEntryForm()
-    return render(request, 'medications/new_entry.html', {'form': form})
+    form_data = {
+        'form': form,
+        'action': reverse('medications:save_entry'),
+        'title': 'Entry Information'
+    }
+    return render(request, 'medications/new_entry.html', {'form_data': form_data})
 
 
 @login_required()
@@ -56,7 +69,12 @@ def save_entry(request):
 @login_required()
 def new_treatment(request):
     form = TreatmentForm()
-    return render(request, 'medications/new_treatment.html', {'form': form})
+    form_data = {
+        'form': form,
+        'action': reverse('medications:save_treatment'),
+        'title': 'Animal and treatment information'
+    }
+    return render(request, 'medications/new_treatment.html', {'form_data': form_data})
 
 
 @login_required()
@@ -132,7 +150,12 @@ def save_stop_treatment(request):
 @login_required()
 def new_discard(request):
     form = DiscardForm()
-    return render(request, 'medications/new_discard.html', {'form': form})
+    form_data = {
+        'form': form,
+        'action': reverse('medications:save_discard'),
+        'title': 'Discard Information'
+    }
+    return render(request, 'medications/new_discard.html', {'form_data': form_data})
 
 
 @login_required()
