@@ -46,11 +46,11 @@
                         <li><a href="{% url 'flocks:create_animal_exit' %}">{% trans 'New Exit' %}</a></li>
                         <li><a href="{% url 'flocks:create_animal_death' %}">{% trans 'New Death' %}</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="{% url 'flocks:create' %}">{% trans 'New Feed Delivery' %}</a></li>
+                        <li><a href="{% url 'feeding:create_feed_entry' %}">{% trans 'New Feed Delivery' %}</a></li>
                         <li class="disabled"><a class="disabled" href="#">{% trans 'New Feeding Transition' %}</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="{% url 'flocks:create' %}">{% trans 'New Treatment' %}</a></li>
-                        <li><a href="{% url 'flocks:index' %}">{% trans 'New Medication Application' %}</a></li>
+                        <li><a href="{% url 'medications:new_treatment' %}">{% trans 'New Treatment' %}</a></li>
+                        <li class="disabled"><a href="{% url 'medications:new_application' %}">{% trans 'New Medication Application' %}</a></li>
                     </ul>
                 </li>
             </ul>
@@ -66,7 +66,7 @@
                 <li><a href="{% url 'flocks:index' %}">{% trans 'Flocks' %}</a></li>
                 <li><a href="{% url 'feeding:index' %}">{% trans 'Feeding' %}</a></li>
                 <li><a href="{% url 'medications:index' %}">{% trans 'Health' %}</a></li>
-                <li><a href="{% url 'flocks:index' %}">{% trans 'Financial' %}</a> </li>
+                <li class="disabled"><a href="">{% trans 'Financial' %}</a> </li>
             </ul>
             <ul class="nav nav-sidebar">
                 <li><a href="">{% trans 'Reports' %}</a></li>
