@@ -11,21 +11,21 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-
+from .utils import load_environment_file
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
+load_environment_file('environment.ini')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'x$(jw+@24h0&(9&&aj%&4c5u-ugs_c47688ayh1(*80@y1%#=_'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_SECRET_DEBUG', None)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split()
 
 LOGIN_REDIRECT_URL = '/'
 
