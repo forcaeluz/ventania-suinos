@@ -1,17 +1,38 @@
-{% extends 'base.html' %}
+{% extends 'base2.html' %}
 {% load i18n %}
-{% block extra_head %}
-<title>{% trans 'New medication application' %}</title>
-{{ form.media }}
-{% endblock %}
 
-{% block main-content %}
-<h1>Register new medication entry</h1>
-<form action="{% url 'medications:save_stop_treatment' %}" method="post">
-{% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-<input type="submit" value="Save" />
-</form>
+{% block main_content %}
+<h2 class="page-header">Register treatment stop</h2>
+
+<div class="col-sm-12 col-xs-12 col-md-6 col-lg-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Stop Date' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <form action="{% url 'medications:save_stop_treatment' %}" method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+                                {% if field.is_hidden %}
+                                    {{ field }}
+                                {% else %}
+                                    {{ field.label_tag }}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger" role="alert">
+                                            {{ field.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <p class="help">{{ field.help_text|safe }}</p>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <input type="submit" value="Save" />
+                    </form>
+                </div>
+            </div>
+        </div>
 {% endblock %}

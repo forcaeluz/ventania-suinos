@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
 {% load l10n %}
 {% load static %}
@@ -7,59 +7,81 @@
 
 {% block title %}{% trans "Flock Management" %}{% endblock %}
 
-{% block main-content %}
-<h1> {% trans "Flock Management" %} </h1>
+{% block main_content %}
+    <h1> {% trans "Flock Management" %} </h1>
+    <div class="row">
+        {% if current_flocks %}
+            <div class="col-sm-12 col-md-12">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Current Flocks in the farm' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans "Flock" %}</th>
+                                <th>{% trans "Entry Date" %}</th>
+                                <th>{% trans "Animals still on farm" %}</th>
+                                <th>{% trans "Estimated Avg. Weight" %}</th>
+                                <th>{% trans 'Animals in Treatment' %}</th>
+                                <th>{% trans 'Animals separated' %}</th>
+                                <th>{% trans "Death %" %}</th>
+                                <th>{% trans "Expected Exit Date" %}</th>
+                            </tr>
+                            </thead>
+                            {% for flock in current_flocks %}
+                                <tr class="table-row">
+                                    <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
+                                    <td>{{flock.entry_date}}</td>
+                                    <td>{{flock.number_of_living_animals}}</td>
+                                    <td>{{flock.average_entry_weight|stringformat:".2f"}}</td>
+                                    <td>0</td>
+                                    <td>0</td>
+                                    <td>{{flock.death_percentage|stringformat:".2f"}}%</td>
+                                    <td>{{flock.expected_exit_date}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
 
-<h2> {% trans "Current Flocks in the Farm" %} </h2>
-{% if current_flocks %}
-    <table class="flock-list">
-        <thead>
-        <tr class="table-header">
-            <td>{% trans "Flock" %}</td>
-            <td>{% trans "Entry Date" %}</td>
-            <td>{% trans "Animals still on farm" %}</td>
-            <td>{% trans "Estimated Avg. Weight" %}</td>
-            <td>{% trans "Death %" %}</td>
-            <td>{% trans "Expected Exit Date" %}</td>
-        </tr>
-        </thead>
-        {% for flock in current_flocks %}
-            <tr class="table-row">
-            <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
-            <td>{{flock.entry_date}}</td>
-            <td>{{flock.number_of_living_animals}}</td>
-            <td>{{flock.average_entry_weight|stringformat:".2f"}}</td>
-            <td>{{flock.death_percentage|stringformat:".2f"}}%</td>
-            <td>{{flock.expected_exit_date}}</td>
-            </tr>
-        {% endfor %}
-</table>
-{% else %}
-    <p>{% trans "No flocks at the farm." %}</p>
-{% endif %}
-<a href="{% url 'flocks:create' %}">{%  trans "Register new flock" %}</a>
+        {% endif %}
 
-<h2> {% trans "Previous flocks" %} </h2>
-{% if old_flocks %}
-<table class="flock-list">
-    <thead>
-    <tr class="table-header">
-        <td>{% trans "Flock" %}</td>
-        <td>{% trans "Entry Date" %}</td>
-        <td>{% trans "Average Daily Grow" %}</td>
-        <td>{% trans "Death %" %}</td>
-    </tr>
-    </thead>
-{% for flock in old_flocks %}
-    <tr class="table-row">
-    <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
-    <td>{{flock.entry_date}}</td>
-    <td>{{flock.computed_daily_growth|stringformat:".2f"}}</td>
-    <td>{{ flock.death_percentage|stringformat:".2f" }}%</td>
-    </tr>
-{% endfor %}
-</table>
-{% else %}
-    <p>{% trans "No prevous flocks to show." %}</p>
-{% endif %}
+        {% if current_flocks %}
+            <div class="col-sm-12 col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Flocks not in the farm anymore' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans "Flock" %}</th>
+                                <th>{% trans "Entry Date" %}</th>
+                                <th>{% trans "Growth Rate" %}</th>
+                                <th>{% trans "Avg. Exit Weight" %}</th>
+                                <th>{% trans "Death %" %}</th>
+                            </tr>
+                            </thead>
+                            {% for flock in previous_flocks %}
+                                <tr class="table-row">
+                                    <td><a href="{% url 'flocks:detail' flock.id %}">{{flock.flock_name}}</a></td>
+                                    <td>{{flock.entry_date}}</td>
+                                    <td>{{flock.computed_daily_growth|stringformat:".2f"}}</td>
+                                    <td>{{flock.average_entry_weight|stringformat:".2f"}}</td>
+                                    <td>{{flock.death_percentage|stringformat:".2f"}}%</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+
+        {% endif %}
+    </div>
 {% endblock %}

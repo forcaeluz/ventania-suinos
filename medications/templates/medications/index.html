@@ -1,94 +1,114 @@
-{% extends 'base.html' %}
+{% extends 'base2.html' %}
 {% load i18n %}
 {% load l10n %}
 {% load static %}
 
 {% block extra_head %}
-<title>Medications</title>
+    <title>Medications</title>
 {% endblock %}
 
-{% block main-content %}
-<h1>Medications</h1>
-<h2>Ongoing Treatments</h2>
-{% if treatments %}
-<table class="flock-list">
-        <thead>
-        <tr class="table-header">
-            <td>{% trans 'Flock' %}</td>
-            <td>{% trans 'Start Date' %}</td>
-            <td>{% trans 'Medication' %}</td>
-            <td>{% trans 'Number of applications' %}</td>
-            <td>{% trans 'Total of medication used' %}</td>
-        </tr>
-        </thead>
-        {% for treatment in treatments %}
-            <tr class="table-row">
-                <td><a href="{% url 'medications:view_treatment' treatment.id %}">{{treatment.flock}}</a></td>
-                <td>{{ treatment.start_date }}</td>
-                <td>{{ treatment.medication.name }}</td>
-                <td>{{ treatment.number_of_application }}</td>
-                <td>{{ treatment.total_amount_used }}[{{ treatment.medication.quantity_unit }}]</td>
-            </tr>
-        {% endfor %}
-</table>
-{% else %}
-<p>{% trans 'Very good! No ongoing treatments.' %}</p>
-{% endif %}
-<a href="{% url 'medications:treatment_list' %}">{% trans 'View all treatments' %}</a>
-<h2>Medicine Stock</h2>
-{% if medications %}
-<table>
-        <thead>
-        <tr class="table-header">
-            <td>{% trans "Name" %}</td>
-            <td>{% trans "Available Dosage" %}</td>
-        </tr>
-        </thead>
-        {% for medication in medications %}
-            <tr class="table-row">
-            <td><a href="{% url 'medications:view_medication' medication.id %}">{{medication.name}}</a></td>
-            <td>{{medication.availability}}[{{ medication.quantity_unit }}]</td>
-            </tr>
-        {% endfor %}
-</table>
-{% else %}
-<p>{% trans 'No medications registered' %}</p>
-{% endif %}
+{% block main_content %}
+    <h2 class="sub-header">Health</h2>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-lg-7">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Ongoing treatments</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Flock' %}</th>
+                            <th>{% trans 'Start Date' %}</th>
+                            <th>{% trans 'Medication' %}</th>
+                            <th>{% trans 'Number of applications' %}</th>
+                            <th>{% trans 'Total of medication used' %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        {% for treatment in treatments %}
+                            <tr class="table-row">
+                                <td><a href="{% url 'medications:view_treatment' treatment.id %}">{{treatment.flock}}</a></td>
+                                <td>{{ treatment.start_date }}</td>
+                                <td>{{ treatment.medication.name }}</td>
+                                <td>{{ treatment.number_of_application }}</td>
+                                <td>{{ treatment.total_amount_used }}[{{ treatment.medication.quantity_unit }}]</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'medications:new_application' %}?treatment_id={{ treatment.id }}" title="New Application" class="btn btn-default"><span class="glyphicon glyphicon-baby-formula"></span></a>
+                                        <a href="{% url 'medications:stop_treatment' %}?treatment_id={{ treatment.id }}" title="Stop Treatment" class="btn btn-warning"><span class="glyphicon glyphicon-stop"></span></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Old treatments</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Flock' %}</th>
+                            <th>{% trans 'Start Date' %}</th>
+                            <th>{% trans 'Medication' %}</th>
+                            <th>{% trans 'Number of applications' %}</th>
+                            <th>{% trans 'Total of medication used' %}</th>
+                        </tr>
+                        </thead>
+                        {% for treatment in old_treatments %}
+                            <tr class="table-row">
+                                <td><a href="{% url 'medications:view_treatment' treatment.id %}">{{treatment.flock}}</a></td>
+                                <td>{{ treatment.start_date }}</td>
+                                <td>{{ treatment.medication.name }}</td>
+                                <td>{{ treatment.number_of_application }}</td>
+                                <td>{{ treatment.total_amount_used }}[{{ treatment.medication.quantity_unit }}]</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-lg-5">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Medication Stock</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Available Dosage" %}</th>
+                            <th>{% trans 'Next expiry date' %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        {% for medication in medications %}
+                            <tr class="table-row">
+                                <td><a href="{% url 'medications:view_medication' medication.id %}">{{medication.name}}</a></td>
+                                <td>{{medication.availability}}[{{ medication.quantity_unit }}]</td>
+                                <td>{{ medication.availability }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'medications:new_discard' %}" title="Discard" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span></a>
+                                        <a class="btn btn-default" href="{% url 'medications:new_entry' %}" title="{% trans 'Register new medication entry' %}">
+                                                <span class="glyphicon glyphicon-copy"></span>
+                                        </a>
+                                        <a href="{% url 'medications:new_treatment' %}" title="Start Treatment" class="btn btn-default"><span class="glyphicon glyphicon-baby-formula"></span></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<h2>{% trans 'Actions:' %}</h2>
-<div class="actions">
-    <div class="single-action">
-    <a href="{% url 'medications:new_discard'  %}">
-    <div class="action-box">
-        <img src=""/>
-        <span class="action-text">{%  trans "Discard medication" %}</span>
-    </div>
-    </a>
-    </div>
-    <div class="single-action">
-    <a href="{% url 'medications:new_medication' %}">
-    <div class="action-box">
-        <img src=""/>
-        <span class="action-text">{%  trans "New medication" %}</span>
-    </div>
-    </a>
-    </div>
-    <div class="single-action">
-    <a href="{% url 'medications:new_entry' %}">
-    <div class="action-box">
-        <img src=""/>
-        <span class="action-text">{%  trans "New medication entry" %}</span>
-    </div>
-    </a>
-    </div>
-    <div class="single-action">
-    <a href="{% url 'medications:new_treatment' %}">
-    <div class="action-box">
-        <img src=""/>
-        <span class="action-text">{%  trans "New treatment" %}</span>
-    </div>
-    </a>
-    </div>
-</div>
 
 {% endblock %}

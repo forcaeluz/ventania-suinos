@@ -1,108 +1,135 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
 {% load static %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
 <title>{% trans "Flock Information" %}{{ flock.flock_name }}</title>
-{% block main-content %}
-<h1>{% trans "Flock information" %}</h1>
+{% block main_content %}
+    <h1>{% trans "Flock information" %}</h1>
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'General Information' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>{% trans "ID:" %} {{ flock.id }}</li>
+                        <li>{% trans "Friendly Identifier:" %} {{ flock.flock_name }}</li>
+                        <li>{% trans "Entry Date:" %} {{ flock.entry_date }}</li>
+                        <li>{% trans "Entry Weight:" %} {{ flock.entry_weight }}</li>
+                        <li>{% trans "Entry Count:" %} {{ flock.number_of_animals }}</li>
+                        <li>{% trans "Average Entry Weight:" %} {{ flock.average_entry_weight|stringformat:".2f" }}</li>
+                        <li>{% trans "Number of animals on farm" %} {{ flock.number_of_living_animals }}</li>
+                        {% if flock.number_of_living_animals > 0 %}
+                            <li>{% trans "Expected Exit Date" %} {{ flock.expected_exit_date }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Animal Deaths' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if death_list %}
+                        <table class="table table-stripped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Weight" %}</th>
+                                <th>{% trans "Cause" %}</th>
+                            </tr>
+                            </thead>
+                            {% for death in death_list %}
+                                <tr class="table-row">
+                                    <td>{{death.date}}</td>
+                                    <td>{{death.weight}}</td>
+                                    <td>{{death.cause}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
 
-<h2>{% trans "General Information" %}</h2>
-<ul>
-    <li>{% trans "ID:" %} {{ flock.id }}</li>
-    <li>{% trans "Friendly Identifier:" %} {{ flock.flock_name }}</li>
-    <li>{% trans "Entry Date:" %} {{ flock.entry_date }}</li>
-    <li>{% trans "Entry Weight:" %} {{ flock.entry_weight }}</li>
-    <li>{% trans "Entry Count:" %} {{ flock.number_of_animals }}</li>
-    <li>{% trans "Average Entry Weight:" %} {{ flock.average_entry_weight }}</li>
-    <li>{% trans "Number of animals on farm" %} {{ flock.number_of_living_animals }}</li>
-    {% if flock.number_of_living_animals > 0 %}
-    <li>{% trans "Expected Exit Date" %} {{ flock.expected_exit_date }}</li>
-    {% endif %}
-</ul>
+                    {% else %}
+                        <p>{% trans "No deaths in this flock." %}</p>
+                    {% endif %}
 
-<h2>{% trans "Animal Death Information" %}</h2>
-{% if death_list %}
-<table class="flock-list">
-<thead>
-    <tr class="table-header">
-        <td>{% trans "Exit Date" %}</td>
-        <td>{% trans "Weight" %}</td>
-        <td>{% trans "Cause" %}</td>
-    </tr>
-    </thead>
-    {% for death in death_list %}
-        <tr class="table-row">
-        <td>{{death.date}}</td>
-        <td>{{death.weight}}</td>
-        <td>{{death.cause}}</td>
-        </tr>
-    {% endfor %}
-</table>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Animal Separations' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if separation_list %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Separation Date" %}</th>
+                                <th>{% trans "Reason" %}</th>
+                                <th>{% trans "Ended" %}</th>
+                            </tr>
+                            </thead>
+                            {% for separation in separation_list %}
+                                <tr class="table-row">
+                                    <td><a href="{% url 'flocks:separation_detail' separation.id %}">{{separation.date}}</a></td>
+                                    <td>{{separation.reason}}</td>
+                                    {% if separation.death %}
+                                        <td>{% trans "Died in:" %} {{separation.death.date}}</td>
+                                    {% elif separation.exit %}
+                                        <td>{% trans "Exit in:" %} {{separation.exit.date}}</td>
+                                    {% else %}
+                                        <td>{% trans "Still separated." %}
+                                            <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>
+                                            <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>
+                                                </div>
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <p>{% trans "No animals separated from this flock." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Animal Exits' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if exits_list %}
+                        <table class="table table-stripped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Exit Date" %}</th>
+                                <th>{% trans "N. of animals" %}</th>
+                                <th>{% trans "Total weight" %}</th>
+                                <th>{% trans "Average weight" %}</th>
+                            </tr>
+                            </thead>
+                            {% for exit in exits_list %}
+                                <tr class="table-row">
+                                    <td>{{exit.date}}</td>
+                                    <td>{{exit.number_of_animals}}</td>
+                                    <td>{{exit.total_weight|stringformat:".2f"}}</td>
+                                    <td>{{exit.average_weight|stringformat:".2f"}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <p>{% trans "No animals exited." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-{% else %}
-<p>{% trans "No deaths in this flock." %}</p>
-{% endif %}
-
-{% if flock.number_of_living_animals > 0 %}
-<a href="{% url "flocks:create_animal_death" %}">{% trans "Register new Animal Death" %}</a>
-{% endif %}
-
-<h2>{% trans "Sell Information" %}</h2>
-{% if exits_list %}
-<table class="flock-list">
-<thead>
-    <tr class="table-header">
-        <td>{% trans "Exit Date" %}</td>
-        <td>{% trans "Number of animals" %}</td>
-        <td>{% trans "Total weight" %}</td>
-        <td>{% trans "Average weight" %}</td>
-    </tr>
-    </thead>
-    {% for exit in exits_list %}
-        <tr class="table-row">
-        <td>{{exit.date}}</td>
-        <td>{{exit.number_of_animals}}</td>
-        <td>{{exit.total_weight|stringformat:".2f"}}</td>
-        <td>{{exit.average_weight|stringformat:".2f"}}</td>
-        </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>{% trans "No animals exited." %}</p>
-{% endif %}
-{% if flock.number_of_living_animals > 0 %}
-<a href="{% url "flocks:create_animal_exit" %}">{% trans "Register new Animal Exit" %}</a>
-{% endif %}
-
-<h2>{% trans "Separation Information" %}</h2>
-{% if separation_list %}
-<table class="flock-list">
-<thead>
-    <tr class="table-header">
-        <td>{% trans "Separation Date" %}</td>
-        <td>{% trans "Reason" %}</td>
-        <td>{% trans "Ended" %}</td>
-    </tr>
-    </thead>
-    {% for separation in separation_list %}
-        <tr class="table-row">
-        <td><a href="{% url 'flocks:separation_detail' separation.id %}">{{separation.date}}</a></td>
-        <td>{{separation.reason}}</td>
-        {% if separation.death %}
-            <td>{% trans "Died in:" %} {{separation.death.date}}</td>
-        {% elif separation.exit %}
-            <td>{% trans "Exit in:" %} {{separation.exit.date}}</td>
-        {% else %}
-            <td>{% trans "Still separated." %}</td>
-        {% endif %}
-        </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>{% trans "No animals separated from this flock." %}</p>
-{% endif %}
-{% if flock.number_of_living_animals > 0 %}
-<a href="{% url "flocks:create_animal_separation" %}?flockid={{ flock.id }}">{% trans "Register new Animal Separation" %}</a>
-{% endif %}
+    </div>
 {% endblock %}

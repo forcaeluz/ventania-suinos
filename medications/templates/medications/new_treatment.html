@@ -1,17 +1,15 @@
-{% extends 'base.html' %}
+{% extends "base2.html" %}
 {% load i18n %}
+{% load bootstrap_form %}
 {% block extra_head %}
-<title>{% trans 'New animal treatment' %}</title>
-{{ form.media }}
+<title>{% trans 'New Animal Treatment' %}</title>
 {% endblock %}
 
-{% block main-content %}
-<h1>Register new medication entry</h1>
-<form action="{% url 'medications:save_treatment' %}" method="post">
-{% csrf_token %}
-    <table>
-    {{ form.as_table }}
-    </table>
-<input type="submit" value="Save" />
-</form>
+{% block main_content %}
+    <h2 class="page-header">{% trans 'Register new treatment' %}</h2>
+    <div class="row">
+        <div class="col-sm-12 col-lg-4">
+            {% show_form form_data %}
+        </div>
+    </div>
 {% endblock %}

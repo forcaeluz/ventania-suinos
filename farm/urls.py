@@ -1,8 +1,9 @@
 from django.conf.urls import url
+from django.contrib.auth.decorators import login_required, permission_required
 
-from . import views
+from .views import FarmIndexView
 
 app_name = 'farm'
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
+    url(r'^$', login_required(FarmIndexView.as_view()), name='index'),
 ]

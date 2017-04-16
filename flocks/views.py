@@ -8,9 +8,9 @@ from .forms import AnimalSeparationForm, SeparationDeathForm, SeparationExitForm
 @login_required
 def index(request):
     current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
-    old_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals == 0]
+    old_flocks = [obj for obj in Flock.objects.all().order_by('-entry_date') if obj.number_of_living_animals == 0]
     old_flocks = old_flocks[:8]
-    return render(request, 'flocks/index.html', {'current_flocks': current_flocks, 'old_flocks': old_flocks})
+    return render(request, 'flocks/index.html', {'current_flocks': current_flocks, 'previous_flocks': old_flocks})
 
 
 @login_required

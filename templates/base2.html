@@ -1,0 +1,91 @@
+{% load i18n %}
+{% load l10n %}
+{% load static %}
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>{% block title %}Chácara Ventania{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-theme.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/dashboard.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-datepicker3.standalone.min.css' %}" />
+    <link rel="shortcut icon" type="image/png" href="{% static 'porco.png' %}"/>
+</head>
+
+
+<body>
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'farm:index' %}"><img src="{% static 'porco.png' %}" style="width: 30px;"/> EasyFat</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
+                <li><a href="#"><span class="glyphicon glyphicon-user"></span> Profile </a></li>
+                <li><a href="#"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> Help</a>
+                <li><a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-plus-sign"></span>Actions</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'flocks:create' %}">{% trans 'New Flock' %}</a></li>
+                        <li><a href="{% url 'flocks:create_animal_separation' %}">{% trans 'New Separation' %}</a></li>
+                        <li><a href="{% url 'flocks:create_animal_exit' %}">{% trans 'New Exit' %}</a></li>
+                        <li><a href="{% url 'flocks:create_animal_death' %}">{% trans 'New Death' %}</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{% url 'feeding:create_feed_entry' %}">{% trans 'New Feed Delivery' %}</a></li>
+                        <li class="disabled"><a class="disabled" href="#">{% trans 'New Feeding Transition' %}</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{% url 'medications:new_treatment' %}">{% trans 'New Treatment' %}</a></li>
+                        <li class="disabled"><a href="{% url 'medications:new_application' %}">{% trans 'New Medication Application' %}</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+            <ul class="nav nav-sidebar">
+                <li><a href="{% url 'farm:index' %}">{% trans 'Farm Overview' %} <span class="sr-only">(current)</span></a></li>
+                <li><a href="{% url 'flocks:index' %}">{% trans 'Flocks' %}</a></li>
+                <li><a href="{% url 'feeding:index' %}">{% trans 'Feeding' %}</a></li>
+                <li><a href="{% url 'medications:index' %}">{% trans 'Health' %}</a></li>
+                <li class="disabled"><a href="">{% trans 'Financial' %}</a> </li>
+            </ul>
+            <ul class="nav nav-sidebar">
+                <li><a href="">{% trans 'Reports' %}</a></li>
+            </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% block main_content %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+
+<footer class="panel-footer">
+    <div class="container">
+        EasyFat v0.0.1
+    </div>
+</footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+<script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap-datepicker.min.js' %}"></script>
+</body>

@@ -1,60 +1,65 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
 {% load static %}
 
 <link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
 <title>{% trans "Treatment Information" %}</title>
-{% block main-content %}
-<h1>{% trans "Treatment Information" %}</h1>
+{% block main_content %}
+    <h2 class="page-header">{% trans "Treatment Information" %}</h2>
 
-<h2>{% trans "General Information" %}</h2>
-<ul>
-    <li>{% trans "Flock:" %} {{ treatment.flock }}</li>
-    <li>{% trans "Start Date:" %} {{ treatment.start_date }}</li>
-    <li>{% trans "Medication" %} {{ treatment.medication }}</li>
-    {% if treatment.stop_date %}
-    <li>{% trans "End Date:" %} {{ treatment.stop_date }}</li>
-    <li>{% trans "End Grace Period:" %} {{ treatment.end_date_grace_period }}</li>
-    {% endif %}
-    <li>{% trans "Total of medication applied:" %} {{ treatment.total_amount_used }}[{{ treatment.medication.quantity_unit }}]</li>
-</ul>
-{% if applications %}
-<h2>Medication Applications</h2>
-<table class="flock-list">
-        <thead>
-        <tr class="table-header">
-            <td>{% trans 'Date' %}</td>
-            <td>{% trans 'Dosage' %}</td>
-        </tr>
-        </thead>
-        {% for application in applications %}
-            <tr class="table-row">
-            <td>{{ application.date }}</td>
-            <td>{{ application.dosage }}[{{ treatment.medication.quantity_unit }}]</td>
-            </tr>
-        {% endfor %}
-</table>
-{% endif %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "General Information" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>{% trans "Flock:" %} {{ treatment.flock }}</li>
+                        <li>{% trans "Start Date:" %} {{ treatment.start_date }}</li>
+                        <li>{% trans "Medication:" %} {{ treatment.medication }}</li>
+                        {% if treatment.stop_date %}
+                            <li>{% trans "End Date:" %} {{ treatment.stop_date }}</li>
+                            <li>{% trans "End Grace Period:" %} {{ treatment.end_date_grace_period }}</li>
+                        {% endif %}
+                        <li>{% trans "Total of medication applied:" %} {{ treatment.total_amount_used }}[{{ treatment.medication.quantity_unit }}]</li>
+                    </ul>
+                    {% if not treatment.stop_date %}
+                    <div class="btn-group">
+                        <a class="btn btn-default" href="{% url 'medications:new_application' %}?treatment_id={{ treatment.id }}">
+                            <span class="glyphicon glyphicon-baby-formula"></span>
+                        </a>
+                        <a class="btn btn-warning" href="{% url 'medications:stop_treatment'  %}?treatment_id={{ treatment.id }}">
+                            <span class="glyphicon glyphicon-stop"></span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-{% if not treatment.stop_date %}
-<h2>{% trans 'Actions:' %}</h2>
-<div class="actions">
-    <div class="single-action">
-    <a href="{% url 'medications:stop_treatment'  %}?treatment_id={{ treatment.id }}">
-    <div class="action-box">
-        <img src=""/>
-        <span class="action-text">{%  trans "Stop Treatment" %}</span>
+        <div class="col-lg-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Applications" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Date' %}</th>
+                            <th>{% trans 'Dosage' %}</th>
+                        </tr>
+                        </thead>
+                        {% for application in applications %}
+                            <tr class="table-row">
+                                <td>{{ application.date }}</td>
+                                <td>{{ application.dosage }}[{{ treatment.medication.quantity_unit }}]</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    </a>
-    </div>
-    <div class="single-action">
-    <a href="{% url 'medications:new_application' %}?treatment_id={{ treatment.id }}">
-    <div class="action-box">
-        <img src=""/>
-        <span class="action-text">{%  trans "New Application" %}</span>
-    </div>
-    </a>
-    </div>
-</div>
-{% endif %}
 {% endblock %}

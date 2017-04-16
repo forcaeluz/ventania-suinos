@@ -10,6 +10,12 @@ from flocks.models import Flock
 
 class MedicationForm(forms.ModelForm):
 
+    def __init__(self, *args, **kwargs):
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
     class Meta:
         model = Medication
         fields = ['name', 'recommended_age_start', 'recommended_age_stop', 'dosage_per_kg',
@@ -17,6 +23,13 @@ class MedicationForm(forms.ModelForm):
 
 
 class MedicationEntryForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
 
     class Meta:
         model = MedicationEntry
@@ -36,6 +49,11 @@ class TreatmentForm(forms.Form):
         super(forms.Form, self).__init__(*args, **kwargs)
         current_flocks = [obj.id for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
         self.fields['flock'].queryset = Flock.objects.filter(pk__in=current_flocks)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
+
 
     def save(self):
         date = self.cleaned_data.get('start_date')
@@ -59,6 +77,10 @@ class ApplicationForm(forms.Form):
         super().__init__(*args, **kwargs)
         if treatment_id is not None:
             self.fields['treatment'].initial = treatment_id
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
 
     def clean(self):
         treatment = Treatment.objects.get(id=self.cleaned_data.get('treatment'))
@@ -86,6 +108,10 @@ class TreatmentEndedForm(forms.Form):
         super().__init__(*args, **kwargs)
         if treatment_id is not None:
             self.fields['treatment'].initial = treatment_id
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
 
     def clean(self):
         treatment = Treatment.objects.get(id=self.cleaned_data.get('treatment'))
@@ -102,7 +128,13 @@ class TreatmentEndedForm(forms.Form):
 
 class DiscardForm(forms.ModelForm):
 
+    def __init__(self, *args, **kwargs):
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
     class Meta:
         model = MedicationDiscard
-        fields = ['date', 'quantity', 'medication']
+        fields = ['date', 'quantity', 'medication', 'reason']
         widgets = {'date': DatePickerWidget}

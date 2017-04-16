@@ -1,61 +1,84 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 
 {% load i18n %}
 {% load l10n %}
 {% load static %}
 
 {% block extra_head %}
-<link rel="stylesheet" type="text/css" href="{% static 'suinos.css' %}" />
-<title>{% trans "Feed Management" %}</title>
+    <title>{% trans "Feed Management" %}</title>
 {% endblock %}
 
-{% block main-content %}
-<h1> {% trans "Feed Management" %} </h1>
-<h2> {% trans "Registered Feed Types" %} </h2>
-{% if feed_types %}
-    <table class="flock-list">
-        <thead>
-        <tr class="table-header">
-            <td>{% trans "Type" %}</td>
-            <td>{% trans "Estimated Weight" %}</td>
-            <td>{% trans "Estimated availability end date" %}</td>
-        </tr>
-        </thead>
-        {% for feed in feed_types %}
-            <tr class="table-row">
-            <td>{{ feed.name }}</td>
-            <td>{{ feed.remaining_weight|stringformat:".1f" }}</td>
-            <td>{{ feed.feed_end_date }}</td>
-            </tr>
-        {% endfor %}
-</table>
-{% else %}
-    <p>{% trans "No feed types registered" %}</p>
-{% endif %}
-<a href="{% url 'feeding:create_type' %}">{%  trans "Register new feed type" %}</a>
+{% block main_content %}
+    <h1 class="page-header"> {% trans "Feed Management" %} </h1>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Feed Types' %}
+                    <div class="btn-group">
+                        <a title="{% trans 'Add feed type' %}" class="btn btn-primary" href="{% url 'feeding:create_type' %}"><span class="glyphicon glyphicon-plus-sign"></span></a>
+                    </div>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {% if feed_types %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Estimated Weight" %}</th>
+                                <th>{% trans "Estimated availability end date" %}</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            {% for feed in feed_types %}
+                                <tr class="table-row">
+                                    <td>{{ feed.name }}</td>
+                                    <td>{{ feed.remaining_weight|stringformat:".1f" }}</td>
+                                    <td>{{ feed.feed_end_date }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a class="btn btn-default" href="{% url 'feeding:create_feed_entry' %}" title="{% trans 'Register new feed entry' %}">
+                                                <span class="glyphicon glyphicon-copy"></span>
+                                            </a>
 
-{% if feed_types %}
-<h2> {% trans "Feed Entries" %} </h2>
-{% if feed_entries %}
-<table class="flock-list">
-    <thead>
-    <tr class="table-header">
-        <td>{% trans "Date" %}</td>
-        <td>{% trans "Type" %}</td>
-        <td>{% trans "Weight" %}</td>
-    </tr>
-    </thead>
-{% for entry in feed_entries %}
-    <tr class="table-row">
-    <td>{{entry.date}}</td>
-    <td>{{entry.feed_type}}</td>
-    <td>{{entry.weight}}</td>
-    </tr>
-{% endfor %}
-</table>
-{% else %}
-    <p>{% trans "No feed entries registered." %}</p>
-{% endif %}
-<a href="{% url 'feeding:create_feed_entry' %}">{%  trans "Register new feed entry" %}</a>
-{% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <p>{% trans "No feed types registered" %}</p>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Feed Entries' %}</h3>
+                </div>
+                <div class="panel-body">
+
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Weight" %}</th>
+                        </tr>
+                        </thead>
+                        {% for entry in feed_entries %}
+                            <tr class="table-row">
+                                <td>{{entry.date}}</td>
+                                <td>{{entry.feed_type}}</td>
+                                <td>{{entry.weight}}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

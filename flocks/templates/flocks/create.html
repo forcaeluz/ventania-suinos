@@ -1,14 +1,37 @@
-{% extends "base.html" %}
+{% extends "base2.html" %}
 {% load i18n %}
-{% block extra_head %}
-{{ form.media }}
+{% block page_header %}
+    {% trans 'Register new Flock' %}
 {% endblock %}
-{% block main-content %}
-<h1>{% trans "Register new flock" %}</h1>
 
-<form action="{% url 'flocks:save' %}" method="post">
-{% csrf_token %}
-    {{ form }}
-<input type="submit" value="Save" />
-</form>
+{% block main_content %}
+    <h1>Register new flock</h1>
+    <div class="row">
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form action="{% url 'flocks:save' %}" method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+
+                                {{ field.label_tag }}
+                                {% if field.errors %}
+                                    <div class="alert alert-danger" role="alert">
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="help">{{ field.help_text|safe }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <input type="submit" value="Save" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
