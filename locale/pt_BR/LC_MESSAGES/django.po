@@ -1,4 +1,4 @@
-# SOME DESCRIPTIVE TITLE.
+﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
@@ -50,57 +50,57 @@ msgstr "Data de Entrada"
 
 #: farm/templates/farm/index.html:35 flocks/templates/flocks/index.html:25
 msgid "Animals still on farm"
-msgstr ""
+msgstr "Animais na Granja"
 
 #: farm/templates/farm/index.html:36 flocks/templates/flocks/index.html:26
 msgid "Estimated Avg. Weight"
-msgstr ""
+msgstr "Peso Médio Estimado"
 
 #: farm/templates/farm/index.html:37 flocks/templates/flocks/index.html:27
 msgid "Animals in Treatment"
-msgstr ""
+msgstr "Animais em Tratamento"
 
 #: farm/templates/farm/index.html:38 flocks/templates/flocks/index.html:28
 msgid "Animals separated"
-msgstr ""
+msgstr "Animais Separados"
 
 #: farm/templates/farm/index.html:39 flocks/templates/flocks/index.html:29
 #: flocks/templates/flocks/index.html:67
 #, python-format
 msgid "Death %%"
-msgstr ""
+msgstr "Mortalidade"
 
 #: farm/templates/farm/index.html:40 flocks/templates/flocks/detail.html:25
 #: flocks/templates/flocks/index.html:30
 msgid "Expected Exit Date"
-msgstr ""
+msgstr "Data Esperada de Saída"
 
 #: farm/templates/farm/index.html:63
 msgid "Separations"
-msgstr ""
+msgstr "Separações"
 
 #: farm/templates/farm/index.html:69 feeding/templates/feeding/index.html:67
 #: flocks/templates/flocks/detail.html:41
 #: medications/templates/medications/treatment_detail.html:50
 msgid "Date"
-msgstr ""
+msgstr "Data"
 
 #: farm/templates/farm/index.html:71 flocks/templates/flocks/detail.html:73
 msgid "Reason"
-msgstr ""
+msgstr "Ração"
 
 #: farm/templates/farm/index.html:89 templates/base.html:21
 #: templates/base2.html:67
 msgid "Feeding"
-msgstr ""
+msgstr "Alimentação"
 
 #: farm/templates/farm/index.html:95 farm/templates/farm/index.html:121
 msgid "Feed"
-msgstr ""
+msgstr "Ração"
 
 #: farm/templates/farm/index.html:96 farm/templates/farm/index.html:122
 msgid "Estimated Availability"
-msgstr ""
+msgstr "Disponibilidade Estimada"
 
 #: farm/templates/farm/index.html:97 farm/templates/farm/index.html:123
 msgid "Estimated end date"
@@ -108,15 +108,15 @@ msgstr ""
 
 #: farm/templates/farm/index.html:115 templates/base.html:22
 msgid "Medications"
-msgstr ""
+msgstr "Medicamentos"
 
 #: farm/templates/farm/welcome.html:5
 msgid "Welcome to Ventania Suinos"
-msgstr ""
+msgstr "Bem vindo ao EasyFat"
 
 #: farm/templates/farm/welcome.html:7
 msgid "Welcome!!!"
-msgstr ""
+msgstr "Bem vindo!"
 
 #: feeding/templates/feeding/create_feed_entry.html:5
 #, fuzzy
@@ -143,45 +143,45 @@ msgstr "Tipos de ração registrados"
 
 #: feeding/templates/feeding/index.html:19
 msgid "Add feed type"
-msgstr ""
+msgstr "Adicionar tipo de ração"
 
 #: feeding/templates/feeding/index.html:28
 #: feeding/templates/feeding/index.html:68
 msgid "Type"
-msgstr ""
+msgstr "Tipo"
 
 #: feeding/templates/feeding/index.html:29
 msgid "Estimated Weight"
-msgstr ""
+msgstr "Peso Estimado"
 
 #: feeding/templates/feeding/index.html:30
 msgid "Estimated availability end date"
-msgstr ""
+msgstr "Data estimada de disponibilidade"
 
 #: feeding/templates/feeding/index.html:41
 msgid "Register new feed entry"
-msgstr ""
+msgstr "Registrar nova compra de ração"
 
 #: feeding/templates/feeding/index.html:51
 msgid "No feed types registered"
-msgstr ""
+msgstr "Não existem rações cadastradas"
 
 #: feeding/templates/feeding/index.html:60
 msgid "Feed Entries"
-msgstr ""
+msgstr "Entradas de Rações"
 
 #: feeding/templates/feeding/index.html:69
 #: flocks/templates/flocks/detail.html:42
 msgid "Weight"
-msgstr ""
+msgstr "Peso"
 
 #: flocks/templates/animal_separations/create.html:8
 msgid "Animal Separation"
-msgstr ""
+msgstr "Separação Animal"
 
 #: flocks/templates/animal_separations/detail.html:6
 msgid "Separation Information"
-msgstr ""
+msgstr "Informações de Separações"
 
 #: flocks/templates/animal_separations/detail.html:11
 #: flocks/templates/animal_separations/register_death.html:11
@@ -189,67 +189,67 @@ msgstr ""
 #: flocks/templates/flocks/detail.html:13
 #: medications/templates/medications/treatment_detail.html:14
 msgid "General Information"
-msgstr ""
+msgstr "Informações Gerais"
 
 #: flocks/templates/animal_separations/detail.html:15
 #: flocks/templates/animal_separations/register_death.html:15
 #: flocks/templates/animal_separations/register_exit.html:15
 #: flocks/templates/flocks/detail.html:17
 msgid "ID:"
-msgstr ""
+msgstr "ID:"
 
 #: flocks/templates/animal_separations/detail.html:16
 #: flocks/templates/animal_separations/register_death.html:16
 #: flocks/templates/animal_separations/register_exit.html:16
 #: medications/templates/medications/treatment_detail.html:18
 msgid "Flock:"
-msgstr ""
+msgstr "Lote:"
 
 #: flocks/templates/animal_separations/detail.html:17
 #: flocks/templates/animal_separations/detail.html:32
 #: flocks/templates/animal_separations/detail.html:46
 msgid "Date:"
-msgstr ""
+msgstr "Data:"
 
 #: flocks/templates/animal_separations/detail.html:18
 msgid "Reason:"
-msgstr ""
+msgstr "Razão:"
 
 #: flocks/templates/animal_separations/detail.html:28
 #: flocks/templates/animal_separations/register_death.html:25
 msgid "Death Information"
-msgstr ""
+msgstr "Informações Mortalidade"
 
 #: flocks/templates/animal_separations/detail.html:33
 msgid "Cause:"
-msgstr ""
+msgstr "Causa:"
 
 #: flocks/templates/animal_separations/detail.html:42
 #: flocks/templates/animal_separations/register_exit.html:25
 msgid "Exit Information"
-msgstr ""
+msgstr "Informações de Saídas"
 
 #: flocks/templates/animal_separations/detail.html:47
 msgid "Weight:"
-msgstr ""
+msgstr "Peso:"
 
 #: flocks/templates/animal_separations/register_death.html:6
 #: flocks/templates/animal_separations/register_exit.html:6
 msgid "Separated Animal Death"
-msgstr ""
+msgstr "Morte de Animal Separado"
 
 #: flocks/templates/animal_separations/register_death.html:17
 #: flocks/templates/animal_separations/register_exit.html:17
 msgid "Separation Date:"
-msgstr ""
+msgstr "Data de Separação"
 
 #: flocks/templates/animaldeaths/create.html:7
 msgid "Register new animal death"
-msgstr ""
+msgstr "Registrar nova morte de animal"
 
 #: flocks/templates/animalexits/create.html:6
 msgid "Register new animal exit"
-msgstr ""
+msgstr "Registrar nova saídade de animal"
 
 #: flocks/templates/flocks/create.html:4
 #, fuzzy
@@ -259,155 +259,155 @@ msgstr "Registrar novo tipo de ração"
 
 #: flocks/templates/flocks/detail.html:6
 msgid "Flock Information"
-msgstr ""
+msgstr "Informações do Lote"
 
 #: flocks/templates/flocks/detail.html:8
 msgid "Flock information"
-msgstr ""
+msgstr "Informações do Lote"
 
 #: flocks/templates/flocks/detail.html:18
 msgid "Friendly Identifier:"
-msgstr ""
+msgstr "Identificador:"
 
 #: flocks/templates/flocks/detail.html:19
 msgid "Entry Date:"
-msgstr ""
+msgstr "Data de Entrada:"
 
 #: flocks/templates/flocks/detail.html:20
 msgid "Entry Weight:"
-msgstr ""
+msgstr "Peso de Entrada:"
 
 #: flocks/templates/flocks/detail.html:21
 msgid "Entry Count:"
-msgstr ""
+msgstr "Quantidade de Animais na Entrada:"
 
 #: flocks/templates/flocks/detail.html:22
 msgid "Average Entry Weight:"
-msgstr ""
+msgstr "Peso Médio de Entrada:"
 
 #: flocks/templates/flocks/detail.html:23
 msgid "Number of animals on farm"
-msgstr ""
+msgstr "Número de Animais na Granja"
 
 #: flocks/templates/flocks/detail.html:34
 msgid "Animal Deaths"
-msgstr ""
+msgstr "Mortalidade"
 
 #: flocks/templates/flocks/detail.html:43
 msgid "Cause"
-msgstr ""
+msgstr "Causa"
 
 #: flocks/templates/flocks/detail.html:56
 msgid "No deaths in this flock."
-msgstr ""
+msgstr "Sem mortes neste lote."
 
 #: flocks/templates/flocks/detail.html:65
 msgid "Animal Separations"
-msgstr ""
+msgstr "Separação de Animais"
 
 #: flocks/templates/flocks/detail.html:72
 msgid "Separation Date"
-msgstr ""
+msgstr "Data de Separação"
 
 #: flocks/templates/flocks/detail.html:74
 msgid "Ended"
-msgstr ""
+msgstr "Terminou"
 
 #: flocks/templates/flocks/detail.html:82
 msgid "Died in:"
-msgstr ""
+msgstr "Morreu em:"
 
 #: flocks/templates/flocks/detail.html:84
 msgid "Exit in:"
-msgstr ""
+msgstr "Saiu em:"
 
 #: flocks/templates/flocks/detail.html:86
 msgid "Still separated."
-msgstr ""
+msgstr "Ainda separado."
 
 #: flocks/templates/flocks/detail.html:97
 msgid "No animals separated from this flock."
-msgstr ""
+msgstr "Não existem animais separados deste lote."
 
 #: flocks/templates/flocks/detail.html:105
 msgid "Animal Exits"
-msgstr ""
+msgstr "Saída de Animais"
 
 #: flocks/templates/flocks/detail.html:112
 msgid "Exit Date"
-msgstr ""
+msgstr "Data de Saída"
 
 #: flocks/templates/flocks/detail.html:113
 msgid "N. of animals"
-msgstr ""
+msgstr "Número de animais"
 
 #: flocks/templates/flocks/detail.html:114
 msgid "Total weight"
-msgstr ""
+msgstr "Peso total"
 
 #: flocks/templates/flocks/detail.html:115
 msgid "Average weight"
-msgstr ""
+msgstr "Peso médio"
 
 #: flocks/templates/flocks/detail.html:128
 msgid "No animals exited."
-msgstr ""
+msgstr "Não houve saída de animais"
 
 #: flocks/templates/flocks/index.html:8 flocks/templates/flocks/index.html:11
 msgid "Flock Management"
-msgstr ""
+msgstr "Gestão de Lote"
 
 #: flocks/templates/flocks/index.html:17
 msgid "Current Flocks in the farm"
-msgstr ""
+msgstr "Lotes alojados na granja"
 
 #: flocks/templates/flocks/index.html:57
 msgid "Flocks not in the farm anymore"
-msgstr ""
+msgstr "Lotes vendidos"
 
 #: flocks/templates/flocks/index.html:65
 msgid "Growth Rate"
-msgstr ""
+msgstr "Taxa de Crescimento"
 
 #: flocks/templates/flocks/index.html:66
 msgid "Avg. Exit Weight"
-msgstr ""
+msgstr "Peso médio de saída"
 
 #: medications/templates/medications/index.html:23
 #: medications/templates/medications/index.html:57
 #: medications/templates/medications/treatment_list.html:18
 msgid "Start Date"
-msgstr ""
+msgstr "Data de Início"
 
 #: medications/templates/medications/index.html:24
 #: medications/templates/medications/index.html:58
 #: medications/templates/medications/treatment_list.html:20
 msgid "Medication"
-msgstr ""
+msgstr "Medicamento"
 
 #: medications/templates/medications/index.html:25
 #: medications/templates/medications/index.html:59
 #: medications/templates/medications/treatment_list.html:21
 msgid "Number of applications"
-msgstr ""
+msgstr "Número de Aplicações"
 
 #: medications/templates/medications/index.html:26
 #: medications/templates/medications/index.html:60
 #: medications/templates/medications/treatment_list.html:22
 msgid "Total of medication used"
-msgstr ""
+msgstr "Total de medicamento usado"
 
 #: medications/templates/medications/index.html:85
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #: medications/templates/medications/index.html:86
 msgid "Available Dosage"
-msgstr ""
+msgstr "Quantidade Disponível"
 
 #: medications/templates/medications/index.html:87
 msgid "Next expiry date"
-msgstr ""
+msgstr "Data de Validade mais próxima"
 
 #: medications/templates/medications/index.html:99
 #, fuzzy
@@ -418,45 +418,45 @@ msgstr "Registrar novo tipo de ração"
 #: medications/templates/medications/medication_detail.html:6
 #: medications/templates/medications/medication_detail.html:8
 msgid "Medication Information"
-msgstr ""
+msgstr "Informação Medicamento"
 
 #: medications/templates/medications/medication_detail.html:17
 msgid "Medication name:"
-msgstr ""
+msgstr "Nome medicamento:"
 
 #: medications/templates/medications/medication_detail.html:18
 msgid "Recommended age to start:"
-msgstr ""
+msgstr "Idade mínima recomendada:"
 
 #: medications/templates/medications/medication_detail.html:19
 msgid "Recommended age to stop:"
-msgstr ""
+msgstr "Idade limite recomendada:"
 
 #: medications/templates/medications/medication_detail.html:20
 msgid "Recomended dosage/kg:"
-msgstr ""
+msgstr "Dosagem/kg recomendada:"
 
 #: medications/templates/medications/medication_detail.html:21
 msgid "Stock:"
-msgstr ""
+msgstr "Estoque:"
 
 #: medications/templates/medications/medication_detail.html:22
 msgid "Instructions:"
-msgstr ""
+msgstr "Instruções:"
 
 #: medications/templates/medications/new_application.html:11
 #: medications/templates/medications/treatment_detail.html:6
 #: medications/templates/medications/treatment_detail.html:8
 msgid "Treatment Information"
-msgstr ""
+msgstr "Informações de Tratamentos"
 
 #: medications/templates/medications/new_application.html:26
 msgid "Application Information"
-msgstr ""
+msgstr "Informações de Aplicações"
 
 #: medications/templates/medications/new_discard.html:5
 msgid "New Medication Discard"
-msgstr ""
+msgstr "Adicionar Descarte de Medicamento"
 
 #: medications/templates/medications/new_discard.html:9
 #, fuzzy
@@ -476,88 +476,88 @@ msgstr "Registrar novo tipo de ração"
 
 #: medications/templates/medications/stop_treatment.html:10
 msgid "Stop Date"
-msgstr ""
+msgstr "Data de término:"
 
 #: medications/templates/medications/treatment_detail.html:19
 msgid "Start Date:"
-msgstr ""
+msgstr "Data de Início"
 
 #: medications/templates/medications/treatment_detail.html:20
 msgid "Medication:"
-msgstr ""
+msgstr "Medicamento:"
 
 #: medications/templates/medications/treatment_detail.html:22
 msgid "End Date:"
-msgstr ""
+msgstr "Data de Término:"
 
 #: medications/templates/medications/treatment_detail.html:23
 msgid "End Grace Period:"
-msgstr ""
+msgstr "Período de Carência:"
 
 #: medications/templates/medications/treatment_detail.html:25
 msgid "Total of medication applied:"
-msgstr ""
+msgstr "Total de medicação aplicada:"
 
 #: medications/templates/medications/treatment_detail.html:44
 msgid "Applications"
-msgstr ""
+msgstr "Aplicações"
 
 #: medications/templates/medications/treatment_detail.html:51
 msgid "Dosage"
-msgstr ""
+msgstr "Dosagem"
 
 #: medications/templates/medications/treatment_list.html:19
 msgid "End Date"
-msgstr ""
+msgstr "Data de Término"
 
 #: templates/base.html:19
 msgid "Home"
-msgstr ""
+msgstr "Home"
 
 #: templates/base.html:23
 msgid "Buildings"
-msgstr ""
+msgstr "Construções"
 
 #: templates/base.html:24 templates/base2.html:72
 msgid "Reports"
-msgstr ""
+msgstr "Relatórios"
 
 #: templates/base2.html:44
 msgid "New Flock"
-msgstr ""
+msgstr "Novo Lote"
 
 #: templates/base2.html:45
 msgid "New Separation"
-msgstr ""
+msgstr "Nova Separação"
 
 #: templates/base2.html:46
 msgid "New Exit"
-msgstr ""
+msgstr "Nova Saída"
 
 #: templates/base2.html:47
 msgid "New Death"
-msgstr ""
+msgstr "Nova Morte"
 
 #: templates/base2.html:49
 msgid "New Feed Delivery"
-msgstr ""
+msgstr "Nova Entrada de Ração"
 
 #: templates/base2.html:50
 msgid "New Feeding Transition"
-msgstr ""
+msgstr "Alterar Ração de Lote"
 
 #: templates/base2.html:52
 msgid "New Treatment"
-msgstr ""
+msgstr "Novo Tratamento"
 
 #: templates/base2.html:53
 msgid "New Medication Application"
-msgstr ""
+msgstr "Nova Aplicação de Medicamento"
 
 #: templates/base2.html:68
 msgid "Health"
-msgstr ""
+msgstr "Saúde"
 
 #: templates/base2.html:69
 msgid "Financial"
-msgstr ""
+msgstr "Financeiro"
