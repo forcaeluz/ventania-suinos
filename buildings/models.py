@@ -54,6 +54,7 @@ class Room(models.Model):
     capacity = models.IntegerField()
     name = models.CharField(max_length=20)
     group = models.ForeignKey(RoomGroup)
+    is_separation = models.BooleanField(default=False)
 
     @property
     def occupancy(self):
