@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 
 from feeding.models import FeedType
 from flocks.models import Flock, AnimalSeparation, AnimalExits
+from buildings.models import Room
 
 from statistics import mean
 from datetime import datetime, timedelta
@@ -17,8 +18,20 @@ class FarmKpi:
         self.unit = unit
 
 
+class FarmWarning:
+    def __init__(self, title, content):
+        self.title = title
+        self.content = content
+
+
 class FarmIndexView(TemplateView):
     template_name = "farm/index.html"
+
+    def __init__(self):
+        self.current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        self.active_separations = [obj for obj in AnimalSeparation.objects.all() if obj.active]
+        self.number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
+        self.farm_capacity = sum([room.capacity for room in Room.objects.all()])
 
     def get_context_data(self, **kwargs):
         context = super(FarmIndexView, self).get_context_data(**kwargs)
@@ -26,6 +39,7 @@ class FarmIndexView(TemplateView):
         context['separations'] = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         context['feed_types'] = FeedType.objects.all()
         context['kpis'] = self.generate_kpi_data()
+        context['warnings'] = self.generate_warnings()
         return context
 
     def generate_kpi_data(self):
@@ -39,25 +53,24 @@ class FarmIndexView(TemplateView):
         Generates the FarmKpi for the flocks currently in the farm.
         :return:
         """
-        current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
-        active_separations = [obj for obj in AnimalSeparation.objects.all() if obj.active]
-        number_of_living_animals = sum([obj.number_of_living_animals for obj in current_flocks])
-        number_of_animals = sum([obj.number_of_animals for obj in current_flocks])
-        number_of_dead_animals = sum([obj.animaldeath_set.count() for obj in current_flocks])
-        death_perc = number_of_dead_animals / number_of_animals * 100
-        number_of_separated_animals = len(active_separations)
+        number_of_animals = sum([obj.number_of_animals for obj in self.current_flocks])
+        number_of_dead_animals = sum([obj.animaldeath_set.count() for obj in self.current_flocks])
+        death_percentage = number_of_dead_animals / number_of_animals * 100
+        number_of_separated_animals = len(self.active_separations)
 
         separation_percentage = number_of_separated_animals / number_of_animals * 100
-        kpi_nof_animals = FarmKpi('success', 'Animals on Farm', number_of_living_animals, '')
-        kpi_death_perc = FarmKpi('danger', 'Death Percentage', '%.2f' % death_perc, '%')
-        if death_perc < 2:
+        kpi_nof_animals = FarmKpi('success', 'Animals on Farm', self.number_of_living_animals, '')
+        kpi_occupancy = FarmKpi('success', 'Occupancy', '%.2f' % (number_of_animals * 100 / self.farm_capacity), '%')
+        kpi_death_perc = FarmKpi('danger', 'Death Percentage', '%.2f' % death_percentage, '%')
+        if death_percentage < 2:
             kpi_death_perc.kpi_class = 'success'
-        elif death_perc < 5:
+        elif death_percentage < 5:
             kpi_death_perc.kpi_class = 'warning'
 
         kpi_separation = FarmKpi('warning', 'Animal Separation', '%.2f' % separation_percentage, '%')
 
-        return [kpi_nof_animals, kpi_death_perc, kpi_separation]
+        return [kpi_nof_animals, kpi_death_perc, kpi_separation, kpi_occupancy]
+
 
     def generate_historic_kpis(self):
         considering_from = datetime.today() - timedelta(days=365)
@@ -75,3 +88,17 @@ class FarmIndexView(TemplateView):
             kpi_grow_rate.kpi_class = 'warning'
 
         return [kpi_grow_rate]
+
+    def generate_warnings(self):
+        warning_list = []
+        number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
+        number_of_animals_in_rooms = sum([room.occupancy for room in Room.objects.all()])
+        if number_of_living_animals != number_of_animals_in_rooms:
+            warning = FarmWarning('Data Inconsistency:', 'The number of living animals is not equal to the number of '
+                                                         'animals inside rooms. This might be due to an update from a'
+                                                         'version without the Buildings module to a version with the '
+                                                         'Buildings module. You have to manually update the room '
+                                                         'information.')
+            warning_list.append(warning)
+
+        return warning_list
