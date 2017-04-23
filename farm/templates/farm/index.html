@@ -12,12 +12,11 @@
         {% endfor %}
     </div>
     <h2 class="sub-header">{% trans 'Alerts' %}</h2>
+    {% for warning in warnings %}
     <div class="alert alert-warning" role="alert">
-        <strong>Feeding</strong> It is time to order feed type S2 and S3.
+        <strong>{{ warning.title }}</strong> {{ warning.content }}
     </div>
-    <div class="alert alert-danger" role="alert">
-        <strong>Health</strong> The is an extremely large number of sick animals in flock 2017_1.
-    </div>
+    {% endfor %}
 
     <h2 class="sub-header">{% trans 'Overviews' %}</h2>
     <div class="row placeholders">
