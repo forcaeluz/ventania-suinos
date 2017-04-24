@@ -1,0 +1,41 @@
+{% extends 'base2.html' %}
+{% load i18n %}
+
+{% block main_content %}
+    <h2 class="sub-header">{% trans 'Register animal entries in rooms' %}</h2>
+    <div class="row">
+        <div class="col-sm-12 col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-body">
+                    <form action="{% url 'buildings:save_migrate' %}" method="post">
+                        {% for field in formset.management_form %}
+                            {% if field.is_hidden %}
+                            {{ field }}
+                            {% endif %}
+                        {% endfor %}
+                        {% csrf_token %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans 'Flock' %}</th>
+                                <th>{% trans 'Number of animals' %}</th>
+                                <th>{% trans 'Room' %}</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+
+                            {% for row in formset.forms %}
+                                <tr>
+                                    {% for field in row %}
+                                        <td>{{ field }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                        <input type="submit" value="Save" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}}
