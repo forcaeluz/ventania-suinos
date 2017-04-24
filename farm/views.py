@@ -53,23 +53,28 @@ class FarmIndexView(TemplateView):
         Generates the FarmKpi for the flocks currently in the farm.
         :return:
         """
+        kpi_list = []
+
         number_of_animals = sum([obj.number_of_animals for obj in self.current_flocks])
         number_of_dead_animals = sum([obj.animaldeath_set.count() for obj in self.current_flocks])
         death_percentage = number_of_dead_animals / number_of_animals * 100
         number_of_separated_animals = len(self.active_separations)
 
         separation_percentage = number_of_separated_animals / number_of_animals * 100
-        kpi_nof_animals = FarmKpi('success', 'Animals on Farm', self.number_of_living_animals, '')
-        kpi_occupancy = FarmKpi('success', 'Occupancy', '%.2f' % (number_of_animals * 100 / self.farm_capacity), '%')
+        kpi_list.append(FarmKpi('success', 'Animals on Farm', self.number_of_living_animals, ''))
+
+        if self.farm_capacity is not 0:
+            kpi_list.append(FarmKpi('success', 'Occupancy', '%.2f' % (self.number_of_living_animals * 100 / self.farm_capacity), '%'))
+
         kpi_death_perc = FarmKpi('danger', 'Death Percentage', '%.2f' % death_percentage, '%')
         if death_percentage < 2:
             kpi_death_perc.kpi_class = 'success'
         elif death_percentage < 5:
             kpi_death_perc.kpi_class = 'warning'
+        kpi_list.append(kpi_death_perc)
+        kpi_list.append(FarmKpi('warning', 'Animal Separation', '%.2f' % separation_percentage, '%'))
 
-        kpi_separation = FarmKpi('warning', 'Animal Separation', '%.2f' % separation_percentage, '%')
-
-        return [kpi_nof_animals, kpi_death_perc, kpi_separation, kpi_occupancy]
+        return kpi_list
 
 
     def generate_historic_kpis(self):
