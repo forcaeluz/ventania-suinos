@@ -2,12 +2,13 @@
 {% load i18n %}
 
 {% block main_content %}
-    <h2 class="sub-header">{% trans 'Register animal entries in rooms' %}</h2>
+    <h2 class="sub-header">{% trans 'Link exit to rooms' %}</h2>
+    <h4 class="sub-header">From flock: {{ formset.animal_exit.flock }}{% trans ' on ' %}{{ formset.animal_exit.date }}</h4>
     <div class="row">
         <div class="col-sm-12 col-md-6">
             <div class="panel panel-info">
                 <div class="panel-body">
-                    <form action="{% url 'buildings:flock_entries_to_rooms' %}" method="post">
+                    <form action="{% url 'buildings:animal_exit_to_rooms' %}" method="post">
                         {% for field in formset.management_form %}
                             {% if field.is_hidden %}
                                 {{ field }}
@@ -17,10 +18,8 @@
                         <table class="table table-striped">
                             <thead>
                             <tr class="table-header">
-                                <th>{% trans 'Flock' %}</th>
-                                <th>{% trans 'Number of animals' %}</th>
                                 <th>{% trans 'Room' %}</th>
-                                <th></th>
+                                <th>{% trans 'Number of animals' %}</th>
                             </tr>
                             </thead>
 
@@ -29,25 +28,28 @@
                                     {% for field in row %}
                                         {% if field.errors %}
                                             <td>
-                                                <div class="form-group has-error">
+                                                <div class="has-error">
                                                     <label class="control-label sr-only">{{ field.label_tag }}</label>
                                                     {{ field }}
                                                 </div>
                                             </td>
+                                        {% elif field.is_hidden %}
+                                            {{ field }}
                                         {% else %}
                                             <td>
-                                                <div class="form-group">
+                                                <div class="">
                                                     <label class="control-label sr-only">{{ field.label_tag }}</label>
                                                     {{ field }}
                                                 </div>
                                             </td>
                                         {% endif %}
-
-
                                     {% endfor %}
                                 </tr>
                             {% endfor %}
                         </table>
+                        {% for error in formset.non_form_errors %}
+                            {{ error }}
+                        {% endfor %}
                         <input type="submit" value="Save" />
                     </form>
                 </div>

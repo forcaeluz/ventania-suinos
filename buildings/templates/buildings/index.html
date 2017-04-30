@@ -15,6 +15,7 @@
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Location" %}</th>
                             <th>{% trans "Animal Capacity" %}</th>
+                            <th>{% trans "Animal Occupancy" %}</th>
                             <th>{% trans "Feed Capacity" %}</th>
                             <th>{% trans "Rooms" %}</th>
                         </tr>
@@ -24,6 +25,7 @@
                                 <td>{{building.name}}</td>
                                 <td>{{building.location}}</td>
                                 <td>{{building.animal_capacity}}</td>
+                                <td>{{ building.occupancy }}</td>
                                 <td>{{building.feed_capacity}}
                                 <td>{{building.number_of_rooms}}
                             </tr>

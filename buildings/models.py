@@ -1,6 +1,6 @@
 from django.db import models
 from flocks.models import Flock, AnimalDeath, AnimalSeparation
-
+from datetime import date
 
 class Silo(models.Model):
     capacity = models.FloatField()
@@ -34,6 +34,17 @@ class RoomGroup(models.Model):
 
         return count
 
+    @property
+    def occupancy(self):
+        count = 0
+        for group in self.roomgroup_set.all():
+            count += group.occupancy
+
+        for room in self.room_set.all():
+            count += room.occupancy
+
+        return count
+
     def __str__(self):
         return self.name
 
@@ -57,23 +68,23 @@ class Room(models.Model):
     is_separation = models.BooleanField(default=False)
 
     @property
-    def occupancy(self):
+    def occupancy(self, at_date=date.today()):
         count = 0
-        for entry in self.animalroomentry_set.all():
+        for entry in self.animalroomentry_set.filter(date__lte=at_date):
             count += entry.number_of_animals
 
-        for room_exit in self.animalroomexit_set.all():
+        for room_exit in self.animalroomexit_set.filter(date__lte=at_date):
             count -= room_exit.number_of_animals
         return count
 
-    def get_animals_for_flock(self, flock_id):
+    def get_animals_for_flock(self, flock_id, at_date=date.today()):
         count = 0
-        for entry in self.animalroomentry_set.get(flock_id=flock_id):
+        for entry in self.animalroomentry_set.filter(flock_id=flock_id, date__lte=at_date):
             count += entry.number_of_animals
 
-        for room_exit in self.animalroomexit_set.get(flock_id=flock_id):
+        for room_exit in self.animalroomexit_set.filter(flock_id=flock_id, date__lte=at_date):
             count -= room_exit.number_of_animals
-        return 0
+        return count
 
     def __str__(self):
         return self.group.name + ' - ' + self.name
