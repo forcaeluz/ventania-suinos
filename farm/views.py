@@ -1,6 +1,5 @@
-from django.shortcuts import render
 from django.views.generic import TemplateView
-
+from django.urls import reverse
 
 from feeding.models import FeedType
 from flocks.models import Flock, AnimalSeparation, AnimalExits
@@ -19,9 +18,10 @@ class FarmKpi:
 
 
 class FarmWarning:
-    def __init__(self, title, content):
+    def __init__(self, title, content, link):
         self.title = title
         self.content = content
+        self.link = link
 
 
 class FarmIndexView(TemplateView):
@@ -76,7 +76,6 @@ class FarmIndexView(TemplateView):
 
         return kpi_list
 
-
     def generate_historic_kpis(self):
         considering_from = datetime.today() - timedelta(days=365)
         flocks_exited_past_year = AnimalExits.objects.filter(flock__animalexits__date__gt=considering_from)
@@ -98,12 +97,30 @@ class FarmIndexView(TemplateView):
         warning_list = []
         number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
         number_of_animals_in_rooms = sum([room.occupancy for room in Room.objects.all()])
-        if number_of_living_animals != number_of_animals_in_rooms:
+        if number_of_living_animals != number_of_animals_in_rooms+1:
             warning = FarmWarning('Data Inconsistency:', 'The number of living animals is not equal to the number of '
                                                          'animals inside rooms. This might be due to an update from a'
                                                          'version without the Buildings module to a version with the '
                                                          'Buildings module. You have to manually update the room '
-                                                         'information.')
+                                                         'information, with the <a href="%s">wizard.</a>' % reverse('buildings:migration_wizard'),
+                                  '')
             warning_list.append(warning)
 
         return warning_list
+
+
+class RegisterNewAnimalEntry(TemplateView):
+    """
+        This class is a generic view for registering new flocks. If the buildings app is installed, it will
+        request building information as well, otherwise it will only request flock information.
+    """
+    def get(self, request, *args, **kwargs):
+        super().get(request, *args, **kwargs)
+
+
+class RegisterNewAnimalExit(TemplateView):
+    """
+        This class is a generic view for registering new exits. If the buildings app is installed, it will
+        request building information as well.    
+    """
+    pass
