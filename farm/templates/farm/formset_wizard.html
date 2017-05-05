@@ -1,0 +1,37 @@
+{% extends "base2.html" %}
+{% load i18n %}
+
+{% block main_content %}
+    <div class="row">
+        <div class="col-xs-12 col-lg-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}: {{ wizard.steps.current }}
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <form action="{{ form_action }}" method="post">{% csrf_token %}
+                            {{ wizard.management_form }}
+                            {% if wizard.form.forms %}
+                                {{ wizard.form.management_form }}
+
+                                {% for form in wizard.form.forms %}
+                                    {{ form }}
+                                {% endfor %}
+                            {% else %}
+                                {{ wizard.form }}
+                            {% endif %}
+                        {% if wizard.steps.prev %}
+                            <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+                        {% endif %}
+                        <input type="submit" value="{% trans "Submit" %}"/>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script></script>
+
+
+{% endblock %}
