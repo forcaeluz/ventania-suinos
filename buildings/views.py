@@ -115,7 +115,7 @@ class LinkExitsToRoomsView(View):
         exit_id = request.GET.get('exit_id')
         selected_exit = AnimalExits.objects.get(id=exit_id)
         flock = selected_exit.flock
-        rooms = [obj for obj in Room.objects.all() if (obj.get_animals_for_flock(flock_id=flock.id, at_date=selected_exit.date) > 0)]
+        rooms = [obj for obj in Room.objects.filter(is_separation=False) if (obj.get_animals_for_flock(flock_id=flock.id, at_date=selected_exit.date) > 0)]
         AnimalExitLinkToRoomFormSetFactory = modelformset_factory(AnimalRoomExit,
                                                                   formset=AnimalExitRoomFormSet,
                                                                   form=AnimalExitRoomForm,

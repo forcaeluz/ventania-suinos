@@ -124,7 +124,7 @@ class AnimalDeathRoomForm(forms.Form):
 
         if death_id != 0:
             self.death = AnimalDeath.objects.get(id=death_id)
-            rooms = [obj.id for obj in Room.objects.all() if obj.get_animals_for_flock(self.death.flock) > 0]
+            rooms = [obj.id for obj in Room.objects.filter(is_separation=False) if obj.get_animals_for_flock(self.death.flock) > 0]
             self.fields['room'].queryset = Room.objects.filter(pk__in=rooms)
         else:
             self.death = None
