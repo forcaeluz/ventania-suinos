@@ -2,6 +2,7 @@ from django.db import models
 from flocks.models import Flock, AnimalDeath, AnimalSeparation
 from datetime import date
 
+
 class Silo(models.Model):
     capacity = models.FloatField()
     name = models.CharField(max_length=20)
@@ -86,6 +87,20 @@ class Room(models.Model):
             count -= room_exit.number_of_animals
         return count
 
+    def get_flocks_present_at(self, at_date=date.today()):
+        flocks = {}
+        for entry in self.animalroomentry_set.filter(date__lte=at_date):
+            count = flocks.get(entry.flock, 0) + entry.number_of_animals
+            flocks.update({entry.flock: count})
+
+        for room_exit in self.animalroomexit_set.filter(date__lte=at_date):
+            count = flocks.get(room_exit.flock, 0) - room_exit.number_of_animals
+            flocks.update({room_exit.flock: count})
+
+        flocks = {key: value for key, value in flocks.items() if value > 0}
+
+        return flocks
+
     def __str__(self):
         return self.group.name + ' - ' + self.name
 
@@ -117,6 +132,7 @@ class AnimalSeparatedFromRoom(models.Model):
         Model only used for statistics, to couple a separation to a room. Note that this is the room "from" where the
         animal was separated, and not the room to which it went to.
     """
-    room = models.ForeignKey(Room)
+    room = models.ForeignKey(Room, related_name='source_room')
+    destination = models.ForeignKey(Room, related_name='destination_room', null=True)
     separation = models.ForeignKey(AnimalSeparation)
 
