@@ -1,8 +1,9 @@
 from django.views.generic import TemplateView
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import render, HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.forms import formset_factory
-from formtools.wizard.views import CookieWizardView, SessionWizardView
+from django.utils.translation import ugettext as _
+from formtools.wizard.views import SessionWizardView
 from statistics import mean
 from datetime import datetime, timedelta
 
@@ -12,8 +13,9 @@ from flocks.models import Flock, AnimalSeparation, AnimalExits
 from buildings.models import Room, AnimalRoomEntry
 
 
-from .forms import AnimalEntryForm, AnimalEntryRoomForm, AnimalExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
-from .forms import EasyFatForm, AnimalEntryRoomFormset
+from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
+from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
+from .forms import AnimalDeathDistinctionForm
 from .models import AnimalExitWizardSaver
 
 
@@ -117,16 +119,41 @@ class FarmIndexView(TemplateView):
         return warning_list
 
 
-class RegisterNewAnimalEntry(SessionWizardView):
+class EasyFatWizard(SessionWizardView):
     """
-        This class is a generic view for registering new flocks. If the buildings app is installed, it will
-        request building information as well, otherwise it will only request flock information.
+        This is a base class for the wizards inside EasyFat.
     """
-    form_list = [
-        ("flock_information", AnimalEntryForm),
-        ("building_information", formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
-    ]
+    wizard_name = _('EasyFat Wizard')
     template_name = 'farm/form_wizard.html'
+    title_dict = {}
+
+    def done(self, form_list, **kwargs):
+        raise NotImplementedError('EasyFatWizard is only an abstraction.')
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        context.update({'wizard_title': self.wizard_name})
+
+        current_step = self.steps.current
+        title = self.title_dict.get(current_step, current_step)
+        context.update({'step_title': title})
+        return context
+
+
+class RegisterNewAnimalEntry(EasyFatWizard):
+    """
+        This class is a generic view for registering new flocks. It registers the new flock, as well as building
+        information about where the flock has been placed.
+    """
+
+    form_list = [
+        ('flock_information', AnimalEntryForm),
+        ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
+    ]
+    wizard_name = _('Register animal entry')
+
+    title_dict = {'flock_information': _('General flock information'),
+                  'building_information': _('Placement of animals in the buildings')}
 
     def done(self, form_list, **kwargs):
         flock_info = self.get_cleaned_data_for_step('flock_information')
@@ -149,20 +176,18 @@ class RegisterNewAnimalEntry(SessionWizardView):
         return HttpResponseRedirect(reverse('farm:index'))
 
     def get_form_initial(self, step):
+        initial = []
         if step == 'building_information':
             rooms = [obj for obj in Room.objects.all() if obj.occupancy == 0 and not obj.is_separation]
+            if len(rooms) == 0:
+                raise ValueError('No room available.')  # TODO Generate nice usefull information for the user.
+
             animals = int(self.storage.get_step_data('flock_information')['flock_information-number_of_animals'])
             default_entry = int(animals/len(rooms))
-            initial = []
             for room in rooms:
                 initial.append({'room': room, 'number_of_animals': default_entry})
 
-            return initial
-
-        return super().get_form_initial(step)
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        return initial
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
@@ -178,34 +203,45 @@ class RegisterNewAnimalEntry(SessionWizardView):
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
         if step == 'building_information':
-            kwargs.update({'number_of_animals':
-                               self.storage.get_step_data('flock_information')['flock_information-number_of_animals']})
+            number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
+            kwargs.update({'number_of_animals': number_of_animals})
+
 
         return kwargs
 
-class RegisterNewAnimalExit(SessionWizardView):
+
+class RegisterNewAnimalExit(EasyFatWizard):
     """
         This class is a generic view for registering new exits. If the buildings app is installed, it will
         request building information as well.    
     """
     form_list = [
-        ("flock_information", AnimalExitForm),
-        ("building_information", formset_factory(form=AnimalExitRoomForm, formset=AnimalExitRoomFormset, extra=0)),
-        ("overview", EasyFatForm)
+        ('general_information', GroupExitForm),
+        ('building_information', formset_factory(form=AnimalExitRoomForm, formset=AnimalExitRoomFormset, extra=0)),
+        # TODO: Add form to distinguish animals from different flocks in the same room
+        ('overview', EasyFatForm)
     ]
-    template_name = 'farm/form_wizard.html'
+    wizard_name = _('Register animal group exit')
+    title_dict = {'general_information': _('General exit information'),
+                  'building_information': _('Specific room information'),
+                  'overview': _('Overview')}
 
     def get_form_initial(self, step):
         initial = []
         if step == 'building_information':
-            number_of_animals = int(self.storage.get_step_data('flock_information')['flock_information-number_of_animals'])
+            group_information = self.get_cleaned_data_for_step('general_information')
+            number_of_animals = group_information['number_of_animals']
+
             flocks_present = [obj for obj in Flock.objects.order_by('entry_date') if obj.number_of_living_animals > 0]
             oldest = flocks_present[0]
+
             separated = len([obj for obj in oldest.animalseparation_set.all() if obj.active])
+
             if number_of_animals >= oldest.number_of_living_animals - separated:
                 initial = self.__get_initial_room_data_flock_exit(oldest.id)
             else:
                 initial = self.__get_initial_room_data_flock_exit(0)
+
         return initial
 
     def get_context_data(self, form, **kwargs):
@@ -214,17 +250,18 @@ class RegisterNewAnimalExit(SessionWizardView):
         if self.steps.current == 'building_information':
             pass
         elif self.steps.current == 'overview':
-            form_data = [self.get_cleaned_data_for_step('flock_information'),
-                         self.__get_building_info_overview()]
-
-            context.update({'form_data': form_data})
+            context.update({'warnings': ['This is only an overview. Changing values does not affect the '
+                                         'data that is going to be saved.']})
+            form1 = self.get_form('general_information', self.storage.get_step_data('general_information'))
+            form2 = self.get_form('building_information', self.storage.get_step_data('building_information'))
+            context.update({'form_displays': [form1, form2]})
         return context
 
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
         if step == 'building_information':
-            kwargs.update({'number_of_animals':
-                               self.storage.get_step_data('flock_information')['flock_information-number_of_animals']})
+            number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
+            kwargs.update({'number_of_animals': number_of_animals})
 
         return kwargs
 
@@ -235,7 +272,7 @@ class RegisterNewAnimalExit(SessionWizardView):
             return self.template_name
 
     def done(self, form_list, **kwargs):
-        group_form = kwargs.get('form_dict')['flock_information']
+        group_form = kwargs.get('form_dict')['general_information']
         building_form = kwargs.get('form_dict')['building_information']
         saver = AnimalExitWizardSaver(group_form, building_form)
         saver.save()
@@ -256,4 +293,77 @@ class RegisterNewAnimalExit(SessionWizardView):
         step_info = [room for room in step_info if room['number_of_animals'] > 0]
         return step_info
 
+
+class RegisterNewAnimalDeath(EasyFatWizard):
+    """
+        This Wizard is to register deaths. Usually this can be done in a single step, however,
+        in some cases, it is necessary to distinguish the animal (in the case of separated animals).
+        In those cases an extra step is added, used to distinguish between the animals.
+    """
+
+    wizard_name = _('Register animal death')
+    form_list = [
+        ('death_information', AnimalDeathForm),
+        ('animal_distinction', AnimalDeathDistinctionForm),
+        ('overview', EasyFatForm)
+    ]
+
+    title_dict = {'death_information': _('General death information'),
+                  'animal_distinction': _('Distinguishing animals'),
+                  'overview': _('Overview')}
+
+    def __init__(self, **kwargs):
+        condition_dict = {'animal_distinction': self.needs_animal_distinction}
+        kwargs.update({'condition_dict': condition_dict})
+        super().__init__(**kwargs)
+
+    def done(self, form_list, **kwargs):
+
+        forms = kwargs.get('form_dict')
+
+        death_form = forms.get('death_information')
+        death_form.save()
+        death = death_form.death
+
+        distinction_form = forms.get('animal_distinction')
+        distinction_form.set_death(death)
+        distinction_form.save()
+
+        return HttpResponseRedirect(reverse('farm:index'))
+
+    def get_form_kwargs(self, step=None):
+        if step == 'animal_distinction':
+            room = self.get_cleaned_data_for_step('death_information')['room']
+            return {'room': room}
+        else:
+            return {}
+
+    @staticmethod
+    def needs_animal_distinction(wizard_instance):
+        """
+        Class function to determine is the animal distinction step needs to be performed.
+        It's made a static method to support the way it is called by the FormWizard.
+        :param wizard_instance: 
+        :return: 
+        """
+        data = wizard_instance.get_cleaned_data_for_step('death_information') or None
+        if data:
+            return data['room'].is_separation and data['room'].occupancy > 1
+        return True
+
+
+class RegisterNewAnimalSeparation(TemplateView):
+    template_name = 'farm/form.html'
+
+    def get(self, request, *args, **kwargs):
+        form = AnimalSeparationForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = AnimalSeparationForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('farm:index'))
+        return render(request, self.template_name, {'form': form})
 

@@ -7,29 +7,79 @@
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">
-                        Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}: {{ wizard.steps.current }}
+                        Step {{ wizard.steps.step1 }} of {{ wizard.steps.count }}: {{ step_title }}
                     </h3>
                 </div>
                 <div class="panel-body">
+                    {% for warning in warnings %}
+                        <div class="alert alert-warning">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            {{ warning }}
+                        </div>
+                    {% endfor %}
+
                     <form action="{{ form_action }}" method="post">{% csrf_token %}
                         {{ wizard.management_form }}
-                        {% for form in form_data %}
-                            {% for field, value in form.items %}
-                                <ul>
-                                <li>{{ field }}: {{ value }}</li>
-                                </ul>
+                        {% for display_form in form_displays %}
+                            {% if display_form.forms %}
+                                {{ display_form.management_form }}
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr class="table-header">
+                                        <th>{% trans 'Room' %}</th>
+                                        <th>{% trans 'Number of animals' %}</th>
+                                        <th>{% trans '' %}</th>
+                                    </tr>
+                                    </thead>
+                                    {% for row in display_form.forms %}
+                                        <tr>
+                                            {% for field in row %}
+                                                {% if field.errors or row.errors %}
+                                                    <td>
+                                                        <div class="has-error">
+                                                            <label class="control-label sr-only">{{ field.label_tag }}</label>
+                                                            {{ field }}
+                                                        </div>
+                                                    </td>
+                                                {% elif field.is_hidden %}
+                                                    {{ field }}
+                                                {% else %}
+                                                    <td>
+                                                        <div class="">
+                                                            <label class="control-label sr-only">{{ field.label_tag }}</label>
+                                                            {{ field }}
+                                                        </div>
+                                                    </td>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            {% else %}
+                                {{ display_form }}
+                            {% endif %}
+                        {% endfor %}
+                        {% for error in wizard.form.errors %}
+                            {% for value in error.values %}
+                                <div class="alert alert-danger alert-dismissible">
+                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                    {{ value.as_text }}
+                                </div>
                             {% endfor %}
                         {% endfor %}
+                        {% for error in wizard.form.non_form_errors %}
+                            <div class="alert alert-danger alert-dismissible">
+                                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
                         {% if wizard.steps.prev %}
                             <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
                         {% endif %}
                         <input type="submit" value="{% trans "Submit" %}"/>
                     </form>
-                    {% for warning in warnings %}
-                        <div class="alert alert-warning">
-                            {{ warning }}
-                        </div>
-                    {% endfor %}
+
                 </div>
             </div>
         </div>
