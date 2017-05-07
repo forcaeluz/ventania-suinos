@@ -101,3 +101,6 @@ class AnimalSeparation(models.Model):
     @property
     def active(self):
         return (self.death is None) and (self.exit is None)
+
+    def __str__(self):
+        return '@' + str(self.date) + ' reas:' + self.reason
