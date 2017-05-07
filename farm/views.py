@@ -318,16 +318,23 @@ class RegisterNewAnimalDeath(EasyFatWizard):
         super().__init__(**kwargs)
 
     def done(self, form_list, **kwargs):
-
+        # get the forms
         forms = kwargs.get('form_dict')
-
         death_form = forms.get('death_information')
-        death_form.save()
-        death = death_form.death
+        distinction_form = forms.get('animal_distinction', None)
 
-        distinction_form = forms.get('animal_distinction')
-        distinction_form.set_death(death)
-        distinction_form.save()
+        if distinction_form:  # Some distinction is needed.
+            # Set the flock value in the death form. Otherwise it won't always be able
+            # to fill in the animal's flock.
+            death_form.set_flock(distinction_form.cleaned_data.get('separation', None))
+            # After saving we can get the death value, and fill in on the distinction form.
+            death_form.save()
+            death = death_form.death
+
+            distinction_form.set_death(death)
+            distinction_form.save()
+        else:  # Death form is clear, no separation attached.
+            death_form.save()
 
         return HttpResponseRedirect(reverse('farm:index'))
 

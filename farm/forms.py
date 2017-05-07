@@ -141,39 +141,41 @@ class AnimalDeathForm(EasyFatForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.death = None
+        self.flock = None
         non_empty_rooms = [room.id for room in Room.objects.all() if room.occupancy > 0]
         self.fields['date'].widget.attrs.update(
             {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
         self.fields['date'].initial = datetime.today().date()
         self.fields['room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
-    def clean(self):
-        data = self.cleaned_data
-        room = data.get('room')
-        if len(room.get_flocks_present_at(data['date'])) != 1:
-            raise ValidationError('Unable to handle rooms with multiple flocks.')
+    def set_flock(self, flock):
+        self.flock = flock
 
     def save(self):
         data = self.cleaned_data
         date = data['date']
         room = data['room']
+        if not self.flock:
+            if len(room.get_flocks_present_at(date)) == 1:
+                self.flock = next(iter(room.get_flocks_present_at(date)))
+            else:
+                raise ValidationError('No flock distinction possible')
 
-        if len(room.get_flocks_present_at(date)) == 1:
-            flock = next(iter(room.get_flocks_present_at(date)))
-            death = AnimalDeath(date=date,
-                                flock=flock,
-                                weight=data['weight'],
-                                cause=data['reason'])
-            death.save()
-            death_in_room = DeathInRoom(death=death,
-                                        room=room)
-            death_in_room.save()
-            room_exit = AnimalRoomExit(date=date,
-                                       room=room,
-                                       flock=flock,
-                                       number_of_animals=1)
-            room_exit.save()
-            self.death = death
+        flock = self.flock
+        death = AnimalDeath(date=date,
+                            flock=flock,
+                            weight=data['weight'],
+                            cause=data['reason'])
+        death.save()
+        death_in_room = DeathInRoom(death=death,
+                                    room=room)
+        death_in_room.save()
+        room_exit = AnimalRoomExit(date=date,
+                                   room=room,
+                                   flock=flock,
+                                   number_of_animals=1)
+        room_exit.save()
+        self.death = death
 
 
 class AnimalDeathDistinctionForm(EasyFatForm):
