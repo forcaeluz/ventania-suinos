@@ -151,6 +151,21 @@ class AnimalDeathForm(EasyFatForm):
     def set_flock(self, flock):
         self.flock = flock
 
+    def clean(self):
+        data = self.cleaned_data
+        date = data['date']
+        room = data['room'] # Room
+        if not self.flock:
+            if len(room.get_flocks_present_at(date)) == 1:
+                self.flock = next(iter(room.get_flocks_present_at(date)))
+            elif len(room.get_flocks_present_at(date)) > 1:
+                raise ValidationError('No flock distinction possible')
+            else:
+                raise ValidationError('Room was empty at death date')
+
+        if room.get_animals_for_flock(self.flock, date) <= 0:
+            raise ValidationError('No animals from flock in room at death date')
+
     def save(self):
         data = self.cleaned_data
         date = data['date']
@@ -182,23 +197,15 @@ class AnimalDeathDistinctionForm(EasyFatForm):
     separation = ModelChoiceField(queryset=AnimalSeparation.objects.all())
 
     def __init__(self, *args, **kwargs):
-        self.room = kwargs.pop('room')
+        self.room = kwargs.pop('room', None)
         self.death = None
         self.exit = None
 
         super().__init__(*args, **kwargs)
-        separations = AnimalSeparation.objects.filter(animalseparatedfromroom__destination=self.room)
-        separations = [sep.id for sep in separations if sep.active]
-        self.fields['separation'].queryset = AnimalSeparation.objects.filter(pk__in=separations)
-
-    def get_separations(self):
-        separation_ids = []
-        if self.room:
-            entries = self.room.animalroomentry_set.all()
-            for entry in entries:
-                ids = [obj.id for obj in AnimalSeparation.objects.filter(date=entry.date) if obj.active]
-                separation_ids.extend(ids)
-        return separation_ids
+        if not self.is_bound:
+            separations = AnimalSeparation.objects.filter(animalseparatedfromroom__destination=self.room)
+            separations = [sep.id for sep in separations if sep.active]
+            self.fields['separation'].queryset = AnimalSeparation.objects.filter(pk__in=separations)
 
     def set_death(self, death):
         assert(isinstance(death, AnimalDeath))
@@ -222,7 +229,8 @@ class AnimalSeparationForm(EasyFatForm):
         self.fields['date'].widget.attrs.update(
             {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
         self.fields['date'].initial = datetime.today().date()
-        self.fields['src_room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
+        if not self.is_bound:
+            self.fields['src_room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
     def clean(self):
         data = self.cleaned_data
