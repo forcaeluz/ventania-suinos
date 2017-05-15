@@ -212,16 +212,18 @@ class RegisterNewAnimalEntry(EasyFatWizard):
 
 class RegisterNewAnimalExit(EasyFatWizard):
     """
-        This class is a generic view for registering new exits. If the buildings app is installed, it will
-        request building information as well.    
+    This class is a generic view for registering new exits. If the buildings app is installed, it will
+    request building information as well.
     """
     form_list = [
         ('general_information', GroupExitForm),
         ('building_information', formset_factory(form=AnimalExitRoomForm, formset=AnimalExitRoomFormset, extra=0)),
-        # TODO: Add form to distinguish animals from different flocks in the same room
+        ('animal_distinction', AnimalDeathDistinctionForm),
         ('overview', EasyFatForm)
     ]
+
     wizard_name = _('Register animal group exit')
+
     title_dict = {'general_information': _('General exit information'),
                   'building_information': _('Specific room information'),
                   'overview': _('Overview')}

@@ -1,7 +1,9 @@
 from django.test import TestCase
-from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalDeathDistinctionForm
-from buildings.models import Silo, Building, Room, AnimalRoomEntry, AnimalRoomExit
-from flocks.models import Flock, AnimalDeath, AnimalExits, AnimalSeparation
+from django.forms import formset_factory
+from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalDeathDistinctionForm, GroupExitForm
+from .forms import AnimalExitRoomFormset, AnimalExitRoomForm
+from buildings.models import Building, Room
+from flocks.models import Flock, AnimalSeparation
 
 
 class FarmTestClass(TestCase):
@@ -110,7 +112,20 @@ class AnimalSeparationFormTest(FarmTestClass):
         self.assertEqual(2, self.flock1.animalseparation_set.count())
 
 
-class AnimalDistinctionForm(FarmTestClass):
+class AnimalDistinctionFormTest(FarmTestClass):
+    def create_room_exit_formset_data(self):
+        data = {'form-TOTAL_FORMS': '3',
+                'form-INITIAL_FORMS': '3',
+                'form-MAX_NUM_FORMS': '',
+                'form-0-room': self.normal_room1.id,
+                'form-0-number_of_animals': 0,
+                'form-1-room': self.normal_room2.id,
+                'form-1-number_of_animals': 0,
+                'form-2-room': self.separation_room.id,
+                'form-2-number_of_animals': 1,
+        }
+        return data
+
     def test_death_distinction(self):
         form_data = {'date': '2017-01-15',
                      'weight': '30',
@@ -129,5 +144,117 @@ class AnimalDistinctionForm(FarmTestClass):
         self.separation1.refresh_from_db()
         self.assertFalse(self.separation1.active)
 
+    def test_exit_distinction(self):
+        form_data = {'date': '2017-01-15',
+                     'number_of_animals': '1',
+                     'weight': 30
+                     }
+
+        form1 = GroupExitForm(data=form_data)
+        self.assertTrue(form1.is_valid())
+        form_data = self.create_room_exit_formset_data()
+        FormSet = formset_factory(formset=AnimalExitRoomFormset, form=AnimalExitRoomForm)
+        form2 = FormSet(form_data, number_of_animals=1)
+        self.assertTrue(form2.is_valid())
+#         TODO: Implement further checks.
+
+class GroupExitFormTest(FarmTestClass):
+    def create_room_exit_formset_data(self):
+        data = {'form-TOTAL_FORMS': '3',
+                'form-INITIAL_FORMS': '3',
+                'form-MAX_NUM_FORMS': '',
+                'form-0-room': self.normal_room1.id,
+                'form-0-number_of_animals': 13,
+                'form-1-room': self.normal_room2.id,
+                'form-1-number_of_animals': 0,
+                'form-2-room': self.separation_room.id,
+                'form-2-number_of_animals': 0,
+        }
+        return data
+
+    def test_form(self):
+        form_data = {'date': '2017-03-15',
+                     'number_of_animals': '13',
+                     'weight': 1330
+                     }
+
+        form1 = GroupExitForm(data=form_data)
+        self.assertTrue(form1.is_valid())
 
 
+class AnimalExitRoomFomsetTest(FarmTestClass):
+
+    def test_constructor(self):
+        FormSet = formset_factory(formset=AnimalExitRoomFormset, form=AnimalExitRoomForm)
+        data = {'form-TOTAL_FORMS': '3',
+                'form-INITIAL_FORMS': '3',
+                'form-MAX_NUM_FORMS': '',
+                'form-0-room': self.normal_room1.id,
+                'form-0-number_of_animals': 12,
+                'form-1-room': self.normal_room2.id,
+                'form-1-number_of_animals': 0,
+                'form-2-room': self.separation_room.id,
+                'form-2-number_of_animals': 0,
+                }
+
+        formset = FormSet(data, number_of_animals=12)
+        self.assertTrue(formset.is_valid())
+
+    def test_get_exited_rooms(self):
+        FormSet = formset_factory(formset=AnimalExitRoomFormset, form=AnimalExitRoomForm)
+        data = {'form-TOTAL_FORMS': '3',
+                'form-INITIAL_FORMS': '3',
+                'form-MAX_NUM_FORMS': '',
+                'form-0-room': self.normal_room1.id,
+                'form-0-number_of_animals': 9,
+                'form-1-room': self.normal_room2.id,
+                'form-1-number_of_animals': 3,
+                'form-2-room': self.separation_room.id,
+                'form-2-number_of_animals': 0,
+                }
+
+        formset = FormSet(data, number_of_animals=12)
+        self.assertTrue(formset.is_valid())
+        rooms = formset.get_exited_rooms()
+        self.assertTrue(rooms[0], self.normal_room1)
+        self.assertTrue(rooms[1], self.normal_room2)
+
+    def test_invalid_sub_form(self):
+        FormSet = formset_factory(formset=AnimalExitRoomFormset, form=AnimalExitRoomForm)
+        data = {'form-TOTAL_FORMS': '3',
+                'form-INITIAL_FORMS': '3',
+                'form-MAX_NUM_FORMS': '',
+                'form-0-room': self.normal_room1.id,
+                'form-0-number_of_animals': 13,
+                'form-1-room': self.normal_room2.id,
+                'form-1-number_of_animals': 0,
+                'form-2-room': self.separation_room.id,
+                'form-2-number_of_animals': 0,
+                }
+
+        formset = FormSet(data, number_of_animals=12)
+        self.assertFalse(formset.is_valid())
+        self.assertEqual(0, len(formset.non_form_errors()))
+        self.assertEqual(1, len(formset.forms[0].errors))
+        self.assertEqual(0, len(formset.forms[1].errors))
+        self.assertEqual(0, len(formset.forms[2].errors))
+
+    def test_not_matching_animal_count(self):
+        FormSet = formset_factory(formset=AnimalExitRoomFormset, form=AnimalExitRoomForm)
+        data = {'form-TOTAL_FORMS': '3',
+                'form-INITIAL_FORMS': '3',
+                'form-MAX_NUM_FORMS': '',
+                'form-0-room': self.normal_room1.id,
+                'form-0-number_of_animals': 12,
+                'form-1-room': self.normal_room2.id,
+                'form-1-number_of_animals': 0,
+                'form-2-room': self.separation_room.id,
+                'form-2-number_of_animals': 0,
+                }
+
+        formset = FormSet(data, number_of_animals=13)
+        self.assertFalse(formset.is_valid())
+        self.assertEqual(1, len(formset.non_form_errors()))
+        self.assertEqual(0, len(formset.forms[0].errors))
+        self.assertEqual(0, len(formset.forms[1].errors))
+        self.assertEqual(0, len(formset.forms[2].errors))
