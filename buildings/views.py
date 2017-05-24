@@ -40,17 +40,19 @@ class MigrationWizard(TemplateView):
         return flock_entries != room_entries
 
     def _need_to_fix_separations(self):
-        separation_count = AnimalSeparation.objects.count()
+        separation_count = len([obj for obj in AnimalSeparation.objects.all() if obj.active])
         room_separation_count = AnimalSeparatedFromRoom.objects.count()
         return separation_count != room_separation_count
 
     def _need_to_fix_deaths(self):
-        death_count = AnimalDeath.objects.count()
+        flock_ids = [obj.id for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        death_count = AnimalDeath.objects.filter(flock__in=flock_ids).count()
         death_in_room_count = DeathInRoom.objects.count()
         return death_count != death_in_room_count
 
     def _need_to_fix_exits(self):
-        exits = [obj for obj in AnimalExits.objects.all() if obj.animalseparation_set.count() == 0]
+        flocks = [obj.id for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        exits = [obj for obj in AnimalExits.objects.filter(flock__in=flocks) if obj.animalseparation_set.count() == 0]
 
         for animal_exit in exits:
             room_exits = AnimalRoomExit.objects.filter(flock=animal_exit.flock, date=animal_exit.date)
@@ -150,8 +152,8 @@ class LinkDeathsToRoomsView(TemplateView):
     template_name = 'buildings/animal_death_rooms.html'
 
     def get(self, request, *args, **kwargs):
-
-        initial = [{'death_id': obj.id} for obj in AnimalDeath.objects.all() if obj.deathinroom_set.count() == 0]
+        flocks = [obj.id for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        initial = [{'death_id': obj.id} for obj in AnimalDeath.objects.filter(flock__in=flocks) if obj.deathinroom_set.count() == 0]
         FormSetFactory = formset_factory(AnimalDeathRoomForm, extra=0)
         formset = FormSetFactory(initial=initial)
         return render(request, self.template_name, {'formset': formset})
@@ -180,7 +182,7 @@ class LinkSeparationsToRoomsView(TemplateView):
 
     def get(self, request, *args, **kwargs):
 
-        initial = [{'separation_id': obj.id} for obj in AnimalSeparation.objects.all()]
+        initial = [{'separation_id': obj.id} for obj in AnimalSeparation.objects.all() if obj.active]
         FormSetFactory = formset_factory(AnimalSeparationRoomForm, extra=0)
         formset = FormSetFactory(initial=initial)
         return render(request, self.template_name, {'formset': formset})

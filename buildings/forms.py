@@ -39,6 +39,8 @@ class FlockEntryRoomForm(forms.ModelForm):
             if self.fields[field].error_messages:
                 self.fields[field].widget.attrs.update({'class': 'form-control'})
         self.fields['room'].widget.attrs['readonly'] = True
+        flocks = [obj.id for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        self.fields['flock'].queryset = Flock.objects.filter(pk__in=flocks)
 
     def save(self, commit=True):
         return super().save(commit)
