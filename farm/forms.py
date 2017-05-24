@@ -81,6 +81,64 @@ class GroupExitForm(Form):
         self.fields['date'].initial = datetime.today().date()
 
 
+class SingleAnimalExitForm(EasyFatForm):
+    date = DateField()
+    room = ModelChoiceField(queryset=Room.objects.all())
+    weight = FloatField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.animal_exit = None
+        self.flock = None
+        non_empty_rooms = [room.id for room in Room.objects.all() if room.occupancy > 0]
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+        self.fields['date'].initial = datetime.today().date()
+        self.fields['room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
+
+    def set_flock(self, flock):
+        self.flock = flock
+
+    def clean(self):
+        data = self.cleaned_data
+        date = data['date']
+        room = data['room']  # Room
+        if not self.flock:
+            if len(room.get_flocks_present_at(date)) == 1:
+                self.flock = next(iter(room.get_flocks_present_at(date)))
+            elif len(room.get_flocks_present_at(date)) > 1:
+                raise ValidationError('No flock distinction possible')
+            else:
+                raise ValidationError('Room was empty at death date')
+
+        if room.get_animals_for_flock(self.flock, date) <= 0:
+            raise ValidationError('No animals from flock in room at death date')
+
+    def save(self):
+        data = self.cleaned_data
+        date = data['date']
+        room = data['room']
+        if not self.flock:
+            if len(room.get_flocks_present_at(date)) == 1:
+                self.flock = next(iter(room.get_flocks_present_at(date)))
+            else:
+                raise ValidationError('No flock distinction possible')
+
+        flock = self.flock
+        animal_exit = AnimalExits(date=date,
+                                  flock=flock,
+                                  number_of_animals=1,
+                                  total_weight=data['weight'])
+        animal_exit.save()
+
+        room_exit = AnimalRoomExit(date=date,
+                                   room=room,
+                                   flock=flock,
+                                   number_of_animals=1)
+        room_exit.save()
+        self.animal_exit = animal_exit
+
+
 class AnimalExitRoomForm(Form):
     room = ModelChoiceField(queryset=Room.objects.all())
     number_of_animals = IntegerField(min_value=0)

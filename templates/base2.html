@@ -43,7 +43,8 @@
                     <ul class="dropdown-menu">
                         <li><a href="{% url 'farm:animal_entry' %}">{% trans 'New Flock' %}</a></li>
                         <li><a href="{% url 'farm:animal_separation' %}">{% trans 'New Separation' %}</a></li>
-                        <li><a href="{% url 'farm:animal_exit' %}">{% trans 'New Exit' %}</a></li>
+                        <li><a href="{% url 'farm:animal_exit' %}">{% trans 'New Group Exit' %}</a></li>
+                        <li><a href="{% url 'farm:single_animal_exit' %}">{% trans 'New Single Exit' %}</a></li>
                         <li><a href="{% url 'farm:animal_death' %}">{% trans 'New Death' %}</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="{% url 'feeding:create_feed_entry' %}">{% trans 'New Feed Delivery' %}</a></li>
