@@ -1,0 +1,96 @@
+{% extends 'base2.html' %}
+{% load i18n %}
+{% block main_content %}
+    <h1 class="page-header">Farm Buildings</h1>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Buildings' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Location" %}</th>
+                            <th>{% trans "Animal Capacity" %}</th>
+                            <th>{% trans "Animal Occupancy" %}</th>
+                            <th>{% trans "Feed Capacity" %}</th>
+                            <th>{% trans "Rooms" %}</th>
+                        </tr>
+                        </thead>
+                        {% for building in buildings %}
+                            <tr class="table-row">
+                                <td>{{building.name}}</td>
+                                <td>{{building.location}}</td>
+                                <td>{{building.animal_capacity}}</td>
+                                <td>{{ building.occupancy }}</td>
+                                <td>{{building.feed_capacity}}
+                                <td>{{building.number_of_rooms}}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% for building in buildings %}
+        <h2 class="page-header">{{ building.name }}</h2>
+        <div class="row">
+        <div class="col-xs-6 col-sm-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Ungrouped rooms: ' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans "Room" %}</th>
+                                <th>{% trans "Capacity" %}</th>
+                                <th>{% trans "Occupancy" %}</th>
+                            </tr>
+                            </thead>
+                            {% for room in building.room_set.all %}
+                                <tr class="table-row">
+                                    <td>{{room.name}}</td>
+                                    <td>{{room.capacity}}</td>
+                                    <td>{{room.occupancy}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+                </div>
+            {% for room_group in building.roomgroup_set.all %}
+                <div class="col-xs-6 col-sm-3">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Group: ' %}{{ room_group.name }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans "Room" %}</th>
+                                <th>{% trans "Capacity" %}</th>
+                                <th>{% trans "Occupancy" %}</th>
+                            </tr>
+                            </thead>
+                            {% for room in room_group.room_set.all %}
+                                <tr class="table-row">
+                                    <td>{{room.name}}</td>
+                                    <td>{{room.capacity}}</td>
+                                    <td>{{ room.occupancy }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

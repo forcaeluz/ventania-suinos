@@ -1,0 +1,69 @@
+{% extends "base2.html" %}
+{% load i18n %}
+
+{% block main_content %}
+    <h2 class="sub-header">{% trans 'Link death to room' %}</h2>
+    <div class="row">
+        <div class="col-sm-12 col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-body">
+                    <form action="{% url 'buildings:animal_death_to_room' %}" method="post">
+                        {% for field in formset.management_form %}
+                            {% if field.is_hidden %}
+                                {{ field }}
+                            {% endif %}
+                        {% endfor %}
+                        {% csrf_token %}
+                        <table class="table table-striped">
+                            <thead>
+                            <tr class="table-header">
+                                <th>{% trans 'Death Date' %}</th>
+                                <th>{% trans 'Flock' %}</th>
+                                <th>{% trans 'Cause' %}</th>
+                                <th>{% trans 'Room' %}</th>
+                            </tr>
+                            </thead>
+
+                            {% for row in formset.forms %}
+                                <tr>
+                                    <td>
+                                        {{ row.death.date }}
+                                    </td>
+                                    <td>
+                                        {{ row.death.flock }}
+                                    </td>
+                                    <td>
+                                        {{ row.death.cause }}
+                                    </td>
+                                    {% for field in row %}
+                                        {% if field.errors %}
+                                            <td>
+                                                <div class="has-error">
+                                                    <label class="control-label sr-only">{{ field.label_tag }}</label>
+                                                    {{ field }}
+                                                </div>
+                                            </td>
+                                        {% elif field.is_hidden %}
+                                            {{ field }}
+                                        {% else %}
+                                            <td>
+                                                <div class="">
+                                                    <label class="control-label sr-only">{{ field.label_tag }}</label>
+                                                    {{ field }}
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                        <input type="submit" value="Save" />
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}}

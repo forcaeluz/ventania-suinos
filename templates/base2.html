@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load l10n %}
 {% load static %}
-
+{% get_current_language as LANGUAGE_CODE %}
 
 
 <head>
@@ -16,7 +16,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.min.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-theme.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/dashboard.css' %}"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-datepicker3.standalone.min.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap-datepicker/css/bootstrap-datepicker3.standalone.min.css' %}" />
     <link rel="shortcut icon" type="image/png" href="{% static 'porco.png' %}"/>
 </head>
 
@@ -37,14 +37,15 @@
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
-                <li><a href="#"><span class="glyphicon glyphicon-user"></span> Profile </a></li>
+                <li><a href="#"><span class="glyphicon glyphicon-user"></span> Profile {{ LANGUAGE_CODE }} </a></li>
                 <li><a href="#"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> Help</a>
                 <li><a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-plus-sign"></span>Actions</a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url 'flocks:create' %}">{% trans 'New Flock' %}</a></li>
-                        <li><a href="{% url 'flocks:create_animal_separation' %}">{% trans 'New Separation' %}</a></li>
-                        <li><a href="{% url 'flocks:create_animal_exit' %}">{% trans 'New Exit' %}</a></li>
-                        <li><a href="{% url 'flocks:create_animal_death' %}">{% trans 'New Death' %}</a></li>
+                        <li><a href="{% url 'farm:animal_entry' %}">{% trans 'New Flock' %}</a></li>
+                        <li><a href="{% url 'farm:animal_separation' %}">{% trans 'New Separation' %}</a></li>
+                        <li><a href="{% url 'farm:animal_exit' %}">{% trans 'New Group Exit' %}</a></li>
+                        <li><a href="{% url 'farm:single_animal_exit' %}">{% trans 'New Single Exit' %}</a></li>
+                        <li><a href="{% url 'farm:animal_death' %}">{% trans 'New Death' %}</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="{% url 'feeding:create_feed_entry' %}">{% trans 'New Feed Delivery' %}</a></li>
                         <li class="disabled"><a class="disabled" href="#">{% trans 'New Feeding Transition' %}</a></li>
@@ -67,6 +68,7 @@
                 <li><a href="{% url 'feeding:index' %}">{% trans 'Feeding' %}</a></li>
                 <li><a href="{% url 'medications:index' %}">{% trans 'Health' %}</a></li>
                 <li class="disabled"><a href="">{% trans 'Financial' %}</a> </li>
+                <li><a href="{% url 'buildings:index' %}">{% trans 'Buildings' %}</a></li>
             </ul>
             <ul class="nav nav-sidebar">
                 <li><a href="">{% trans 'Reports' %}</a></li>
@@ -87,5 +89,9 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
 <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
-<script src="{% static 'bootstrap/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'bootstrap-datepicker/locales/bootstrap-datepicker.pt-br.min.js' %}"></script>
+<script>$('.datepicker').datepicker({
+        language: "{{ LANGUAGE_CODE }}"
+    });</script>
 </body>
