@@ -44,6 +44,22 @@ class Flock(models.Model):
         exits_set = self.animalexits_set.all()
         return self.__compute_grow_rate_for_exits_set(exits_set)
 
+    @property
+    def average_exit_weight(self):
+        exits_set = self.animalexits_set.all()
+        weight = sum([obj.total_weight for obj in exits_set])
+        animals = sum([obj.number_of_animals for obj in exits_set])
+        if animals > 0:
+            return weight/animals
+        else:
+            return 0
+
+    @property
+    def separated_animals(self):
+        separation_set = self.animalseparation_set.all()
+        active_separations = len([obj for obj in separation_set if obj.active])
+        return active_separations
+
     @staticmethod
     def __compute_grow_rate_for_exits_set(exits_set):
         total_number_of_animals = 0
