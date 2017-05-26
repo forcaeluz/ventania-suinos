@@ -111,6 +111,9 @@ class AnimalRoomEntry(models.Model):
     flock = models.ForeignKey(Flock)
     room = models.ForeignKey(Room)
 
+    def __str__(self):
+        return self.room.__str__() + ' - ' + str(self.number_of_animals)
+
 
 class AnimalRoomExit(models.Model):
     date = models.DateField()
