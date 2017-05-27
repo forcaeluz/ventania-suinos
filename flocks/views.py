@@ -40,11 +40,16 @@ def detail(request, flock_id):
     exit_list = flock.animalexits_set.all()
     death_list = flock.animaldeath_set.all()
     separation_list = flock.animalseparation_set.all()
+    room_entries = flock.animalroomentry_set.all()
+    room_exits = flock.animalroomexit_set.filter(number_of_animals__gt=0)
+
     param_list = {
         'flock': flock,
         'exits_list': exit_list,
         'death_list': death_list,
-        'separation_list': separation_list
+        'separation_list': separation_list,
+        'room_entries': room_entries,
+        'room_exits': room_exits
     }
     return render(request, 'flocks/detail.html', param_list)
 

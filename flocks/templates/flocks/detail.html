@@ -85,9 +85,9 @@
                                     {% else %}
                                         <td>{% trans "Still separated." %}
                                             <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>
-                                            <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>
-                                                </div>
+                                                <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>
+                                                <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>
+                                            </div>
                                         </td>
                                     {% endif %}
                                 </tr>
@@ -130,6 +130,61 @@
                 </div>
             </div>
         </div>
-
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-5">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Room Entries' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if room_entries %}
+                        <table class="table table-stripped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Room" %}</th>
+                                <th>{% trans "N. of animals" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                            </thead>
+                            {% for entry in room_entries %}
+                                <tr class="table-row">
+                                    <td>{{entry.room}}</td>
+                                    <td>{{entry.number_of_animals}}</td>
+                                    <td>{{entry.date}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-5">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Room Exits' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {% if room_entries %}
+                        <table class="table table-stripped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Room" %}</th>
+                                <th>{% trans "N. of animals" %}</th>
+                                <th>{% trans "Date" %}</th>
+                            </tr>
+                            </thead>
+                            {% for entry in room_exits %}
+                                <tr class="table-row">
+                                    <td>{{entry.room}}</td>
+                                    <td>{{entry.number_of_animals}}</td>
+                                    <td>{{entry.date}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
