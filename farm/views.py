@@ -93,7 +93,7 @@ class FarmIndexView(TemplateView):
             return []
 
         number_of_animals = sum([obj.number_of_animals for obj in flocks_exited_past_year])
-        weighted_grow_rate = mean([obj.grow_rate * obj.number_of_animals for obj in flocks_exited_past_year])
+        weighted_grow_rate = sum([obj.grow_rate * obj.number_of_animals for obj in flocks_exited_past_year])
         grow_rate = weighted_grow_rate / number_of_animals
         kpi_grow_rate = FarmKpi('success', 'Grow Rate', '%.2f' % grow_rate, 'kg/day')
         if grow_rate < 0.700:
