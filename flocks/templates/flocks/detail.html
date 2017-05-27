@@ -130,55 +130,28 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-6 col-md-5">
+        <div class="col-sm-6 col-md-4">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Room Entries' %}</h3>
+                    <h3 class="panel-title">{% trans 'Room Occupation' %}
+                    <div class="btn-group">
+                        <a title="{% trans 'Detailed room information' %}" class="btn btn-primary" href="{% url 'flocks:detail' flock.id %}"><span class="glyphicon glyphicon-search"></span></a>
+                    </div>
+                    </h3>
                 </div>
                 <div class="panel-body">
-                    {% if room_entries %}
+                    {% if current_rooms %}
                         <table class="table table-stripped">
                             <thead>
                             <tr>
                                 <th>{% trans "Room" %}</th>
                                 <th>{% trans "N. of animals" %}</th>
-                                <th>{% trans "Date" %}</th>
                             </tr>
                             </thead>
-                            {% for entry in room_entries %}
+                            {% for room, n_of_animals in current_rooms.items %}
                                 <tr class="table-row">
-                                    <td>{{entry.room}}</td>
-                                    <td>{{entry.number_of_animals}}</td>
-                                    <td>{{entry.date}}</td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-5">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Room Exits' %}</h3>
-                </div>
-                <div class="panel-body">
-                    {% if room_entries %}
-                        <table class="table table-stripped">
-                            <thead>
-                            <tr>
-                                <th>{% trans "Room" %}</th>
-                                <th>{% trans "N. of animals" %}</th>
-                                <th>{% trans "Date" %}</th>
-                            </tr>
-                            </thead>
-                            {% for entry in room_exits %}
-                                <tr class="table-row">
-                                    <td>{{entry.room}}</td>
-                                    <td>{{entry.number_of_animals}}</td>
-                                    <td>{{entry.date}}</td>
+                                    <td>{{room}}</td>
+                                    <td>{{n_of_animals}}</td>
                                 </tr>
                             {% endfor %}
                         </table>

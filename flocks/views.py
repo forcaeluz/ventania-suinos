@@ -1,9 +1,12 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
+from django.views.generic import TemplateView
 from .models import Flock, AnimalSeparation
 from .forms import FlockForm, AnimalExitsForm, AnimalDeathForm
 from .forms import AnimalSeparationForm, SeparationDeathForm, SeparationExitForm
+from buildings.models import Room
+
 
 @login_required
 def index(request):
@@ -34,24 +37,27 @@ def save(request):
     return render(request, 'flocks/create.html', {'form': form})
 
 
-@login_required
-def detail(request, flock_id):
-    flock = get_object_or_404(Flock, pk=flock_id)
-    exit_list = flock.animalexits_set.all()
-    death_list = flock.animaldeath_set.all()
-    separation_list = flock.animalseparation_set.all()
-    room_entries = flock.animalroomentry_set.all()
-    room_exits = flock.animalroomexit_set.filter(number_of_animals__gt=0)
+class FlockDetailView(TemplateView):
+    template_name = 'flocks/detail.html'
 
-    param_list = {
-        'flock': flock,
-        'exits_list': exit_list,
-        'death_list': death_list,
-        'separation_list': separation_list,
-        'room_entries': room_entries,
-        'room_exits': room_exits
-    }
-    return render(request, 'flocks/detail.html', param_list)
+    def get(self, request, *args, **kwargs):
+        flock_id = kwargs.get('flock_id', None)
+        self.flock = get_object_or_404(Flock, pk=flock_id)
+        return super().get(request, args, kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'flock': self.flock})
+        context.update({'death_list': self.flock.animaldeath_set.all()})
+        context.update({'separation_list': self.flock.animalseparation_set.all()})
+        context.update({'exits_list': self.flock.animalexits_set.all()})
+        context.update({'current_rooms': self.__get_building_info()})
+        return context
+
+    def __get_building_info(self):
+        room_entries = self.flock.animalroomentry_set.all()
+        current_rooms = [obj.room for obj in room_entries if obj.room.get_animals_for_flock(self.flock.id) > 0]
+        return {obj.__str__(): obj.get_animals_for_flock(self.flock.id) for obj in current_rooms}
 
 
 @login_required
