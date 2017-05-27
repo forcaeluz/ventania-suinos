@@ -206,22 +206,26 @@ class EditAnimalEntry(EasyFatWizard):
         super().__init__(**kwargs)
 
     def get_form_initial(self, step):
-        initial = []
-        if step == 'building_information':
-            rooms = [obj for obj in Room.objects.all() if obj.occupancy == 0 and not obj.is_separation]
-            if len(rooms) == 0:
-                raise ValueError('No room available.')  # TODO Generate nice usefull information for the user.
+        initial = None
+        flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
+        self.animal_entry.set_flock(instance=flock)
+        if step == 'flock_information':
+            initial = {'number_of_animals': flock.number_of_animals,
+                       'date': flock.entry_date,
+                       'weight': flock.entry_weight}
 
-            animals = int(self.storage.get_step_data('flock_information')['flock_information-number_of_animals'])
-            default_entry = int(animals/len(rooms))
-            for room in rooms:
-                initial.append({'room': room, 'number_of_animals': default_entry})
+        if step == 'building_information':
+            room_entries = self.animal_entry.flock.animalroomentry_set.all()
+            initial = []
+
+            for room in room_entries:
+                initial.append({'room': room.room, 'number_of_animals': room.number_of_animals})
 
         return initial
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
-
+        context.update({'warnings': [_('Altering entry information might cause data inconsistency.')]})
         if self.steps.current == 'building_information':
             for sub_form in form.forms:
                 if sub_form.warnings:
@@ -233,14 +237,21 @@ class EditAnimalEntry(EasyFatWizard):
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
         if step == 'building_information':
-            number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
+            number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
             kwargs.update({'number_of_animals': number_of_animals})
 
         return kwargs
 
     def done(self, form_list, **kwargs):
+        flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
+        flock_data = self.get_cleaned_data_for_step('flock_information')
+        building_data = self.get_cleaned_data_for_step('building_information')
+        self.animal_entry.set_flock(instance=flock)
+        self.animal_entry.update_flock(flock_data)
+        self.animal_entry.update_room_entries(building_data)
+        self.animal_entry.clean()
         self.animal_entry.save()
-        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id':self.animal_entry.flock.id}))
+        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': self.animal_entry.flock.id}))
 
 
 class RegisterNewAnimalExit(EasyFatWizard):

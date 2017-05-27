@@ -9,7 +9,11 @@
         <div class="col-sm-6 col-md-3">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'General Information' %}</h3>
+                    <h3 class="panel-title">{% trans 'General Information' %}
+                    <div class="btn-group">
+                        <a title="{% trans 'Edit animal entry' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_entry' flock.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                    </div>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <ul>

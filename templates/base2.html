@@ -91,7 +91,9 @@
 <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 <script src="{% static 'bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
 <script src="{% static 'bootstrap-datepicker/locales/bootstrap-datepicker.pt-br.min.js' %}"></script>
+<script src="{% static 'bootstrap-datepicker/locales/bootstrap-datepicker.en-us.min.js' %}"></script>
 <script>$('.datepicker').datepicker({
-        language: "{{ LANGUAGE_CODE }}"
+        language: "{{ LANGUAGE_CODE }}",
+        format: "yyyy-mm-dd"
     });</script>
 </body>
