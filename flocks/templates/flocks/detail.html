@@ -2,7 +2,6 @@
 {% load i18n %}
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'flocks/flocks.css' %}" />
 <title>{% trans "Flock Information" %}{{ flock.flock_name }}</title>
 {% block main_content %}
     <h1>{% trans "Flock information" %}</h1>
@@ -59,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-md-4">
+        <div class="col-sm-6 col-md-5">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">{% trans 'Animal Separations' %}</h3>
@@ -85,9 +84,9 @@
                                     {% else %}
                                         <td>{% trans "Still separated." %}
                                             <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>
-                                            <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>
-                                                </div>
+                                                <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>
+                                                <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>
+                                            </div>
                                         </td>
                                     {% endif %}
                                 </tr>
@@ -99,7 +98,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-12 col-md-5">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">{% trans 'Animal Exits' %}</h3>
@@ -130,6 +129,34 @@
                 </div>
             </div>
         </div>
-
+        <div class="col-sm-6 col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Room Occupation' %}
+                    <div class="btn-group">
+                        <a title="{% trans 'Detailed room information' %}" class="btn btn-primary" href="{% url 'flocks:detail' flock.id %}"><span class="glyphicon glyphicon-search"></span></a>
+                    </div>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {% if current_rooms %}
+                        <table class="table table-stripped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Room" %}</th>
+                                <th>{% trans "N. of animals" %}</th>
+                            </tr>
+                            </thead>
+                            {% for room, n_of_animals in current_rooms.items %}
+                                <tr class="table-row">
+                                    <td>{{room}}</td>
+                                    <td>{{n_of_animals}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
