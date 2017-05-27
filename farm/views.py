@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import render, HttpResponseRedirect, Http404
 from django.urls import reverse
 from django.forms import formset_factory
 from django.utils.translation import ugettext as _
@@ -16,7 +16,7 @@ from buildings.models import Room, AnimalRoomEntry
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
 from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
-from .models import AnimalExitWizardSaver
+from .models import AnimalExitWizardSaver, AnimalEntry
 
 
 class FarmKpi:
@@ -147,21 +147,13 @@ class RegisterNewAnimalEntry(EasyFatWizard):
 
     def done(self, form_list, **kwargs):
         flock_info = self.get_cleaned_data_for_step('flock_information')
-        new_flock = Flock(number_of_animals=flock_info['number_of_animals'],
-                          entry_date=flock_info['date'],
-                          entry_weight=flock_info['weight'])
-        new_flock.full_clean()
-        new_flock.save()
-
         room_info = self.get_cleaned_data_for_step('building_information')
-        room_info = [room for room in room_info if room['number_of_animals'] > 0]
-        for room in room_info:
-            room_entry = AnimalRoomEntry(number_of_animals=room['number_of_animals'],
-                                         flock=new_flock,
-                                         date=flock_info['date'],
-                                         room=room['room'])
-            room_entry.full_clean()
-            room_entry.save()
+
+        animal_entry = AnimalEntry()
+        animal_entry.set_flock(flock_info)
+        animal_entry.set_room_entries(room_info)
+        animal_entry.clean()
+        animal_entry.save()
 
         return HttpResponseRedirect(reverse('farm:index'))
 
@@ -196,8 +188,59 @@ class RegisterNewAnimalEntry(EasyFatWizard):
             number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
             kwargs.update({'number_of_animals': number_of_animals})
 
+        return kwargs
+
+
+class EditAnimalEntry(EasyFatWizard):
+    form_list = [
+        ('flock_information', AnimalEntryForm),
+        ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
+    ]
+    wizard_name = _('Edit animal entry')
+
+    title_dict = {'flock_information': _('General flock information'),
+                  'building_information': _('Placement of animals in the buildings')}
+
+    def __init__(self, **kwargs):
+        self.animal_entry = AnimalEntry()
+        super().__init__(**kwargs)
+
+    def get_form_initial(self, step):
+        initial = []
+        if step == 'building_information':
+            rooms = [obj for obj in Room.objects.all() if obj.occupancy == 0 and not obj.is_separation]
+            if len(rooms) == 0:
+                raise ValueError('No room available.')  # TODO Generate nice usefull information for the user.
+
+            animals = int(self.storage.get_step_data('flock_information')['flock_information-number_of_animals'])
+            default_entry = int(animals/len(rooms))
+            for room in rooms:
+                initial.append({'room': room, 'number_of_animals': default_entry})
+
+        return initial
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+
+        if self.steps.current == 'building_information':
+            for sub_form in form.forms:
+                if sub_form.warnings:
+                    context.update({'warnings': ['With the suggested distribution, some rooms have '
+                                                 'more animals than capacity.']})
+
+        return context
+
+    def get_form_kwargs(self, step=None):
+        kwargs = super().get_form_kwargs(step)
+        if step == 'building_information':
+            number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
+            kwargs.update({'number_of_animals': number_of_animals})
 
         return kwargs
+
+    def done(self, form_list, **kwargs):
+        self.animal_entry.save()
+        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id':self.animal_entry.flock.id}))
 
 
 class RegisterNewAnimalExit(EasyFatWizard):
