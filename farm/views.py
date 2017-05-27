@@ -104,18 +104,8 @@ class FarmIndexView(TemplateView):
         return [kpi_grow_rate]
 
     def generate_warnings(self):
+        # No warnings for the time being.
         warning_list = []
-        number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
-        number_of_animals_in_rooms = sum([room.occupancy for room in Room.objects.all()])
-        if number_of_living_animals != number_of_animals_in_rooms:
-            warning = FarmWarning('Data Inconsistency:', 'The number of living animals is not equal to the number of '
-                                                         'animals inside rooms. This might be due to an update from a'
-                                                         'version without the Buildings module to a version with the '
-                                                         'Buildings module. You have to manually update the room '
-                                                         'information, with the <a href="%s">wizard.</a>' % reverse('buildings:migration_wizard'),
-                                  '')
-            warning_list.append(warning)
-
         return warning_list
 
 
