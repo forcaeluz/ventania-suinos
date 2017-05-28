@@ -4,18 +4,17 @@ from django.urls import reverse
 from django.forms import formset_factory
 from django.utils.translation import ugettext as _
 from formtools.wizard.views import SessionWizardView
-from statistics import mean
 from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
 from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
-from buildings.models import Room, AnimalRoomEntry
+from buildings.models import Room
 
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm, AnimalDeathUpdateForm
-from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
+from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm, AnimalSeparationUpdateForm
 from .models import AnimalExitWizardSaver, AnimalEntry
 
 
@@ -337,6 +336,10 @@ class RegisterNewAnimalExit(EasyFatWizard):
         return initial
 
 
+class EditAnimalExit(EasyFatWizard):
+    pass
+
+
 class RegisterSingleAnimalExit(EasyFatWizard):
     """
         This Wizard is to register deaths. Usually this can be done in a single step, however,
@@ -527,6 +530,7 @@ class EditAnimalDeath(EasyFatWizard):
             return data['room'].is_separation and data['room'].occupancy > 1
         return True
 
+
 class RegisterNewAnimalSeparation(TemplateView):
     template_name = 'farm/form.html'
 
@@ -542,3 +546,20 @@ class RegisterNewAnimalSeparation(TemplateView):
             return HttpResponseRedirect(reverse('farm:index'))
         return render(request, self.template_name, {'form': form})
 
+
+class EditAnimalSeparation(TemplateView):
+    template_name = 'farm/form.html'
+
+    def get(self, request, *args, **kwargs):
+        separation = kwargs.get('separation_id')
+        form = AnimalSeparationUpdateForm(separation_id=separation)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        separation = kwargs.get('separation_id')
+        form = AnimalSeparationUpdateForm(request.POST, separation_id=separation)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': form.separation.flock.id}))
+        return render(request, self.template_name, {'form': form})
