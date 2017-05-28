@@ -190,7 +190,7 @@ class AnimalExitRoomFormset(BaseFormSet):
         return exited_rooms
 
 
-class AnimalDeathForm(EasyFatForm):
+class AnimalDeathBaseForm(EasyFatForm):
     date = DateField()
     room = ModelChoiceField(queryset=Room.objects.all())
     weight = FloatField()
@@ -200,11 +200,6 @@ class AnimalDeathForm(EasyFatForm):
         super().__init__(*args, **kwargs)
         self.death = None
         self.flock = None
-        non_empty_rooms = [room.id for room in Room.objects.all() if room.occupancy > 0]
-        self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
-        self.fields['date'].initial = datetime.today().date()
-        self.fields['room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
     def set_flock(self, flock):
         self.flock = flock
@@ -212,7 +207,7 @@ class AnimalDeathForm(EasyFatForm):
     def clean(self):
         data = self.cleaned_data
         date = data['date']
-        room = data['room'] # Room
+        room = data['room']  # Room
         if not self.flock:
             if len(room.get_flocks_present_at(date)) == 1:
                 self.flock = next(iter(room.get_flocks_present_at(date)))
@@ -223,6 +218,64 @@ class AnimalDeathForm(EasyFatForm):
 
         if room.get_animals_for_flock(self.flock, date) <= 0:
             raise ValidationError('No animals from flock in room at death date')
+
+    def save(self):
+        raise NotImplementedError
+
+
+class AnimalDeathUpdateForm(AnimalDeathBaseForm):
+    def __init__(self, *args, **kwargs):
+        death_id = kwargs.pop('death_id', 0)
+        super().__init__(*args, **kwargs)
+        self.death = AnimalDeath.objects.get(id=death_id)
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+        self.fields['date'].initial = self.death.date
+        self.fields['weight'].initial = self.death.weight
+        self.fields['reason'].initial = self.death.cause
+        self.fields['room'].initial = self.death.deathinroom_set.all()[0].room
+
+    def save(self):
+        data = self.cleaned_data
+        date = data['date']
+        room = data['room']
+        old_date = self.death.date
+        old_flock = self.death.flock
+
+        if not self.flock:
+            if len(room.get_flocks_present_at(date)) == 1:
+                self.flock = next(iter(room.get_flocks_present_at(date)))
+            else:
+                raise ValidationError('No flock distinction possible')
+
+        assert(self.death is not None)
+        flock = self.flock
+        self.death.date = date
+        self.death.flock = flock
+        self.death.weight = data['weight']
+        self.death.cause = data['reason']
+
+        self.death.save()
+
+        death_in_room = DeathInRoom.objects.get(death=self.death)
+        old_room = death_in_room.room
+        death_in_room.room = room
+        death_in_room.save()
+
+        animal_room_exit = AnimalRoomExit.objects.get(room=old_room, flock=old_flock, date=old_date, number_of_animals=1)
+        animal_room_exit.date = date
+        animal_room_exit.room = room
+        animal_room_exit.flock = flock
+        animal_room_exit.save()
+
+
+class AnimalDeathForm(AnimalDeathBaseForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+        self.fields['date'].initial = datetime.today().date()
 
     def save(self):
         data = self.cleaned_data

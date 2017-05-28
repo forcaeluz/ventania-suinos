@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalExits
+from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
 from buildings.models import Room, AnimalRoomEntry
 
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
-from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
+from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm, AnimalDeathUpdateForm
 from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
 from .models import AnimalExitWizardSaver, AnimalEntry
 
@@ -466,6 +466,66 @@ class RegisterNewAnimalDeath(EasyFatWizard):
             return data['room'].is_separation and data['room'].occupancy > 1
         return True
 
+
+class EditAnimalDeath(EasyFatWizard):
+
+    wizard_name = _('Edit animal death')
+    form_list = [
+        ('death_information', AnimalDeathUpdateForm),
+        ('animal_distinction', AnimalDeathDistinctionForm),
+        ('overview', EasyFatForm)
+    ]
+
+    title_dict = {'death_information': _('General death information'),
+              'animal_distinction': _('Distinguishing animals'),
+              'overview': _('Overview')}
+
+    def __init__(self, **kwargs):
+        condition_dict = {'animal_distinction': self.needs_animal_distinction}
+        kwargs.update({'condition_dict': condition_dict})
+        super().__init__(**kwargs)
+
+    def get_form_kwargs(self, step=None):
+        if step == 'death_information':
+            return {'death_id': self.kwargs.get('death_id', 0)}
+        elif step == 'animal_distinction':
+            room = self.get_cleaned_data_for_step('death_information')['room']
+            return {'room': room}
+        else:
+            return {}
+
+    def done(self, form_list, **kwargs):
+        # get the forms
+        forms = kwargs.get('form_dict')
+        death_form = forms.get('death_information')
+        distinction_form = forms.get('animal_distinction', None)
+
+        if distinction_form:  # Some distinction is needed.
+            # Set the flock value in the death form. Otherwise it won't always be able
+            # to fill in the animal's flock.
+            death_form.set_flock(distinction_form.cleaned_data.get('separation', None))
+            # After saving we can get the death value, and fill in on the distinction form.
+            death_form.save()
+            death = death_form.death
+
+            distinction_form.set_death(death)
+            distinction_form.save()
+        else:  # Death form is clear, no separation attached.
+            death_form.save()
+        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': death_form.death.flock.id}))
+
+    @staticmethod
+    def needs_animal_distinction(wizard_instance):
+        """
+        Class function to determine is the animal distinction step needs to be performed.
+        It's made a static method to support the way it is called by the FormWizard.
+        :param wizard_instance: 
+        :return: 
+        """
+        data = wizard_instance.get_cleaned_data_for_step('death_information') or None
+        if data:
+            return data['room'].is_separation and data['room'].occupancy > 1
+        return True
 
 class RegisterNewAnimalSeparation(TemplateView):
     template_name = 'farm/form.html'
