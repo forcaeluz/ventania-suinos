@@ -55,6 +55,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a title="{% trans 'Edit animal death' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_death' death.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                                            <a title="{% trans 'Edit animal death' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_death' death.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                                         </div>
                                     </td>
                                 </tr>

@@ -6,6 +6,7 @@ from .models import AnimalExits, Flock, AnimalDeath, AnimalSeparation
 
 from datetime import datetime
 
+
 class FlockForm(forms.Form):
     entry_date = forms.DateField(widget=DatePickerWidget())
     entry_weight = forms.DecimalField()

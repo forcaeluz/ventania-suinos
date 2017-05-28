@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from feeding.models import FeedType
 from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
-from buildings.models import Room
+from buildings.models import Room, AnimalRoomExit
 
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
@@ -336,10 +336,6 @@ class RegisterNewAnimalExit(EasyFatWizard):
         return initial
 
 
-class EditAnimalExit(EasyFatWizard):
-    pass
-
-
 class RegisterSingleAnimalExit(EasyFatWizard):
     """
         This Wizard is to register deaths. Usually this can be done in a single step, however,
@@ -563,3 +559,20 @@ class EditAnimalSeparation(TemplateView):
             form.save()
             return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': form.separation.flock.id}))
         return render(request, self.template_name, {'form': form})
+
+
+class DeleteDeath(TemplateView):
+    template_name = 'farm/delete_confirm.html'
+
+    def get_context_data(self, **kwargs):
+        self.death = AnimalDeath.objects.get(id=kwargs.pop('death_id', 0))
+        context = super().get_context_data(**kwargs)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        death = AnimalDeath.objects.get(id=kwargs.pop('death_id', 0))
+        room_exit = AnimalRoomExit.objects.get(date=death.date, flock=death.flock, number_of_animals=1)
+        flock_id = death.flock_id
+        death.delete()
+        room_exit.delete()
+        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': flock_id}))
