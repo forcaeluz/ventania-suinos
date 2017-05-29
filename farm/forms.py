@@ -433,3 +433,33 @@ class AnimalSeparationUpdateForm(AnimalSeparationBaseForm):
             room_entry.flock = flock
             room_entry.room = dst_room
             room_entry.save()
+
+
+class AnimalDeathDeleteForm(EasyFatForm):
+    def __init__(self, *args, **kwargs):
+        self.death = kwargs.pop('death', None)  # AnimalDeath
+        super().__init__(*args, **kwargs)
+
+    def save(self):
+        date = self.death.date
+        flock = self.death.flock
+        room_exit = AnimalRoomExit.objects.get(date=date, flock=flock, number_of_animals=1)
+        self.death.delete()
+        room_exit.delete()
+
+
+class AnimalSeparationDeleteForm(EasyFatForm):
+
+    def __init__(self, *args, **kwargs):
+        self.separation = kwargs.pop('separation', None)  # AnimalSeparation
+        assert(isinstance(self.separation, AnimalSeparation))
+        super().__init__(*args, **kwargs)
+
+    def save(self):
+        date = self.separation.date
+        flock = self.separation.flock
+        room_exit = AnimalRoomExit.objects.get(date=date, flock=flock, number_of_animals=1)
+        room_entry = AnimalRoomEntry.objects.get(date=date, flock=flock, number_of_animals=1, room__is_separation=True)
+        self.separation.delete()
+        room_exit.delete()
+        room_entry.delete()

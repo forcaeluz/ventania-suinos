@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from django.shortcuts import render, HttpResponseRedirect, Http404
+from django.shortcuts import render, HttpResponseRedirect, Http404, get_object_or_404
 from django.urls import reverse
 from django.forms import formset_factory
 from django.utils.translation import ugettext as _
@@ -13,8 +13,14 @@ from buildings.models import Room, AnimalRoomExit
 
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
-from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm, AnimalDeathUpdateForm
-from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm, AnimalSeparationUpdateForm
+from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
+from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
+
+# Update forms
+from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
+# Delete forms
+from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm
+
 from .models import AnimalExitWizardSaver, AnimalEntry
 
 
@@ -564,15 +570,34 @@ class EditAnimalSeparation(TemplateView):
 class DeleteDeath(TemplateView):
     template_name = 'farm/delete_confirm.html'
 
-    def get_context_data(self, **kwargs):
-        self.death = AnimalDeath.objects.get(id=kwargs.pop('death_id', 0))
-        context = super().get_context_data(**kwargs)
-        return context
+    def get(self, request, *args, **kwargs):
+        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
+        form = AnimalDeathDeleteForm(death=death)
+        return render(request, self.template_name, {'form': form})
 
     def post(self, request, *args, **kwargs):
-        death = AnimalDeath.objects.get(id=kwargs.pop('death_id', 0))
-        room_exit = AnimalRoomExit.objects.get(date=death.date, flock=death.flock, number_of_animals=1)
-        flock_id = death.flock_id
-        death.delete()
-        room_exit.delete()
-        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': flock_id}))
+        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
+        form = AnimalDeathDeleteForm(request.POST, death=death)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': death.flock.id}))
+        return render(request, self.template_name, {'form': form})
+
+
+class DeleteSeparation(TemplateView):
+    template_name = 'farm/delete_confirm.html'
+
+    def get(self, request, *args, **kwargs):
+        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
+        form = AnimalSeparationDeleteForm(separation=separation)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
+        form = AnimalSeparationDeleteForm(request.POST, separation=separation)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': separation.flock.id}))
+        return render(request, self.template_name, {'form': form})

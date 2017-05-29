@@ -111,8 +111,8 @@ class AnimalSeparation(models.Model):
     date = models.DateField()
     reason = models.CharField(max_length=250)
     flock = models.ForeignKey(Flock)
-    death = models.ForeignKey(AnimalDeath, null=True, blank=True)
-    exit = models.ForeignKey(AnimalExits, null=True, blank=True)
+    death = models.ForeignKey(AnimalDeath, null=True, blank=True, on_delete=models.SET_NULL)
+    exit = models.ForeignKey(AnimalExits, null=True, blank=True, on_delete=models.SET_NULL)
 
     @property
     def active(self):

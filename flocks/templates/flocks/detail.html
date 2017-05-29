@@ -55,7 +55,7 @@
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a title="{% trans 'Edit animal death' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_death' death.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
-                                            <a title="{% trans 'Edit animal death' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_death' death.id %}"><span class="glyphicon glyphicon-trash"></span></a>
+                                            <a title="{% trans 'Delete animal death' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_death' death.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                                         </div>
                                     </td>
                                 </tr>
@@ -102,7 +102,8 @@
 {#                                                    <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>#}
 {#                                                    <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>#}
                                                 {% endif %}
-                                                <a title="{% trans 'Edit animal death' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                                                <a title="{% trans 'Edit animal separation' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                                                <a title="{% trans 'Delete animal separation' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_separation' separation.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                                             </div>
                                         </td>
 
