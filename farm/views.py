@@ -1,22 +1,27 @@
 from django.views.generic import TemplateView
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import render, HttpResponseRedirect, Http404, get_object_or_404
 from django.urls import reverse
 from django.forms import formset_factory
 from django.utils.translation import ugettext as _
 from formtools.wizard.views import SessionWizardView
-from statistics import mean
 from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalExits
-from buildings.models import Room, AnimalRoomEntry
+from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
+from buildings.models import Room, AnimalRoomExit
 
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
 from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
-from .models import AnimalExitWizardSaver
+
+# Update forms
+from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
+# Delete forms
+from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm
+
+from .models import AnimalExitWizardSaver, AnimalEntry
 
 
 class FarmKpi:
@@ -147,21 +152,13 @@ class RegisterNewAnimalEntry(EasyFatWizard):
 
     def done(self, form_list, **kwargs):
         flock_info = self.get_cleaned_data_for_step('flock_information')
-        new_flock = Flock(number_of_animals=flock_info['number_of_animals'],
-                          entry_date=flock_info['date'],
-                          entry_weight=flock_info['weight'])
-        new_flock.full_clean()
-        new_flock.save()
-
         room_info = self.get_cleaned_data_for_step('building_information')
-        room_info = [room for room in room_info if room['number_of_animals'] > 0]
-        for room in room_info:
-            room_entry = AnimalRoomEntry(number_of_animals=room['number_of_animals'],
-                                         flock=new_flock,
-                                         date=flock_info['date'],
-                                         room=room['room'])
-            room_entry.full_clean()
-            room_entry.save()
+
+        animal_entry = AnimalEntry()
+        animal_entry.set_flock(flock_info)
+        animal_entry.set_room_entries(room_info)
+        animal_entry.clean()
+        animal_entry.save()
 
         return HttpResponseRedirect(reverse('farm:index'))
 
@@ -196,8 +193,70 @@ class RegisterNewAnimalEntry(EasyFatWizard):
             number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
             kwargs.update({'number_of_animals': number_of_animals})
 
+        return kwargs
+
+
+class EditAnimalEntry(EasyFatWizard):
+    form_list = [
+        ('flock_information', AnimalEntryForm),
+        ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
+    ]
+    wizard_name = _('Edit animal entry')
+
+    title_dict = {'flock_information': _('General flock information'),
+                  'building_information': _('Placement of animals in the buildings')}
+
+    def __init__(self, **kwargs):
+        self.animal_entry = AnimalEntry()
+        super().__init__(**kwargs)
+
+    def get_form_initial(self, step):
+        initial = None
+        flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
+        self.animal_entry.set_flock(instance=flock)
+        if step == 'flock_information':
+            initial = {'number_of_animals': flock.number_of_animals,
+                       'date': flock.entry_date,
+                       'weight': flock.entry_weight}
+
+        if step == 'building_information':
+            room_entries = self.animal_entry.flock.animalroomentry_set.all()
+            initial = []
+
+            for room in room_entries:
+                initial.append({'room': room.room, 'number_of_animals': room.number_of_animals})
+
+        return initial
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form=form, **kwargs)
+        context.update({'warnings': [_('Altering entry information might cause data inconsistency.')]})
+        if self.steps.current == 'building_information':
+            for sub_form in form.forms:
+                if sub_form.warnings:
+                    context.update({'warnings': ['With the suggested distribution, some rooms have '
+                                                 'more animals than capacity.']})
+
+        return context
+
+    def get_form_kwargs(self, step=None):
+        kwargs = super().get_form_kwargs(step)
+        if step == 'building_information':
+            number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
+            kwargs.update({'number_of_animals': number_of_animals})
 
         return kwargs
+
+    def done(self, form_list, **kwargs):
+        flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
+        flock_data = self.get_cleaned_data_for_step('flock_information')
+        building_data = self.get_cleaned_data_for_step('building_information')
+        self.animal_entry.set_flock(instance=flock)
+        self.animal_entry.update_flock(flock_data)
+        self.animal_entry.update_room_entries(building_data)
+        self.animal_entry.clean()
+        self.animal_entry.save()
+        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': self.animal_entry.flock.id}))
 
 
 class RegisterNewAnimalExit(EasyFatWizard):
@@ -413,6 +472,67 @@ class RegisterNewAnimalDeath(EasyFatWizard):
         return True
 
 
+class EditAnimalDeath(EasyFatWizard):
+
+    wizard_name = _('Edit animal death')
+    form_list = [
+        ('death_information', AnimalDeathUpdateForm),
+        ('animal_distinction', AnimalDeathDistinctionForm),
+        ('overview', EasyFatForm)
+    ]
+
+    title_dict = {'death_information': _('General death information'),
+              'animal_distinction': _('Distinguishing animals'),
+              'overview': _('Overview')}
+
+    def __init__(self, **kwargs):
+        condition_dict = {'animal_distinction': self.needs_animal_distinction}
+        kwargs.update({'condition_dict': condition_dict})
+        super().__init__(**kwargs)
+
+    def get_form_kwargs(self, step=None):
+        if step == 'death_information':
+            return {'death_id': self.kwargs.get('death_id', 0)}
+        elif step == 'animal_distinction':
+            room = self.get_cleaned_data_for_step('death_information')['room']
+            return {'room': room}
+        else:
+            return {}
+
+    def done(self, form_list, **kwargs):
+        # get the forms
+        forms = kwargs.get('form_dict')
+        death_form = forms.get('death_information')
+        distinction_form = forms.get('animal_distinction', None)
+
+        if distinction_form:  # Some distinction is needed.
+            # Set the flock value in the death form. Otherwise it won't always be able
+            # to fill in the animal's flock.
+            death_form.set_flock(distinction_form.cleaned_data.get('separation', None))
+            # After saving we can get the death value, and fill in on the distinction form.
+            death_form.save()
+            death = death_form.death
+
+            distinction_form.set_death(death)
+            distinction_form.save()
+        else:  # Death form is clear, no separation attached.
+            death_form.save()
+        return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': death_form.death.flock.id}))
+
+    @staticmethod
+    def needs_animal_distinction(wizard_instance):
+        """
+        Class function to determine is the animal distinction step needs to be performed.
+        It's made a static method to support the way it is called by the FormWizard.
+        :param wizard_instance: 
+        :return: 
+        """
+        data = wizard_instance.get_cleaned_data_for_step('death_information') or None
+        if data:
+            return data['room'].is_separation and data['room'].occupancy > 1
+        return True
+
+
 class RegisterNewAnimalSeparation(TemplateView):
     template_name = 'farm/form.html'
 
@@ -428,3 +548,56 @@ class RegisterNewAnimalSeparation(TemplateView):
             return HttpResponseRedirect(reverse('farm:index'))
         return render(request, self.template_name, {'form': form})
 
+
+class EditAnimalSeparation(TemplateView):
+    template_name = 'farm/form.html'
+
+    def get(self, request, *args, **kwargs):
+        separation = kwargs.get('separation_id')
+        form = AnimalSeparationUpdateForm(separation_id=separation)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        separation = kwargs.get('separation_id')
+        form = AnimalSeparationUpdateForm(request.POST, separation_id=separation)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': form.separation.flock.id}))
+        return render(request, self.template_name, {'form': form})
+
+
+class DeleteDeath(TemplateView):
+    template_name = 'farm/delete_confirm.html'
+
+    def get(self, request, *args, **kwargs):
+        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
+        form = AnimalDeathDeleteForm(death=death)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
+        form = AnimalDeathDeleteForm(request.POST, death=death)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': death.flock.id}))
+        return render(request, self.template_name, {'form': form})
+
+
+class DeleteSeparation(TemplateView):
+    template_name = 'farm/delete_confirm.html'
+
+    def get(self, request, *args, **kwargs):
+        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
+        form = AnimalSeparationDeleteForm(separation=separation)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
+        form = AnimalSeparationDeleteForm(request.POST, separation=separation)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': separation.flock.id}))
+        return render(request, self.template_name, {'form': form})

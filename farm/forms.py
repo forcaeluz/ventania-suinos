@@ -190,7 +190,7 @@ class AnimalExitRoomFormset(BaseFormSet):
         return exited_rooms
 
 
-class AnimalDeathForm(EasyFatForm):
+class AnimalDeathBaseForm(EasyFatForm):
     date = DateField()
     room = ModelChoiceField(queryset=Room.objects.all())
     weight = FloatField()
@@ -200,11 +200,6 @@ class AnimalDeathForm(EasyFatForm):
         super().__init__(*args, **kwargs)
         self.death = None
         self.flock = None
-        non_empty_rooms = [room.id for room in Room.objects.all() if room.occupancy > 0]
-        self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
-        self.fields['date'].initial = datetime.today().date()
-        self.fields['room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
     def set_flock(self, flock):
         self.flock = flock
@@ -212,7 +207,7 @@ class AnimalDeathForm(EasyFatForm):
     def clean(self):
         data = self.cleaned_data
         date = data['date']
-        room = data['room'] # Room
+        room = data['room']  # Room
         if not self.flock:
             if len(room.get_flocks_present_at(date)) == 1:
                 self.flock = next(iter(room.get_flocks_present_at(date)))
@@ -223,6 +218,64 @@ class AnimalDeathForm(EasyFatForm):
 
         if room.get_animals_for_flock(self.flock, date) <= 0:
             raise ValidationError('No animals from flock in room at death date')
+
+    def save(self):
+        raise NotImplementedError
+
+
+class AnimalDeathUpdateForm(AnimalDeathBaseForm):
+    def __init__(self, *args, **kwargs):
+        death_id = kwargs.pop('death_id', 0)
+        super().__init__(*args, **kwargs)
+        self.death = AnimalDeath.objects.get(id=death_id)
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+        self.fields['date'].initial = self.death.date
+        self.fields['weight'].initial = self.death.weight
+        self.fields['reason'].initial = self.death.cause
+        self.fields['room'].initial = self.death.deathinroom_set.all()[0].room
+
+    def save(self):
+        data = self.cleaned_data
+        date = data['date']
+        room = data['room']
+        old_date = self.death.date
+        old_flock = self.death.flock
+
+        if not self.flock:
+            if len(room.get_flocks_present_at(date)) == 1:
+                self.flock = next(iter(room.get_flocks_present_at(date)))
+            else:
+                raise ValidationError('No flock distinction possible')
+
+        assert(self.death is not None)
+        flock = self.flock
+        self.death.date = date
+        self.death.flock = flock
+        self.death.weight = data['weight']
+        self.death.cause = data['reason']
+
+        self.death.save()
+
+        death_in_room = DeathInRoom.objects.get(death=self.death)
+        old_room = death_in_room.room
+        death_in_room.room = room
+        death_in_room.save()
+
+        animal_room_exit = AnimalRoomExit.objects.get(room=old_room, flock=old_flock, date=old_date, number_of_animals=1)
+        animal_room_exit.date = date
+        animal_room_exit.room = room
+        animal_room_exit.flock = flock
+        animal_room_exit.save()
+
+
+class AnimalDeathForm(AnimalDeathBaseForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+        self.fields['date'].initial = datetime.today().date()
 
     def save(self):
         data = self.cleaned_data
@@ -275,7 +328,7 @@ class AnimalDeathDistinctionForm(EasyFatForm):
         separation.save()
 
 
-class AnimalSeparationForm(EasyFatForm):
+class AnimalSeparationBaseForm(EasyFatForm):
     date = DateField()
     src_room = ModelChoiceField(Room.objects.filter(is_separation=False))
     dst_room = ModelChoiceField(Room.objects.filter(is_separation=True))
@@ -283,18 +336,24 @@ class AnimalSeparationForm(EasyFatForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        non_empty_rooms = [room.id for room in Room.objects.all() if room.occupancy > 0]
         self.fields['date'].widget.attrs.update(
             {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
-        self.fields['date'].initial = datetime.today().date()
-        if not self.is_bound:
-            self.fields['src_room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
     def clean(self):
         data = self.cleaned_data
         room = data.get('src_room')
         if len(room.get_flocks_present_at(data['date'])) != 1:
             raise ValidationError('Unable to handle rooms with multiple flocks.')
+
+    def save(self):
+        raise NotImplementedError
+
+
+class AnimalSeparationForm(AnimalSeparationBaseForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].initial = datetime.today().date()
 
     def save(self):
         data = self.cleaned_data
@@ -323,3 +382,84 @@ class AnimalSeparationForm(EasyFatForm):
                                          flock=flock,
                                          number_of_animals=1)
             room_entry.save()
+
+
+class AnimalSeparationUpdateForm(AnimalSeparationBaseForm):
+
+    def __init__(self, *args, **kwargs):
+        separation_id = kwargs.pop('separation_id', 0)
+        super().__init__(*args, **kwargs)
+        self.separation = AnimalSeparation.objects.get(id=separation_id)
+        self.sep_from_room = AnimalSeparatedFromRoom.objects.get(separation=self.separation)
+        self.fields['date'].initial = self.separation.date
+        self.fields['reason'].initial = self.separation.reason
+        self.fields['src_room'].initial = self.sep_from_room.room
+        self.fields['dst_room'].initial = self.sep_from_room.destination
+
+    def save(self):
+        data = self.cleaned_data
+        date = data['date']
+        src_room = data['src_room']
+        dst_room = data['dst_room']
+
+        old_flock = self.separation.flock
+        old_room = self.sep_from_room.room
+        old_date = self.separation.date
+        old_destination = self.sep_from_room.destination
+
+        if len(src_room.get_flocks_present_at(date)) == 1:
+            flock = next(iter(src_room.get_flocks_present_at(date)))
+
+            self.separation.flock = flock
+            self.separation.date = date
+            self.separation.reason = data['reason']
+
+            self.separation.save()
+
+            self.sep_from_room.separation = self.separation
+            self.sep_from_room.room = src_room
+            self.sep_from_room.destination = dst_room
+            self.sep_from_room.save()
+
+            room_exit = AnimalRoomExit.objects.get(date=old_date, flock=old_flock, room=old_room, number_of_animals=1)
+            room_exit.date = date
+            room_exit.flock = flock
+            room_exit.room = src_room
+            room_exit.save()
+
+            room_entry = AnimalRoomEntry.objects.get(date=old_date, flock=old_flock,
+                                                     room=old_destination, number_of_animals=1)
+            room_entry.date = date
+            room_entry.flock = flock
+            room_entry.room = dst_room
+            room_entry.save()
+
+
+class AnimalDeathDeleteForm(EasyFatForm):
+    def __init__(self, *args, **kwargs):
+        self.death = kwargs.pop('death', None)  # AnimalDeath
+        super().__init__(*args, **kwargs)
+
+    def save(self):
+        date = self.death.date
+        flock = self.death.flock
+        room_exit = AnimalRoomExit.objects.get(date=date, flock=flock, number_of_animals=1)
+        self.death.delete()
+        room_exit.delete()
+
+
+class AnimalSeparationDeleteForm(EasyFatForm):
+
+    def __init__(self, *args, **kwargs):
+        self.separation = kwargs.pop('separation', None)  # AnimalSeparation
+        assert(isinstance(self.separation, AnimalSeparation))
+        super().__init__(*args, **kwargs)
+
+    def save(self):
+        date = self.separation.date
+        flock = self.separation.flock
+        room_exit = AnimalRoomExit.objects.get(date=date, flock=flock, number_of_animals=1)
+        room_entry = AnimalRoomEntry.objects.get(date=date, flock=flock, number_of_animals=1, room__is_separation=True)
+        self.separation.delete()
+        room_exit.delete()
+        room_entry.delete()

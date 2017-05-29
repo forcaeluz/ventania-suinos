@@ -1,5 +1,8 @@
+from django.shortcuts import Http404
+from django.core.validators import ValidationError
+
 from flocks.models import Flock, AnimalExits
-from buildings.models import Room, AnimalRoomExit
+from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry
 
 
 class AnimalExitWizardSaver:
@@ -69,3 +72,94 @@ class AnimalExitWizardSaver:
 
         for obj in animal_exits:
             obj.save()
+
+
+class AnimalEntry:
+    """
+    Class that combines RoomEntry and Flock Information.
+    
+    This class is used to create or edit RoomEntry and Flock Information.
+    """
+    def __init__(self, flock=None):
+        self.flock = flock
+        if self.flock is not None:
+            self.room_entries = flock.animalroomentry_set.all()
+        else:
+            self.room_entries = []
+
+    def set_flock(self, **kwargs):
+        instance = kwargs.get('instance', None)
+        data = kwargs.get('cleaned_data', None)
+        if instance:
+            self.flock = instance
+            self.room_entries = self.flock.animalroomentry_set.all()
+        elif data:
+            self.flock = Flock(number_of_animals=data['number_of_animals'],
+                               entry_date=data['date'],
+                               entry_weight=data['weight'])
+        else:
+            raise ValueError('Not possible to assign flock information')
+
+    def update_flock(self, data):
+        assert(self.flock is not None)
+        self.flock.number_of_animals = data['number_of_animals']
+        self.flock.entry_date = data['date']
+        self.flock.entry_weight = data['weight']
+        for room_entry in self.room_entries:
+            room_entry.date = self.flock.entry_date
+
+    def set_room_entries(self, room_entries_info):
+        assert(self.flock is not None)
+        for room_entry_info in room_entries_info:
+            room_entry = AnimalRoomEntry(number_of_animals=room_entry_info['number_of_animals'],
+                                         flock=self.flock,
+                                         date=self.flock.entry_date,
+                                         room=room_entry_info['room'])
+            self.room_entries.append(room_entry)
+
+    def update_room_entries(self, room_entries_info):
+        assert(self.flock is not None)
+        existing_list = [obj.room for obj in self.room_entries]
+        # The final list
+        final_list = [obj['room'] for obj in room_entries_info]
+        # Rooms to be deleted
+        delete_list = [obj.room for obj in self.room_entries if obj.room not in final_list]
+        # Rooms to be added
+        add_list = [obj['room'] for obj in room_entries_info if obj['room'] not in existing_list]
+        # Rooms to be updated
+        update_list = [obj for obj in final_list if obj not in add_list]
+
+        # Delete entries
+        for room_entry in self.room_entries:
+            if room_entry.room in delete_list:
+                room_entry.delete()
+
+        # Only the update list should be in here now.
+        self.room_entries = self.flock.animalroomentry_set.all()
+        for room_entry in self.room_entries:
+            assert(room_entry.room in update_list)
+            for new_room_info in room_entries_info:
+                if new_room_info['room'] == room_entry.room:
+                    room_entry.number_of_animals = new_room_info['number_of_animals']
+                    room_entry.date = self.flock.entry_date
+
+        for room in add_list:
+            for new_room_info in room_entries_info:
+                if new_room_info['room'] == room:
+                    room_entry = AnimalRoomEntry(number_of_animals=new_room_info['number_of_animals'],
+                                                 flock=self.flock,
+                                                 date=self.flock.entry_date,
+                                                 room=new_room_info['room'])
+                    self.room_entries.append(room_entry)
+
+    def clean(self):
+        count = 0
+        self.flock.full_clean()
+        for room_entry in self.room_entries:
+            room_entry.full_clean()
+            count += room_entry.number_of_animals
+
+    def save(self):
+        self.flock.save()
+        for room_entry in self.room_entries:
+            room_entry.save()

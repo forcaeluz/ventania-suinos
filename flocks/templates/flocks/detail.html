@@ -9,7 +9,11 @@
         <div class="col-sm-6 col-md-3">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'General Information' %}</h3>
+                    <h3 class="panel-title">{% trans 'General Information' %}
+                        <div class="btn-group">
+                            <a title="{% trans 'Edit animal entry' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_entry' flock.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                        </div>
+                    </h3>
                 </div>
                 <div class="panel-body">
                     <ul>
@@ -40,6 +44,7 @@
                                 <th>{% trans "Date" %}</th>
                                 <th>{% trans "Weight" %}</th>
                                 <th>{% trans "Cause" %}</th>
+                                <th></th>
                             </tr>
                             </thead>
                             {% for death in death_list %}
@@ -47,6 +52,12 @@
                                     <td>{{death.date}}</td>
                                     <td>{{death.weight}}</td>
                                     <td>{{death.cause}}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a title="{% trans 'Edit animal death' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_death' death.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                                            <a title="{% trans 'Delete animal death' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_death' death.id %}"><span class="glyphicon glyphicon-trash"></span></a>
+                                        </div>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </table>
@@ -71,6 +82,7 @@
                                 <th>{% trans "Separation Date" %}</th>
                                 <th>{% trans "Reason" %}</th>
                                 <th>{% trans "Ended" %}</th>
+                                <th></th>
                             </tr>
                             </thead>
                             {% for separation in separation_list %}
@@ -82,13 +94,19 @@
                                     {% elif separation.exit %}
                                         <td>{% trans "Exit in:" %} {{separation.exit.date}}</td>
                                     {% else %}
-                                        <td>{% trans "Still separated." %}
+                                        <td>{% trans "Still separated." %}</td>
+                                    {% endif %}
+                                        <td>
                                             <div class="btn-group btn-group-sm">
-                                                <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>
-                                                <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>
+                                                {% if separation.active %}
+{#                                                    <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>#}
+{#                                                    <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>#}
+                                                {% endif %}
+                                                <a title="{% trans 'Edit animal separation' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                                                <a title="{% trans 'Delete animal separation' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_separation' separation.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                                             </div>
                                         </td>
-                                    {% endif %}
+
                                 </tr>
                             {% endfor %}
                         </table>
@@ -133,9 +151,9 @@
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">{% trans 'Room Occupation' %}
-                    <div class="btn-group">
-                        <a title="{% trans 'Detailed room information' %}" class="btn btn-primary" href="{% url 'flocks:detail' flock.id %}"><span class="glyphicon glyphicon-search"></span></a>
-                    </div>
+                        <div class="btn-group">
+                            <a title="{% trans 'Detailed room information' %}" class="btn btn-primary" href="{% url 'flocks:detail' flock.id %}"><span class="glyphicon glyphicon-search"></span></a>
+                        </div>
                     </h3>
                 </div>
                 <div class="panel-body">
