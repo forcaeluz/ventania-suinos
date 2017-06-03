@@ -3,10 +3,10 @@ from datetime import datetime
 # Fields
 from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, CharField, ModelMultipleChoiceField
 # Others
-from django.forms import forms, BaseFormSet, Form, ValidationError, CheckboxSelectMultiple
+from django.forms import forms, BaseFormSet, Form, ValidationError
 
-from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom, RoomGroup
-from flocks.models import Flock, AnimalExits, AnimalDeath, AnimalSeparation
+from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom
+from flocks.models import AnimalExits, AnimalDeath, AnimalSeparation
 
 from .widgets import RoomSelectionWidget
 
@@ -79,7 +79,8 @@ class GroupExitForm(Form):
                 'class': 'form-control',
             })
         self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker', 'data-date-end-date': datetime.today().date().isoformat()})
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
+             'data-date-end-date': datetime.today().date().isoformat()})
         self.fields['date'].initial = datetime.today().date()
 
 
@@ -169,8 +170,6 @@ class AnimalExitRoomForm(Form):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
             })
-
-
 
     def clean(self):
         no_of_animals = self.cleaned_data['number_of_animals']
@@ -283,7 +282,8 @@ class AnimalDeathUpdateForm(AnimalDeathBaseForm):
         death_in_room.room = room
         death_in_room.save()
 
-        animal_room_exit = AnimalRoomExit.objects.get(room=old_room, flock=old_flock, date=old_date, number_of_animals=1)
+        animal_room_exit = AnimalRoomExit.objects.get(room=old_room, flock=old_flock,
+                                                      date=old_date, number_of_animals=1)
         animal_room_exit.date = date
         animal_room_exit.room = room
         animal_room_exit.flock = flock
