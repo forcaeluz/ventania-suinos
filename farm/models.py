@@ -1,5 +1,6 @@
 from django.shortcuts import Http404
 from django.core.validators import ValidationError
+from django.db import models
 
 from flocks.models import Flock, AnimalExits
 from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry
@@ -163,3 +164,4 @@ class AnimalEntry:
         self.flock.save()
         for room_entry in self.room_entries:
             room_entry.save()
+

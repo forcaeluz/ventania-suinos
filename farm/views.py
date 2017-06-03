@@ -12,7 +12,7 @@ from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
 from buildings.models import Room, AnimalRoomExit
 
 
-from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
+from .forms import AnimalEntryForm, AnimalEntryRoomForm, ExtendedGroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
 from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
 
@@ -265,7 +265,7 @@ class RegisterNewAnimalExit(EasyFatWizard):
     request building information as well.
     """
     form_list = [
-        ('general_information', GroupExitForm),
+        ('general_information', ExtendedGroupExitForm),
         ('building_information', formset_factory(form=AnimalExitRoomForm, formset=AnimalExitRoomFormset, extra=0)),
         ('overview', EasyFatForm)
     ]
@@ -301,7 +301,7 @@ class RegisterNewAnimalExit(EasyFatWizard):
         context = super().get_context_data(form=form, **kwargs)
 
         if self.steps.current == 'building_information':
-            pass
+            print(self.get_cleaned_data_for_step('general_information')['rooms'])
         elif self.steps.current == 'overview':
             context.update({'warnings': ['This is only an overview. Changing values does not affect the '
                                          'data that is going to be saved.']})

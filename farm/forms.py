@@ -8,6 +8,8 @@ from django.forms import forms, BaseFormSet, Form, ValidationError, CheckboxSele
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom, RoomGroup
 from flocks.models import Flock, AnimalExits, AnimalDeath, AnimalSeparation
 
+from .widgets import RoomSelectionWidget
+
 
 class EasyFatForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -79,6 +81,10 @@ class GroupExitForm(Form):
         self.fields['date'].widget.attrs.update(
             {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
         self.fields['date'].initial = datetime.today().date()
+
+
+class ExtendedGroupExitForm(GroupExitForm):
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.all(), widget=RoomSelectionWidget)
 
 
 class SingleAnimalExitForm(EasyFatForm):
