@@ -3,7 +3,7 @@
 
 {% block main_content %}
     <div class="row">
-    <h1 class="page-header">{{ wizard_title }}</h1>
+        <h1 class="page-header">{{ wizard_title }}</h1>
         <div class="col-xs-12 col-lg-4">
             <div class="panel panel-info">
                 <div class="panel-heading">
@@ -16,6 +16,20 @@
                         {{ wizard.management_form }}
                         {% if wizard.form.forms %}
                             {{ wizard.form.management_form }}
+                            {% for error in wizard.form.errors %}
+                                {% for value in error.values %}
+                                    <div class="alert alert-danger alert-dismissible">
+                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                        {{ value.as_text }}
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in wizard.form.non_form_errors %}
+                                <div class="alert alert-danger alert-dismissible">
+                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
                             <table class="table table-striped">
                                 <thead>
                                 <tr class="table-header">
@@ -49,22 +63,8 @@
                                 {% endfor %}
                             </table>
                         {% else %}
-                            {{ wizard.form }}
+                            {% include 'farm/form.html' with form=wizard.form %}
                         {% endif %}
-                        {% for error in wizard.form.errors %}
-                            {% for value in error.values %}
-                                <div class="alert alert-danger alert-dismissible">
-                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                    {{ value.as_text }}
-                                </div>
-                            {% endfor %}
-                        {% endfor %}
-                        {% for error in wizard.form.non_form_errors %}
-                            <div class="alert alert-danger alert-dismissible">
-                                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                {{ error }}
-                            </div>
-                        {% endfor %}
 
                         {% if wizard.steps.prev %}
                             <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>

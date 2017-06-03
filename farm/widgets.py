@@ -22,6 +22,8 @@ class RoomSelectionWidget(ChoiceWidget):
 
     def create_room_tree(self, value):
         choices = self.choices.queryset.all()
+        if value is None:
+            value = []
 
         room_groups = {}
         for room in choices:
@@ -41,6 +43,7 @@ class RoomSelectionWidget(ChoiceWidget):
                     changed = True
                     group_info = room_groups.get(group.group.id, self.GroupData(group.group.name))
                     group_info.groups.update({group_id: room_groups.get(group_id, None)})
+                    room_groups.update({group.group.id: group_info})
                     room_groups.pop(group_id)
 
         for key, group in room_groups.items():
@@ -51,7 +54,6 @@ class RoomSelectionWidget(ChoiceWidget):
         context = super().get_context(name, value, attrs)
         self.create_room_tree(value)
         context.update({'groups': self.room_groups})
-
         return context
 
     class GroupData:
