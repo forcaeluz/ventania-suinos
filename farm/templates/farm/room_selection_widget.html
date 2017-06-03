@@ -1,0 +1,7 @@
+{% load static %}
+{% load room_group_select %}
+<div class="form-inline">
+{% for id, group in groups.items %}
+    {% display_room_group widget id group %}
+{% endfor %}
+</div>

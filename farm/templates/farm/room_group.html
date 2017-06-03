@@ -1,0 +1,20 @@
+{% load room_group_select %}
+<ul class="list-group tree collapse {% if not group.collapsed %}in{% endif %}" id="group_{{ id }}">
+    {% for room in group.rooms %}
+        <li class="list-group-item room-check-box">
+        <label><input type="checkbox" value="{{ room.id }}" name="{{ widget.name }}" {% if room.id|stringformat:'i' in widget.value %}checked=""{% endif %}/>{{ room.name }}</label>
+        </li>
+    {% endfor %}
+    {% for sub_id, sub_group in group.groups.items %}
+        <li class="list-group-item">
+            <input type="checkbox"/>
+            <label class="tree-toggle tree-parent">
+                <a role="button" data-toggle="collapse" data-target="#group_{{ sub_id }}"  aria-expanded="{% if sub_group.collapsed %}false{% else %}true{% endif %}" aria-controls="group_{{ sub_id }}">
+                <span class="glyphicon glyphicon-{% if sub_group.collapsed %}plus{% else %}minus{% endif %}"></span>
+                {{ sub_group.name }}
+                </a>
+            </label>
+            {% display_room_group widget sub_id sub_group %}
+        </li>
+    {% endfor %}
+</ul>
