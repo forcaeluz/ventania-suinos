@@ -8,6 +8,8 @@ from django.forms import forms, BaseFormSet, Form, ValidationError, CheckboxSele
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom, RoomGroup
 from flocks.models import Flock, AnimalExits, AnimalDeath, AnimalSeparation
 
+from .widgets import RoomSelectionWidget
+
 
 class EasyFatForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -67,7 +69,7 @@ class AnimalEntryRoomFormset(BaseFormSet):
 class GroupExitForm(Form):
     date = DateField()
     weight = FloatField(min_value=0.0)
-    number_of_animals = IntegerField()
+    number_of_animals = IntegerField(min_value=1)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,8 +79,21 @@ class GroupExitForm(Form):
                 'class': 'form-control',
             })
         self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker', 'data-date-end-date': datetime.today().date().isoformat()})
         self.fields['date'].initial = datetime.today().date()
+
+
+class ExtendedGroupExitForm(GroupExitForm):
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
+
+    def clean(self):
+        number_of_animals_in_rooms = 0
+        rooms = self.cleaned_data.get('rooms')
+        for room in rooms:
+            number_of_animals_in_rooms += room.occupancy
+
+        if number_of_animals_in_rooms < self.cleaned_data.get('number_of_animals'):
+            raise ValidationError('Less animals in selected rooms than specified in exit.')
 
 
 class SingleAnimalExitForm(EasyFatForm):
@@ -145,11 +160,17 @@ class AnimalExitRoomForm(Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        room = kwargs.get('initial').get('room', None)
+        if room is not None:
+            self.fields['room'].queryset = Room.objects.filter(id=room.id)
+            self.fields['room'].widget.attrs['readonly'] = True
         self.warnings = []
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
             })
+
+
 
     def clean(self):
         no_of_animals = self.cleaned_data['number_of_animals']
@@ -330,8 +351,8 @@ class AnimalDeathDistinctionForm(EasyFatForm):
 
 class AnimalSeparationBaseForm(EasyFatForm):
     date = DateField()
-    src_room = ModelChoiceField(Room.objects.filter(is_separation=False))
-    dst_room = ModelChoiceField(Room.objects.filter(is_separation=True))
+    src_room = ModelChoiceField(Room.objects.filter(is_separation=False), label='From room:')
+    dst_room = ModelChoiceField(Room.objects.filter(is_separation=True), label='To room:')
     reason = CharField()
 
     def __init__(self, *args, **kwargs):

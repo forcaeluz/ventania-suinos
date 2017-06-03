@@ -1,5 +1,5 @@
-from django.views.generic import TemplateView
-from django.shortcuts import render, HttpResponseRedirect, Http404, get_object_or_404
+from django.views.generic import TemplateView, FormView
+from django.shortcuts import render, HttpResponseRedirect, get_object_or_404
 from django.urls import reverse
 from django.forms import formset_factory
 from django.utils.translation import ugettext as _
@@ -9,10 +9,10 @@ from datetime import datetime, timedelta
 
 from feeding.models import FeedType
 from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
-from buildings.models import Room, AnimalRoomExit
+from buildings.models import Room
 
 
-from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
+from .forms import AnimalEntryForm, AnimalEntryRoomForm, ExtendedGroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
 from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
 
@@ -43,6 +43,7 @@ class FarmIndexView(TemplateView):
     template_name = "farm/index.html"
 
     def __init__(self):
+        super().__init__()
         self.current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
         self.active_separations = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         self.number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
@@ -265,7 +266,7 @@ class RegisterNewAnimalExit(EasyFatWizard):
     request building information as well.
     """
     form_list = [
-        ('general_information', GroupExitForm),
+        ('general_information', ExtendedGroupExitForm),
         ('building_information', formset_factory(form=AnimalExitRoomForm, formset=AnimalExitRoomFormset, extra=0)),
         ('overview', EasyFatForm)
     ]
@@ -282,27 +283,16 @@ class RegisterNewAnimalExit(EasyFatWizard):
     def get_form_initial(self, step):
         initial = []
         if step == 'building_information':
-            group_information = self.get_cleaned_data_for_step('general_information')
-            number_of_animals = group_information['number_of_animals']
-
-            flocks_present = [obj for obj in Flock.objects.order_by('entry_date') if obj.number_of_living_animals > 0]
-            oldest = flocks_present[0]
-
-            separated = len([obj for obj in oldest.animalseparation_set.all() if obj.active])
-
-            if number_of_animals >= oldest.number_of_living_animals - separated:
-                initial = self.__get_initial_room_data_flock_exit(oldest.id)
-            else:
-                initial = self.__get_initial_room_data_flock_exit(0)
+            selected_rooms = self.get_cleaned_data_for_step('general_information').get('rooms')
+            for room in selected_rooms:
+                initial.append({'room': room, 'number_of_animals': 0})
 
         return initial
 
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form=form, **kwargs)
 
-        if self.steps.current == 'building_information':
-            pass
-        elif self.steps.current == 'overview':
+        if self.steps.current == 'overview':
             context.update({'warnings': ['This is only an overview. Changing values does not affect the '
                                          'data that is going to be saved.']})
             form1 = self.get_form('general_information', self.storage.get_step_data('general_information'))
@@ -533,24 +523,18 @@ class EditAnimalDeath(EasyFatWizard):
         return True
 
 
-class RegisterNewAnimalSeparation(TemplateView):
-    template_name = 'farm/form.html'
+class RegisterNewAnimalSeparation(FormView):
+    template_name = 'farm/single_form.html'
+    form_class = AnimalSeparationForm
 
-    def get(self, request, *args, **kwargs):
-        form = AnimalSeparationForm()
-        return render(request, self.template_name, {'form': form})
-
-    def post(self, request, *args, **kwargs):
-        form = AnimalSeparationForm(request.POST)
-
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('farm:index'))
-        return render(request, self.template_name, {'form': form})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'form_title': 'Register new separation'})
+        return context
 
 
 class EditAnimalSeparation(TemplateView):
-    template_name = 'farm/form.html'
+    template_name = 'farm/single_form.html'
 
     def get(self, request, *args, **kwargs):
         separation = kwargs.get('separation_id')

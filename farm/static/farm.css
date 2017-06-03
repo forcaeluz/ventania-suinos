@@ -1,204 +1,33 @@
-body
+.farm-building-list
 {
-    background: #e9e7e8;
-    margin: 0px;
+    list-style: none;
+
 }
 
-.farm-header
-{
-    height: 50px;
-    width: 100%;
-    background: #548235;
-}
-
-.farm-overview
-{
-    width: 100%;
-    display: table;
-    height: 105px;
-    padding-bottom: 10px;
-}
-
-.farm-overview-box
-{
-    float: left;
-    width: 32%;
-    display: block;
-    padding: 10px;
-}
-
-.farm-overview-box-header
-{
-    padding: 5px 10px;
-    background: #548235;
-    color: white;
-    box-sizing: border-box;
-    display: block;
-}
-
-.farm-overview-box-value
-{
-    padding-left: 10px;
-    font-size: 42px;
-    background: #E2F0E9;
-    box-sizing: border-box;
-    display: block;
-}
-
-.menu-item
-{
-    font-size: 24px;
-    padding: 10px;
-    list-style-type: none;
-}
-
-.menu-item-active
-{
-    background: #385724;
-    font-size: 24px;
-    padding: 10px;
-    list-style-type: none;
-}
-
-.farm-menu
-{
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    height: 100%;
-    width: 230px;
-    z-index: 817;
-    box-sizing: border-box;
-    padding-top: 250px;
-    background: #548235;
-}
-
-.main-content
-{
-    box-sizing: border-box;
-    margin-left: 230px;
-    padding: 15px;
-    z-index: 800;
-    position: relative;
-}
-
-.main-page-reports
-{
-    padding: 10px;
-    text-align: center;
-}
-
-.table-header
-{
-    font-weight: bold;
-    color: whitesmoke;
-    background: #548235;
-}
-
-a.menu-item
-{
-    color: whitesmoke;
-}
-
-.logo
-{
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin-left: 15px;
-    max-height: 90%;
-    max-width: 200px;
-}
-
-.actions-list
-{
-    display: block;
-    font-size: 24px;
-    color: whitesmoke;
-}
-
-.farm-header-menu
-{
-    position: relative;
-    margin: 0;
-    float: right;
-    padding-right: 15px;
-    height: 50px;
-    overflow: hidden;
-    display: block;
-    background: #548235;
-    z-index: 810;
-    text-align: right;
-    color: whitesmoke;
-    font-size: 42px;
-}
-
-.farm-header-menu:hover
-{
-    overflow: visible;
-}
-
-.header-menu-item
-{
-    background: #548235;
+.list-group-item {
     padding: 5px 15px;
-    text-align: left;
-    list-style-type: none;
+    padding-right: 0px;
+    border: none;
+}
+
+input[type="checkbox"] {
+    margin-top: 0px;
+    margin-right: 0.5em;
+    vertical-align: -1px;
+}
+
+.tree label {
+    color: #555;
+}
+
+.tree label:hover {
+    text-decoration: underline;
+}
+
+.tree label.tree-parent {
+    color: #222;
+}
+
+.tree label.tree-parent:hover {
     text-decoration: none;
-    font-size: 24px;
-}
-
-.header-menu-item:hover
-{
-    background: #385724;
-}
-
-.header-menu-show
-{
-    list-style-type: none;
-    text-decoration: none;
-    font-size: 42px;
-}
-
-.farm-action-menu
-{
-    margin: 0px;
-    padding: 0px;
-    align-content: right;
-    color: whitesmoke;
-}
-
-.actions
-{
-    width: 100%;
-    display: table;
-}
-
-.single-action
-{
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-}
-
-.action-box
-{
-    width: 150px;
-    height: 150px;
-    background-color: #70a83b;
-    color: whitesmoke;
-    display: inline-block;
-}
-
-.action-box:hover
-{
-    background-color: #548235;
-}
-.action-text
-{
-    display: flex;
 }
