@@ -16,6 +16,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.min.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap-theme.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/dashboard.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'farm.css' %}"/>
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap-datepicker/css/bootstrap-datepicker3.standalone.min.css' %}" />
     <link rel="shortcut icon" type="image/png" href="{% static 'porco.png' %}"/>
 </head>
@@ -96,4 +97,5 @@
         language: "{{ LANGUAGE_CODE }}",
         format: "yyyy-mm-dd"
     });</script>
+<script src="{% static 'treeview.js' %}"></script>
 </body>
