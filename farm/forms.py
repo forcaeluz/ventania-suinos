@@ -6,7 +6,7 @@ from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, 
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom
-from flocks.models import AnimalExits, AnimalDeath, AnimalSeparation
+from flocks.models import AnimalExits, AnimalDeath, AnimalSeparation, Flock
 
 from .widgets import RoomSelectionWidget
 
@@ -24,13 +24,31 @@ class AnimalEntryForm(EasyFatForm):
     date = DateField()
     weight = FloatField(min_value=0.0)
     number_of_animals = IntegerField()
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker'})
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
+             'data-date-end-date': datetime.today().date().isoformat()})
         self.fields['date'].initial = datetime.today().date()
 
+    def clean(self):
+        rooms = self.cleaned_data.get('rooms')
+        date = self.cleaned_data.get('date')
+        for room in rooms:
+            if room.get_occupancy_at_date(at_date=date) > 0:
+                raise ValidationError('You selected rooms which were not empty at the specified date.')
+
+
+class AnimalEntryDeleteForm(EasyFatForm):
+    def __init__(self, *args, **kwargs):
+        self.flock = kwargs.pop('flock', None)  # Flock
+        assert(isinstance(self.flock, Flock))
+        super().__init__(*args, **kwargs)
+
+    def save(self):
+        self.flock.delete()
 
 class AnimalEntryRoomForm(Form):
     room = ModelChoiceField(queryset=Room.objects.all())
@@ -39,6 +57,11 @@ class AnimalEntryRoomForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.warnings = []
+        room = kwargs.get('initial').get('room', None)
+        if room is not None:
+            self.fields['room'].queryset = Room.objects.filter(id=room.id)
+            self.fields['room'].widget.attrs['readonly'] = True
+
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
@@ -70,6 +93,7 @@ class GroupExitForm(Form):
     date = DateField()
     weight = FloatField(min_value=0.0)
     number_of_animals = IntegerField(min_value=1)
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,19 +106,6 @@ class GroupExitForm(Form):
             {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
              'data-date-end-date': datetime.today().date().isoformat()})
         self.fields['date'].initial = datetime.today().date()
-
-
-class ExtendedGroupExitForm(GroupExitForm):
-    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
-
-    def clean(self):
-        number_of_animals_in_rooms = 0
-        rooms = self.cleaned_data.get('rooms')
-        for room in rooms:
-            number_of_animals_in_rooms += room.occupancy
-
-        if number_of_animals_in_rooms < self.cleaned_data.get('number_of_animals'):
-            raise ValidationError('Less animals in selected rooms than specified in exit.')
 
 
 class SingleAnimalExitForm(EasyFatForm):

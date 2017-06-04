@@ -1,9 +1,13 @@
-from django.shortcuts import Http404
 from django.core.validators import ValidationError
-from django.db import models
 
 from flocks.models import Flock, AnimalExits
 from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry
+
+
+class AnimalExit:
+    def __init__(self, group_form, rooms_form):
+        self.group_form = group_form
+        self.room_form = rooms_form
 
 
 class AnimalExitWizardSaver:
@@ -157,11 +161,16 @@ class AnimalEntry:
         count = 0
         self.flock.full_clean()
         for room_entry in self.room_entries:
-            room_entry.full_clean()
             count += room_entry.number_of_animals
+
+        if count != self.flock.number_of_animals:
+            raise ValidationError('Something went wrong.')
 
     def save(self):
         self.flock.save()
         for room_entry in self.room_entries:
+            room_entry.flock = self.flock
             room_entry.save()
 
+    def delete(self):
+        self.flock.delete()
