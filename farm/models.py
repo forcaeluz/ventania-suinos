@@ -1,6 +1,6 @@
 from django.core.validators import ValidationError
 
-from flocks.models import Flock, AnimalExits
+from flocks.models import Flock, AnimalFarmExit, AnimalFlockExit
 from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry
 
 

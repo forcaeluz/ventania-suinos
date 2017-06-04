@@ -78,6 +78,15 @@ class Room(models.Model):
             count -= room_exit.number_of_animals
         return count
 
+    def get_occupancy_at_date(self, at_date=date.today()):
+        count = 0
+        for entry in self.animalroomentry_set.filter(date__lte=at_date):
+            count += entry.number_of_animals
+
+        for room_exit in self.animalroomexit_set.filter(date__lte=at_date):
+            count -= room_exit.number_of_animals
+        return count
+
     def get_animals_for_flock(self, flock_id, at_date=date.today()):
         count = 0
         for entry in self.animalroomentry_set.filter(flock_id=flock_id, date__lte=at_date):

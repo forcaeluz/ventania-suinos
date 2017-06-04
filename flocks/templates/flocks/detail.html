@@ -12,6 +12,7 @@
                     <h3 class="panel-title">{% trans 'General Information' %}
                         <div class="btn-group">
                             <a title="{% trans 'Edit animal entry' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_entry' flock.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                            <a title="{% trans 'Delete animal entry' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_entry' flock.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                         </div>
                     </h3>
                 </div>
@@ -136,7 +137,7 @@
                                 <tr class="table-row">
                                     <td>{{exit.date}}</td>
                                     <td>{{exit.number_of_animals}}</td>
-                                    <td>{{exit.total_weight|stringformat:".2f"}}</td>
+                                    <td>{{exit.weight|stringformat:".2f"}}</td>
                                     <td>{{exit.average_weight|stringformat:".2f"}}</td>
                                 </tr>
                             {% endfor %}

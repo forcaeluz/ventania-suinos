@@ -6,7 +6,7 @@ from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, 
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom
-from flocks.models import AnimalExits, AnimalDeath, AnimalSeparation, Flock
+from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFlockExit, AnimalFarmExit
 
 from .widgets import RoomSelectionWidget
 

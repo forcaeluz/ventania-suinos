@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
+from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit, AnimalFarmExit
 from buildings.models import Room
 
 
@@ -95,7 +95,7 @@ class FarmIndexView(TemplateView):
 
     def generate_historic_kpis(self):
         considering_from = datetime.today() - timedelta(days=365)
-        flocks_exited_past_year = AnimalExits.objects.filter(flock__animalexits__date__gt=considering_from)
+        flocks_exited_past_year = AnimalFlockExit.objects.filter(flock__animalflockexit__farm_exit__date__gt=considering_from)
         if not flocks_exited_past_year:
             return []
 
