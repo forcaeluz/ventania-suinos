@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit, AnimalFarmExit
+from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit
 from buildings.models import Room
 
 
@@ -21,7 +21,7 @@ from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
 # Delete forms
 from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm, AnimalEntryDeleteForm
 
-from .models import AnimalExitWizardSaver, AnimalEntry
+from .models import AnimalEntry, AnimalExit
 
 
 class FarmKpi:
@@ -277,6 +277,7 @@ class DeleteAnimalEntry(FormView):
             return HttpResponseRedirect(reverse('farm:index'))
         return render(request, self.template_name, {'form': form})
 
+
 class RegisterNewAnimalExit(EasyFatWizard):
     """
     This class is a generic view for registering new exits. If the buildings app is installed, it will
@@ -332,10 +333,15 @@ class RegisterNewAnimalExit(EasyFatWizard):
             return self.template_name
 
     def done(self, form_list, **kwargs):
-        group_form = kwargs.get('form_dict')['general_information']
-        building_form = kwargs.get('form_dict')['building_information']
-        saver = AnimalExitWizardSaver(group_form, building_form)
+        saver = AnimalExit()
+        saver.set_animal_farm_exit(cleaned_data=self.get_cleaned_data_for_step('general_information'))
+        saver.set_room_exit_information(self.get_cleaned_data_for_step('building_information'))
+        saver.clean()
         saver.save()
+        # group_form = kwargs.get('form_dict')['general_information']
+        # building_form = kwargs.get('form_dict')['building_information']
+        # saver = AnimalExitWizardSaver(group_form, building_form)
+        # saver.save()
         return HttpResponseRedirect(reverse('farm:index'))
 
     @staticmethod

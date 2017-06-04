@@ -1,5 +1,5 @@
 from django.db import models
-from flocks.models import Flock, AnimalDeath, AnimalSeparation
+from flocks.models import Flock, AnimalDeath, AnimalSeparation, AnimalFarmExit
 from datetime import date
 
 
@@ -129,6 +129,7 @@ class AnimalRoomExit(models.Model):
     room = models.ForeignKey(Room)
     number_of_animals = models.IntegerField()
     flock = models.ForeignKey(Flock)
+    farm_exit = models.ForeignKey(AnimalFarmExit, null=True)
 
 
 class DeathInRoom(models.Model):
@@ -147,4 +148,3 @@ class AnimalSeparatedFromRoom(models.Model):
     room = models.ForeignKey(Room, related_name='source_room')
     destination = models.ForeignKey(Room, related_name='destination_room', null=True)
     separation = models.ForeignKey(AnimalSeparation)
-

@@ -47,7 +47,7 @@ class Flock(models.Model):
     @property
     def average_exit_weight(self):
         exits_set = self.animalflockexit_set.all()
-        weight = sum([obj.total_weight for obj in exits_set])
+        weight = sum([obj.weight for obj in exits_set])
         animals = sum([obj.number_of_animals for obj in exits_set])
         if animals > 0:
             return weight/animals
@@ -93,6 +93,10 @@ class AnimalFarmExit(models.Model):
     weight = models.FloatField()
     number_of_animals = models.IntegerField()
     destination = models.CharField(max_length=140, default='Unknown')
+
+    @property
+    def average_weight(self):
+        return self.weight / self.number_of_animals
 
 
 class AnimalFlockExit(models.Model):
