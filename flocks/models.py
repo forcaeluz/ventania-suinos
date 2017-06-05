@@ -3,11 +3,42 @@ from math import ceil
 import datetime
 
 
+class CurrentFlocksManager(models.Manager):
+    def present_at_farm(self):
+        result_list = []
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT f.id,\n"
+                           "  f.entry_date,\n"
+                           "  f.entry_weight,\n"
+                           "  f.number_of_animals,\n"
+                           "  f.number_of_animals - coalesce(e.exits,0) - coalesce(d.deaths,0) AS \"animal_count\"\n"
+                           "FROM flocks_flock AS f\n"
+                           "  LEFT JOIN\n"
+                           "  (SELECT\n"
+                           "     flock_id,\n"
+                           "     SUM(number_of_animals) AS \"exits\"\n"
+                           "   FROM flocks_animalflockexit GROUP BY flock_id)\n"
+                           "    AS e ON e.flock_id == f.id\n"
+                           "  LEFT JOIN\n"
+                           "  (SELECT\n"
+                           "     flock_id,\n"
+                           "     count(DISTINCT id) AS \"deaths\"\n"
+                           "   FROM flocks_animaldeath GROUP BY flock_id) AS d ON d.flock_id == f.id\n"
+                           "WHERE animal_count > 0\n")
+            for row in cursor.fetchall():
+                p = self.model(id=row[0], entry_date=row[1], entry_weight=row[2], number_of_animals=row[3])
+                result_list.append(p)
+            return result_list
+
+
 class Flock(models.Model):
 
     entry_date = models.DateField()
     entry_weight = models.FloatField()
     number_of_animals = models.IntegerField()
+    objects = CurrentFlocksManager()
+    # alive = CurrentFlocksManager()
 
     @property
     def flock_name(self):
