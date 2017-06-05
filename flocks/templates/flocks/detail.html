@@ -97,16 +97,16 @@
                                     {% else %}
                                         <td>{% trans "Still separated." %}</td>
                                     {% endif %}
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                {% if separation.active %}
-{#                                                    <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>#}
-{#                                                    <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>#}
-                                                {% endif %}
-                                                <a title="{% trans 'Edit animal separation' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
-                                                <a title="{% trans 'Delete animal separation' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_separation' separation.id %}"><span class="glyphicon glyphicon-trash"></span></a>
-                                            </div>
-                                        </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if separation.active %}
+                                                {#                                                    <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>#}
+                                                {#                                                    <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>#}
+                                            {% endif %}
+                                            <a title="{% trans 'Edit animal separation' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
+                                            <a title="{% trans 'Delete animal separation' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_separation' separation.id %}"><span class="glyphicon glyphicon-trash"></span></a>
+                                        </div>
+                                    </td>
 
                                 </tr>
                             {% endfor %}
@@ -131,6 +131,7 @@
                                 <th>{% trans "N. of animals" %}</th>
                                 <th>{% trans "Total weight" %}</th>
                                 <th>{% trans "Average weight" %}</th>
+                                <th></th>
                             </tr>
                             </thead>
                             {% for exit in exits_list %}
@@ -139,6 +140,11 @@
                                     <td>{{exit.number_of_animals}}</td>
                                     <td>{{exit.weight|stringformat:".2f"}}</td>
                                     <td>{{exit.average_weight|stringformat:".2f"}}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a title="{% trans 'Delete animal exit' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_exit' exit.farm_exit_id %}"><span class="glyphicon glyphicon-trash"></span></a>
+                                        </div>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </table>

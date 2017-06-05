@@ -30,6 +30,7 @@ class DeleteForm(EasyFatForm):
                 'class': 'form-control',
             })
 
+
 class AnimalEntryForm(EasyFatForm):
     date = DateField()
     weight = FloatField(min_value=0.0)
@@ -170,6 +171,7 @@ class SingleAnimalExitForm(EasyFatForm):
 
         animal_flock_exit = AnimalFlockExit(number_of_animals=1,
                                             weight=data['weight'],
+                                            flock=self.flock,
                                             farm_exit=animal_exit)
 
         animal_flock_exit.save()
@@ -182,6 +184,21 @@ class SingleAnimalExitForm(EasyFatForm):
 
         room_exit.save()
         self.animal_exit = animal_exit
+
+
+class AnimalExitDeleteForm(EasyFatForm):
+
+    def __init__(self, *args, **kwargs):
+        self.exit = kwargs.pop('exit', None)  # AnimalFarmExit
+        self.instance = self.exit
+        super().__init__(*args, **kwargs)
+        assert (isinstance(self.exit, AnimalFarmExit))
+
+    def save(self):
+        room_exits = self.exit.animalroomexit_set.all()
+        for room_exit in room_exits:
+            room_exit.delete()
+        self.exit.delete()
 
 
 class AnimalExitRoomForm(Form):

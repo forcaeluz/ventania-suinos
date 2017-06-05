@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit
+from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit, AnimalFarmExit
 from buildings.models import Room
 
 
@@ -19,7 +19,7 @@ from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
 # Update forms
 from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
 # Delete forms
-from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm, AnimalEntryDeleteForm
+from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm, AnimalEntryDeleteForm, AnimalExitDeleteForm
 
 from .models import AnimalEntry, AnimalExit
 
@@ -602,7 +602,6 @@ class DeleteDeath(EasyFatFormView):
         return kwargs
 
 
-
 class DeleteSeparation(EasyFatFormView):
     template_name = 'farm/delete_confirm.html'
     form_class = AnimalSeparationDeleteForm
@@ -619,4 +618,22 @@ class DeleteSeparation(EasyFatFormView):
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs()
         kwargs.update({'separation': get_object_or_404(AnimalSeparation, id=self.kwargs.get('separation_id'))})
+        return kwargs
+
+
+class DeleteExit(EasyFatFormView):
+    template_name = 'farm/delete_confirm.html'
+    form_class = AnimalExitDeleteForm
+    form_title = 'Delete animal exit'
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('farm:index')
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'exit': get_object_or_404(AnimalFarmExit, id=self.kwargs.get('exit_id'))})
         return kwargs
