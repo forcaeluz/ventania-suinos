@@ -3,9 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.views.generic import TemplateView
 from .models import Flock, AnimalSeparation
-from .forms import FlockForm, AnimalExitsForm, AnimalDeathForm
-from .forms import AnimalSeparationForm, SeparationDeathForm, SeparationExitForm
-from buildings.models import Room
+from .forms import FlockForm, AnimalDeathForm
+from .forms import AnimalSeparationForm, SeparationDeathForm
 
 
 @login_required
@@ -50,7 +49,7 @@ class FlockDetailView(TemplateView):
         context.update({'flock': self.flock})
         context.update({'death_list': self.flock.animaldeath_set.all()})
         context.update({'separation_list': self.flock.animalseparation_set.all()})
-        context.update({'exits_list': self.flock.animalexits_set.all()})
+        context.update({'exits_list': self.flock.animalflockexit_set.all()})
         context.update({'current_rooms': self.__get_building_info()})
         return context
 

@@ -8,20 +8,20 @@ from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalExits, AnimalDeath
+from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit, AnimalFarmExit
 from buildings.models import Room
 
 
-from .forms import AnimalEntryForm, AnimalEntryRoomForm, ExtendedGroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
+from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
 from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
 
 # Update forms
 from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
 # Delete forms
-from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm
+from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm, AnimalEntryDeleteForm, AnimalExitDeleteForm
 
-from .models import AnimalExitWizardSaver, AnimalEntry
+from .models import AnimalEntry, AnimalExit
 
 
 class FarmKpi:
@@ -80,7 +80,8 @@ class FarmIndexView(TemplateView):
         kpi_list.append(FarmKpi('success', 'Animals on Farm', self.number_of_living_animals, ''))
 
         if self.farm_capacity is not 0:
-            kpi_list.append(FarmKpi('success', 'Occupancy', '%.2f' % (self.number_of_living_animals * 100 / self.farm_capacity), '%'))
+            occupancy = (self.number_of_living_animals * 100 / self.farm_capacity)
+            kpi_list.append(FarmKpi('success', 'Occupancy', '%.2f' % occupancy, '%'))
 
         kpi_death_perc = FarmKpi('danger', 'Death Percentage', '%.2f' % death_percentage, '%')
         if death_percentage < 2:
@@ -94,7 +95,7 @@ class FarmIndexView(TemplateView):
 
     def generate_historic_kpis(self):
         considering_from = datetime.today() - timedelta(days=365)
-        flocks_exited_past_year = AnimalExits.objects.filter(flock__animalexits__date__gt=considering_from)
+        flocks_exited_past_year = AnimalFlockExit.objects.filter(flock__animalflockexit__farm_exit__date__gt=considering_from)
         if not flocks_exited_past_year:
             return []
 
@@ -136,6 +137,15 @@ class EasyFatWizard(SessionWizardView):
         return context
 
 
+class EasyFatFormView(FormView):
+    form_title = 'Form'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'form_title': self.form_title})
+        return context
+
+
 class RegisterNewAnimalEntry(EasyFatWizard):
     """
         This class is a generic view for registering new flocks. It registers the new flock, as well as building
@@ -156,7 +166,7 @@ class RegisterNewAnimalEntry(EasyFatWizard):
         room_info = self.get_cleaned_data_for_step('building_information')
 
         animal_entry = AnimalEntry()
-        animal_entry.set_flock(flock_info)
+        animal_entry.set_flock(cleaned_data=flock_info)
         animal_entry.set_room_entries(room_info)
         animal_entry.clean()
         animal_entry.save()
@@ -166,13 +176,11 @@ class RegisterNewAnimalEntry(EasyFatWizard):
     def get_form_initial(self, step):
         initial = []
         if step == 'building_information':
-            rooms = [obj for obj in Room.objects.all() if obj.occupancy == 0 and not obj.is_separation]
-            if len(rooms) == 0:
-                raise ValueError('No room available.')  # TODO Generate nice usefull information for the user.
+            selected_rooms = self.get_cleaned_data_for_step('flock_information').get('rooms')
+            animals = self.get_cleaned_data_for_step('flock_information').get('number_of_animals')
+            default_entry = int(animals / len(selected_rooms))
 
-            animals = int(self.storage.get_step_data('flock_information')['flock_information-number_of_animals'])
-            default_entry = int(animals/len(rooms))
-            for room in rooms:
+            for room in selected_rooms:
                 initial.append({'room': room, 'number_of_animals': default_entry})
 
         return initial
@@ -191,7 +199,7 @@ class RegisterNewAnimalEntry(EasyFatWizard):
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
         if step == 'building_information':
-            number_of_animals = self.get_cleaned_data_for_step('general_information')['number_of_animals']
+            number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
             kwargs.update({'number_of_animals': number_of_animals})
 
         return kwargs
@@ -260,13 +268,32 @@ class EditAnimalEntry(EasyFatWizard):
         return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': self.animal_entry.flock.id}))
 
 
+class DeleteAnimalEntry(FormView):
+    template_name = 'farm/delete_confirm.html'
+    form_class = AnimalEntryDeleteForm
+
+    def get(self, request, *args, **kwargs):
+        flock = get_object_or_404(Flock, id=kwargs.pop('flock_id'))
+        form = AnimalEntryDeleteForm(flock=flock)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        flock = get_object_or_404(Flock, id=kwargs.pop('flock_id'))
+        form = AnimalEntryDeleteForm(request.POST, flock=flock)
+
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('farm:index'))
+        return render(request, self.template_name, {'form': form})
+
+
 class RegisterNewAnimalExit(EasyFatWizard):
     """
     This class is a generic view for registering new exits. If the buildings app is installed, it will
     request building information as well.
     """
     form_list = [
-        ('general_information', ExtendedGroupExitForm),
+        ('general_information', GroupExitForm),
         ('building_information', formset_factory(form=AnimalExitRoomForm, formset=AnimalExitRoomFormset, extra=0)),
         ('overview', EasyFatForm)
     ]
@@ -315,10 +342,15 @@ class RegisterNewAnimalExit(EasyFatWizard):
             return self.template_name
 
     def done(self, form_list, **kwargs):
-        group_form = kwargs.get('form_dict')['general_information']
-        building_form = kwargs.get('form_dict')['building_information']
-        saver = AnimalExitWizardSaver(group_form, building_form)
+        saver = AnimalExit()
+        saver.set_animal_farm_exit(cleaned_data=self.get_cleaned_data_for_step('general_information'))
+        saver.set_room_exit_information(self.get_cleaned_data_for_step('building_information'))
+        saver.clean()
         saver.save()
+        # group_form = kwargs.get('form_dict')['general_information']
+        # building_form = kwargs.get('form_dict')['building_information']
+        # saver = AnimalExitWizardSaver(group_form, building_form)
+        # saver.save()
         return HttpResponseRedirect(reverse('farm:index'))
 
     @staticmethod
@@ -472,8 +504,8 @@ class EditAnimalDeath(EasyFatWizard):
     ]
 
     title_dict = {'death_information': _('General death information'),
-              'animal_distinction': _('Distinguishing animals'),
-              'overview': _('Overview')}
+                  'animal_distinction': _('Distinguishing animals'),
+                  'overview': _('Overview')}
 
     def __init__(self, **kwargs):
         condition_dict = {'animal_distinction': self.needs_animal_distinction}
@@ -551,37 +583,57 @@ class EditAnimalSeparation(TemplateView):
         return render(request, self.template_name, {'form': form})
 
 
-class DeleteDeath(TemplateView):
+class DeleteDeath(EasyFatFormView):
     template_name = 'farm/delete_confirm.html'
+    form_title = 'Delete animal death'
+    form_class = AnimalDeathDeleteForm
 
-    def get(self, request, *args, **kwargs):
-        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
-        form = AnimalDeathDeleteForm(death=death)
-        return render(request, self.template_name, {'form': form})
+    def form_valid(self, form):
+        self.kwargs.update({'flock_id': form.death.flock.id})
+        form.save()
+        return super().form_valid(form)
 
-    def post(self, request, *args, **kwargs):
-        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
-        form = AnimalDeathDeleteForm(request.POST, death=death)
+    def get_success_url(self):
+        return reverse('flocks:detail', kwargs={'flock_id': self.kwargs.get('flock_id')})
 
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': death.flock.id}))
-        return render(request, self.template_name, {'form': form})
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'death': get_object_or_404(AnimalDeath, id=self.kwargs.get('death_id'))})
+        return kwargs
 
 
-class DeleteSeparation(TemplateView):
+class DeleteSeparation(EasyFatFormView):
     template_name = 'farm/delete_confirm.html'
+    form_class = AnimalSeparationDeleteForm
+    form_title = 'Delete animal separation'
 
-    def get(self, request, *args, **kwargs):
-        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
-        form = AnimalSeparationDeleteForm(separation=separation)
-        return render(request, self.template_name, {'form': form})
+    def form_valid(self, form):
+        self.kwargs.update({'flock_id': form.separation.flock.id})
+        form.save()
+        return super().form_valid(form)
 
-    def post(self, request, *args, **kwargs):
-        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
-        form = AnimalSeparationDeleteForm(request.POST, separation=separation)
+    def get_success_url(self):
+        return reverse('flocks:detail', kwargs={'flock_id': self.kwargs.get('flock_id')})
 
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': separation.flock.id}))
-        return render(request, self.template_name, {'form': form})
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'separation': get_object_or_404(AnimalSeparation, id=self.kwargs.get('separation_id'))})
+        return kwargs
+
+
+class DeleteExit(EasyFatFormView):
+    template_name = 'farm/delete_confirm.html'
+    form_class = AnimalExitDeleteForm
+    form_title = 'Delete animal exit'
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('farm:index')
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'exit': get_object_or_404(AnimalFarmExit, id=self.kwargs.get('exit_id'))})
+        return kwargs
