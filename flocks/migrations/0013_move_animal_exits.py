@@ -6,6 +6,7 @@ def move_exits(apps, schema_editor):
     AnimalExits = apps.get_model('flocks', 'AnimalExits')
     AnimalFarmExit = apps.get_model('flocks', 'AnimalFarmExit')
     AnimalFlockExit = apps.get_model('flocks', 'AnimalFlockExit')
+    AnimalSeparation = apps.get_model('flocks', 'AnimalSeparation')
     for animal_exit in AnimalExits.objects.all():
         farm_exit = AnimalFarmExit(date=animal_exit.date,
                                    weight=animal_exit.total_weight,
@@ -16,6 +17,11 @@ def move_exits(apps, schema_editor):
                                      flock=animal_exit.flock,
                                      farm_exit=farm_exit)
         flock_exit.save()
+        separations = animal_exit.animalseparation_set.all()
+        for separation in separations:
+            separation.flockexit_id = flock_exit.id
+            separation.save()
+
         animal_exit.delete()
 
 class Migration(migrations.Migration):
