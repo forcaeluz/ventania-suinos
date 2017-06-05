@@ -137,6 +137,15 @@ class EasyFatWizard(SessionWizardView):
         return context
 
 
+class EasyFatFormView(FormView):
+    form_title = 'Form'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'form_title': self.form_title})
+        return context
+
+
 class RegisterNewAnimalEntry(EasyFatWizard):
     """
         This class is a generic view for registering new flocks. It registers the new flock, as well as building
@@ -574,37 +583,40 @@ class EditAnimalSeparation(TemplateView):
         return render(request, self.template_name, {'form': form})
 
 
-class DeleteDeath(TemplateView):
+class DeleteDeath(EasyFatFormView):
     template_name = 'farm/delete_confirm.html'
+    form_title = 'Delete animal death'
+    form_class = AnimalDeathDeleteForm
 
-    def get(self, request, *args, **kwargs):
-        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
-        form = AnimalDeathDeleteForm(death=death)
-        return render(request, self.template_name, {'form': form})
+    def form_valid(self, form):
+        self.kwargs.update({'flock_id': form.death.flock.id})
+        form.save()
+        return super().form_valid(form)
 
-    def post(self, request, *args, **kwargs):
-        death = get_object_or_404(AnimalDeath, id=kwargs.pop('death_id'))
-        form = AnimalDeathDeleteForm(request.POST, death=death)
+    def get_success_url(self):
+        return reverse('flocks:detail', kwargs={'flock_id': self.kwargs.get('flock_id')})
 
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': death.flock.id}))
-        return render(request, self.template_name, {'form': form})
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'death': get_object_or_404(AnimalDeath, id=self.kwargs.get('death_id'))})
+        return kwargs
 
 
-class DeleteSeparation(TemplateView):
+
+class DeleteSeparation(EasyFatFormView):
     template_name = 'farm/delete_confirm.html'
+    form_class = AnimalSeparationDeleteForm
+    form_title = 'Delete animal separation'
 
-    def get(self, request, *args, **kwargs):
-        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
-        form = AnimalSeparationDeleteForm(separation=separation)
-        return render(request, self.template_name, {'form': form})
+    def form_valid(self, form):
+        self.kwargs.update({'flock_id': form.separation.flock.id})
+        form.save()
+        return super().form_valid(form)
 
-    def post(self, request, *args, **kwargs):
-        separation = get_object_or_404(AnimalSeparation, id=kwargs.pop('separation_id'))
-        form = AnimalSeparationDeleteForm(request.POST, separation=separation)
+    def get_success_url(self):
+        return reverse('flocks:detail', kwargs={'flock_id': self.kwargs.get('flock_id')})
 
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': separation.flock.id}))
-        return render(request, self.template_name, {'form': form})
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'separation': get_object_or_404(AnimalSeparation, id=self.kwargs.get('separation_id'))})
+        return kwargs

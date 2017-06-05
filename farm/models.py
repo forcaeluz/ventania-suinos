@@ -18,7 +18,7 @@ class AnimalExit:
             self.room_exits = self.animal_farm_exit.animalroomexit_set.all()
 
     def set_animal_farm_exit(self, **kwargs):
-        instance = kwargs.get('instance', None)
+        instance = kwargs.get('separation', None)
         data = kwargs.get('cleaned_data', None)
         if instance:
             self.animal_farm_exit = instance
@@ -99,7 +99,7 @@ class AnimalEntry:
             self.room_entries = []
 
     def set_flock(self, **kwargs):
-        instance = kwargs.get('instance', None)
+        instance = kwargs.get('separation', None)
         data = kwargs.get('cleaned_data', None)
         if instance:
             self.flock = instance

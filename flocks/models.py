@@ -87,6 +87,9 @@ class AnimalDeath(models.Model):
     cause = models.TextField()
     flock = models.ForeignKey(Flock)
 
+    def __str__(self):
+        return 'Animal death: ' + str(self.flock) + ' on ' + str(self.date) + ' because of ' + self.cause
+
 
 class AnimalFarmExit(models.Model):
     date = models.DateField()
@@ -133,4 +136,4 @@ class AnimalSeparation(models.Model):
         return (self.death is None) and (self.exit is None)
 
     def __str__(self):
-        return '@' + str(self.date) + ' reas:' + self.reason
+        return 'Animal separation: ' + str(self.flock) + ' on ' + str(self.date) + ' with reason ' + self.reason

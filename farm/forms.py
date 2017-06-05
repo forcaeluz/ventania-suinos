@@ -6,7 +6,7 @@ from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, 
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom
-from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFlockExit, AnimalFarmExit
+from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFarmExit, AnimalFlockExit
 
 from .widgets import RoomSelectionWidget
 
@@ -19,6 +19,16 @@ class EasyFatForm(forms.Form):
                 'class': 'form-control',
             })
 
+
+class DeleteForm(EasyFatForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in iter(self.fields):
+            self.fields[field].disabled = True
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+            })
 
 class AnimalEntryForm(EasyFatForm):
     date = DateField()
@@ -49,6 +59,7 @@ class AnimalEntryDeleteForm(EasyFatForm):
 
     def save(self):
         self.flock.delete()
+
 
 class AnimalEntryRoomForm(Form):
     room = ModelChoiceField(queryset=Room.objects.all())
@@ -152,16 +163,23 @@ class SingleAnimalExitForm(EasyFatForm):
                 raise ValidationError('No flock distinction possible')
 
         flock = self.flock
-        animal_exit = AnimalExits(date=date,
-                                  flock=flock,
-                                  number_of_animals=1,
-                                  total_weight=data['weight'])
+        animal_exit = AnimalFarmExit(date=date,
+                                     number_of_animals=1,
+                                     weight=data['weight'])
         animal_exit.save()
+
+        animal_flock_exit = AnimalFlockExit(number_of_animals=1,
+                                            weight=data['weight'],
+                                            farm_exit=animal_exit)
+
+        animal_flock_exit.save()
 
         room_exit = AnimalRoomExit(date=date,
                                    room=room,
                                    flock=flock,
-                                   number_of_animals=1)
+                                   number_of_animals=1,
+                                   farm_exit=animal_exit)
+
         room_exit.save()
         self.animal_exit = animal_exit
 
@@ -470,6 +488,7 @@ class AnimalSeparationUpdateForm(AnimalSeparationBaseForm):
 class AnimalDeathDeleteForm(EasyFatForm):
     def __init__(self, *args, **kwargs):
         self.death = kwargs.pop('death', None)  # AnimalDeath
+        self.instance = self.death
         super().__init__(*args, **kwargs)
 
     def save(self):
@@ -480,12 +499,14 @@ class AnimalDeathDeleteForm(EasyFatForm):
         room_exit.delete()
 
 
-class AnimalSeparationDeleteForm(EasyFatForm):
+class AnimalSeparationDeleteForm(DeleteForm):
 
     def __init__(self, *args, **kwargs):
         self.separation = kwargs.pop('separation', None)  # AnimalSeparation
-        assert(isinstance(self.separation, AnimalSeparation))
+        self.instance = self.separation
+        self.sep_from_room = AnimalSeparatedFromRoom.objects.get(separation=self.separation)
         super().__init__(*args, **kwargs)
+        assert(isinstance(self.separation, AnimalSeparation))
 
     def save(self):
         date = self.separation.date
