@@ -91,6 +91,17 @@ class Flock(models.Model):
         active_separations = len([obj for obj in separation_set if obj.active])
         return active_separations
 
+    @property
+    def estimated_avg_weight(self):
+        date_year_before = self.entry_date - datetime.timedelta(days=365)
+        exits = AnimalFlockExit.objects.filter(farm_exit__date__gte=date_year_before)
+        grow_rate = self.__compute_grow_rate_for_exits_set(exits)
+        if grow_rate is None:
+            grow_rate = 0.850
+
+        days_at_farm = datetime.date.today() - self.entry_date
+        return self.average_entry_weight + grow_rate*days_at_farm.days
+
     @staticmethod
     def __compute_grow_rate_for_exits_set(exits_set):
         total_number_of_animals = 0
