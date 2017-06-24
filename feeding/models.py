@@ -64,10 +64,11 @@ class FeedEntry(models.Model):
     feed_type = models.ForeignKey(to=FeedType)
 
 
-class FlockFeedMutation(models.Model):
+class FeedingPeriodForFlock(models.Model):
     """
-    Class that links the types of feed being fed to the flocks.
+    Class used to link a flock to a feed type for a given period.
     """
-    date = models.DateField()
+    start_date = models.DateField()
+    end_date = models.DateField(null=True)
+    feed_type = models.ForeignKey(to=FeedType)
     flock = models.ForeignKey(to=Flock)
-    feed_type = models.ForeignKey(to=FeedType, null=True)
