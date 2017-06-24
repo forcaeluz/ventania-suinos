@@ -558,7 +558,9 @@ class EditAnimalDeath(EasyFatWizard):
 class RegisterNewAnimalSeparation(FormView):
     template_name = 'farm/single_form.html'
     form_class = AnimalSeparationForm
-    success_url = reverse('farm:index')
+
+    def get_success_url(self):
+        return reverse('farm:index')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
