@@ -44,14 +44,14 @@ class FarmIndexView(TemplateView):
 
     def __init__(self):
         super().__init__()
-        self.current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        self.current_flocks = Flock.objects.present_at_farm()
         self.active_separations = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         self.number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
         self.farm_capacity = sum([room.capacity for room in Room.objects.all()])
 
     def get_context_data(self, **kwargs):
         context = super(FarmIndexView, self).get_context_data(**kwargs)
-        context['flocks'] = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        context['flocks'] = self.current_flocks
         context['separations'] = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         context['feed_types'] = FeedType.objects.all()
         context['kpis'] = self.generate_kpi_data()
@@ -558,6 +558,7 @@ class EditAnimalDeath(EasyFatWizard):
 class RegisterNewAnimalSeparation(FormView):
     template_name = 'farm/single_form.html'
     form_class = AnimalSeparationForm
+    success_url = reverse('farm:index')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
