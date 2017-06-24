@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Sum
+
 from math import ceil
 import datetime
 
@@ -135,14 +137,19 @@ class AnimalDeath(models.Model):
 
 class AnimalFarmExit(models.Model):
     date = models.DateField()
-    weight = models.FloatField()
-    number_of_animals = models.IntegerField()
     destination = models.CharField(max_length=140, default='Unknown')
 
     @property
     def average_weight(self):
         return self.weight / self.number_of_animals
 
+    @property
+    def number_of_animals(self):
+        return self.animalflockexit_set.all().aggregate(Sum('number_of_animals'))
+
+    @property
+    def weight(self):
+        return self.animalflockexit_set.all().aggregate(Sum('weight'))
 
 class AnimalFlockExit(models.Model):
     weight = models.FloatField()
