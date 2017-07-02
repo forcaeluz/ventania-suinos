@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.dateparse import parse_date
 
 from flocks.models import Flock, AnimalDeath, AnimalSeparation, AnimalFarmExit
+from feeding.models import FeedType
+
 from datetime import date
 from itertools import chain
 
@@ -119,8 +121,8 @@ class Room(models.Model):
         if isinstance(end_date, str):
             end_date = parse_date(end_date)
 
-        entries = self.animalroomentry_set.filter(date__gt=start_date, date__lt=end_date)
-        exits = self.animalroomexit_set.filter(date__gt=start_date, date__lt=end_date)
+        entries = self.animalroomentry_set.filter(date__gt=start_date, date__lte=end_date)
+        exits = self.animalroomexit_set.filter(date__gt=start_date, date__lte=end_date)
         changes = chain(entries, exits)
         changes = sorted(changes, key=lambda instance: instance.date)
         start = self.get_occupancy_at_date(start_date)
@@ -131,8 +133,29 @@ class Room(models.Model):
         results.update({end_date: self.get_occupancy_at_date(end_date)})
         return results
 
+    def get_animal_days_for_period(self, start_date, end_date):
+        changes = self.get_occupancy_transitions(start_date, end_date)
+        dates = sorted(changes.keys())
+        previous_count = changes[dates[0]]
+        previous_date = dates[0]
+        animals_days = 0
+        for transition_date in dates[1:]:
+            days = (transition_date - previous_date).days
+            animals_days += previous_count * days
+            previous_date = transition_date
+            previous_count = changes[transition_date]
+
+        return animals_days
+
     def __str__(self):
         return self.group.name + ' - ' + self.name
+
+    def get_feeding_type_at(self, at_date=date.today()):
+        feed_change = self.roomfeedingchange_set.filter(date__lte=at_date).order_by('-date').first()
+        if feed_change is None:
+            return None
+        else:
+            return feed_change.feed_type
 
 
 class AnimalRoomEntry(models.Model):
@@ -169,3 +192,9 @@ class AnimalSeparatedFromRoom(models.Model):
     room = models.ForeignKey(Room, related_name='source_room')
     destination = models.ForeignKey(Room, related_name='destination_room', null=True)
     separation = models.ForeignKey(AnimalSeparation)
+
+
+class RoomFeedingChange(models.Model):
+    date = models.DateField()
+    feed_type = models.ForeignKey(to=FeedType)
+    room = models.ForeignKey(to=Room)
