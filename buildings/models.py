@@ -1,6 +1,9 @@
 from django.db import models
+from django.utils.dateparse import parse_date
+
 from flocks.models import Flock, AnimalDeath, AnimalSeparation, AnimalFarmExit
 from datetime import date
+from itertools import chain
 
 
 class Silo(models.Model):
@@ -109,6 +112,24 @@ class Room(models.Model):
         flocks = {key: value for key, value in flocks.items() if value > 0}
 
         return flocks
+
+    def get_occupancy_transitions(self, start_date, end_date):
+        if isinstance(start_date, str):
+            start_date = parse_date(start_date)
+        if isinstance(end_date, str):
+            end_date = parse_date(end_date)
+
+        entries = self.animalroomentry_set.filter(date__gt=start_date, date__lt=end_date)
+        exits = self.animalroomexit_set.filter(date__gt=start_date, date__lt=end_date)
+        changes = chain(entries, exits)
+        changes = sorted(changes, key=lambda instance: instance.date)
+        start = self.get_occupancy_at_date(start_date)
+        results = {start_date: start}
+        for change in changes:
+            results.update({change.date: self.get_occupancy_at_date(change.date)})
+
+        results.update({end_date: self.get_occupancy_at_date(end_date)})
+        return results
 
     def __str__(self):
         return self.group.name + ' - ' + self.name
