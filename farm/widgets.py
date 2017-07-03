@@ -16,7 +16,6 @@ class RoomSelectionWidget(ChoiceWidget):
     room_group_template = ''
 
     def __init__(self, attrs=None, choices=()):
-        print(choices)
         super().__init__(attrs)
         self.room_groups = None
 
