@@ -207,7 +207,10 @@ class AnimalExitRoomForm(Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        room = kwargs.get('initial').get('room', None)
+        room = None
+        initial = kwargs.get('initial', None)
+        if initial is not None:
+            room = kwargs.get('initial').get('room', None)
         if room is not None:
             self.fields['room'].queryset = Room.objects.filter(id=room.id)
             self.fields['room'].widget.attrs['readonly'] = True
