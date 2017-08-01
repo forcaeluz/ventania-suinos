@@ -642,3 +642,16 @@ class DeleteExit(EasyFatFormView):
         kwargs = super().get_form_kwargs()
         kwargs.update({'exit': get_object_or_404(AnimalFarmExit, id=self.kwargs.get('exit_id'))})
         return kwargs
+
+
+class RegisterFeedTransition(EasyFatFormView):
+    form_class = FeedTransitionForm
+    template_name = 'farm/single_form.html'
+    form_title = 'Register feeding transition'
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('farm:index')

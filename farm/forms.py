@@ -540,3 +540,24 @@ class AnimalSeparationDeleteForm(DeleteForm):
         self.separation.delete()
         room_exit.delete()
         room_entry.delete()
+
+
+class FeedTransitionForm(EasyFatForm):
+    date = DateField()
+    feed_type = ModelChoiceField(queryset=FeedType.objects.all())
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
+             'data-date-end-date': datetime.today().date().isoformat()})
+        self.fields['date'].initial = datetime.today().date()
+
+    def save(self):
+        date = self.cleaned_data.get('date')
+        feed_type = self.cleaned_data.get('feed_type')
+        selected_rooms = self.cleaned_data.get('rooms')
+        for room in selected_rooms:
+            room_feed_change = RoomFeedingChange(date=date, feed_type=feed_type, room=room)
+            room_feed_change.save()
