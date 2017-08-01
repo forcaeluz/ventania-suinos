@@ -1,0 +1,3 @@
+easy-fat
+Django>=1.11
+
