@@ -1,6 +1,37 @@
 from django.db import models
+from django.db.models import Sum
+
 from math import ceil
 import datetime
+
+
+class CurrentFlocksManager(models.Manager):
+    def present_at_farm(self):
+        result_list = []
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT f.id,\n"
+                           "  f.entry_date,\n"
+                           "  f.entry_weight,\n"
+                           "  f.number_of_animals,\n"
+                           "  f.number_of_animals - coalesce(e.exits,0) - coalesce(d.deaths,0) AS \"animal_count\"\n"
+                           "FROM flocks_flock AS f\n"
+                           "  LEFT JOIN\n"
+                           "  (SELECT\n"
+                           "     flock_id,\n"
+                           "     SUM(number_of_animals) AS \"exits\"\n"
+                           "   FROM flocks_animalflockexit GROUP BY flock_id)\n"
+                           "    AS e ON e.flock_id == f.id\n"
+                           "  LEFT JOIN\n"
+                           "  (SELECT\n"
+                           "     flock_id,\n"
+                           "     count(DISTINCT id) AS \"deaths\"\n"
+                           "   FROM flocks_animaldeath GROUP BY flock_id) AS d ON d.flock_id == f.id\n"
+                           "WHERE animal_count > 0\n")
+            for row in cursor.fetchall():
+                p = self.model(id=row[0], entry_date=row[1], entry_weight=row[2], number_of_animals=row[3])
+                result_list.append(p)
+            return result_list
 
 
 class Flock(models.Model):
@@ -8,6 +39,8 @@ class Flock(models.Model):
     entry_date = models.DateField()
     entry_weight = models.FloatField()
     number_of_animals = models.IntegerField()
+    objects = CurrentFlocksManager()
+    # alive = CurrentFlocksManager()
 
     @property
     def flock_name(self):
@@ -60,6 +93,17 @@ class Flock(models.Model):
         active_separations = len([obj for obj in separation_set if obj.active])
         return active_separations
 
+    @property
+    def estimated_avg_weight(self):
+        date_year_before = self.entry_date - datetime.timedelta(days=365)
+        exits = AnimalFlockExit.objects.filter(farm_exit__date__gte=date_year_before)
+        grow_rate = self.__compute_grow_rate_for_exits_set(exits)
+        if grow_rate is None:
+            grow_rate = 0.850
+
+        days_at_farm = datetime.date.today() - self.entry_date
+        return self.average_entry_weight + grow_rate*days_at_farm.days
+
     @staticmethod
     def __compute_grow_rate_for_exits_set(exits_set):
         total_number_of_animals = 0
@@ -93,14 +137,19 @@ class AnimalDeath(models.Model):
 
 class AnimalFarmExit(models.Model):
     date = models.DateField()
-    weight = models.FloatField()
-    number_of_animals = models.IntegerField()
     destination = models.CharField(max_length=140, default='Unknown')
 
     @property
     def average_weight(self):
         return self.weight / self.number_of_animals
 
+    @property
+    def number_of_animals(self):
+        return self.animalflockexit_set.all().aggregate(Sum('number_of_animals'))
+
+    @property
+    def weight(self):
+        return self.animalflockexit_set.all().aggregate(Sum('weight'))
 
 class AnimalFlockExit(models.Model):
     weight = models.FloatField()

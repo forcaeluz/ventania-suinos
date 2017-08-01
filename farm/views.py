@@ -14,7 +14,7 @@ from buildings.models import Room
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
-from .forms import AnimalDeathDistinctionForm, SingleAnimalExitForm
+from .forms import AnimalSeparationDistinctionForm, SingleAnimalExitForm, FeedTransitionForm
 
 # Update forms
 from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
@@ -44,14 +44,14 @@ class FarmIndexView(TemplateView):
 
     def __init__(self):
         super().__init__()
-        self.current_flocks = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        self.current_flocks = Flock.objects.present_at_farm()
         self.active_separations = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         self.number_of_living_animals = sum([obj.number_of_living_animals for obj in self.current_flocks])
         self.farm_capacity = sum([room.capacity for room in Room.objects.all()])
 
     def get_context_data(self, **kwargs):
         context = super(FarmIndexView, self).get_context_data(**kwargs)
-        context['flocks'] = [obj for obj in Flock.objects.all() if obj.number_of_living_animals > 0]
+        context['flocks'] = self.current_flocks
         context['separations'] = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         context['feed_types'] = FeedType.objects.all()
         context['kpis'] = self.generate_kpi_data()
@@ -374,7 +374,7 @@ class RegisterSingleAnimalExit(EasyFatWizard):
     wizard_name = _('Register animal death')
     form_list = [
         ('exit_information', SingleAnimalExitForm),
-        ('animal_distinction', AnimalDeathDistinctionForm),
+        ('animal_distinction', AnimalSeparationDistinctionForm),
         ('overview', EasyFatForm)
     ]
 
@@ -390,21 +390,23 @@ class RegisterSingleAnimalExit(EasyFatWizard):
     def done(self, form_list, **kwargs):
         # get the forms
         forms = kwargs.get('form_dict')
-        death_form = forms.get('exit_information')
-        distinction_form = forms.get('animal_distinction', None)
+        exit_form = forms.get('exit_information')
+        separation_form = forms.get('animal_distinction', None)
 
-        if distinction_form:  # Some distinction is needed.
-            # Set the flock value in the death form. Otherwise it won't always be able
+        if separation_form:  # Some distinction is needed.
+            # Set the flock value in the exit form. Otherwise it won't always be able
             # to fill in the animal's flock.
-            death_form.set_flock(distinction_form.cleaned_data.get('separation', None))
-            # After saving we can get the death value, and fill in on the distinction form.
-            death_form.save()
-            death = death_form.death
+            separation = separation_form.cleaned_data.get('separation', None)
+            if separation is not None:
+                exit_form.set_flock(separation.flock)
 
-            distinction_form.set_death(death)
-            distinction_form.save()
+            # After saving we can get the exit value, and fill in on the distinction form.
+            exit_form.save()
+            animal_exit = exit_form.animal_exit
+            separation_form.set_exit(animal_exit)
+            separation_form.save()
         else:  # Death form is clear, no separation attached.
-            death_form.save()
+            exit_form.save()
 
         return HttpResponseRedirect(reverse('farm:index'))
 
@@ -425,7 +427,7 @@ class RegisterSingleAnimalExit(EasyFatWizard):
         """
         data = wizard_instance.get_cleaned_data_for_step('exit_information') or None
         if data:
-            return data['room'].is_separation and data['room'].occupancy > 1
+            return data['room'].is_separation
         return True
 
 
@@ -439,7 +441,7 @@ class RegisterNewAnimalDeath(EasyFatWizard):
     wizard_name = _('Register animal death')
     form_list = [
         ('death_information', AnimalDeathForm),
-        ('animal_distinction', AnimalDeathDistinctionForm),
+        ('animal_distinction', AnimalSeparationDistinctionForm),
         ('overview', EasyFatForm)
     ]
 
@@ -499,7 +501,7 @@ class EditAnimalDeath(EasyFatWizard):
     wizard_name = _('Edit animal death')
     form_list = [
         ('death_information', AnimalDeathUpdateForm),
-        ('animal_distinction', AnimalDeathDistinctionForm),
+        ('animal_distinction', AnimalSeparationDistinctionForm),
         ('overview', EasyFatForm)
     ]
 
@@ -558,6 +560,9 @@ class EditAnimalDeath(EasyFatWizard):
 class RegisterNewAnimalSeparation(FormView):
     template_name = 'farm/single_form.html'
     form_class = AnimalSeparationForm
+
+    def get_success_url(self):
+        return reverse('farm:index')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -637,3 +642,16 @@ class DeleteExit(EasyFatFormView):
         kwargs = super().get_form_kwargs()
         kwargs.update({'exit': get_object_or_404(AnimalFarmExit, id=self.kwargs.get('exit_id'))})
         return kwargs
+
+
+class RegisterFeedTransition(EasyFatFormView):
+    form_class = FeedTransitionForm
+    template_name = 'farm/single_form.html'
+    form_title = 'Register feeding transition'
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('farm:index')

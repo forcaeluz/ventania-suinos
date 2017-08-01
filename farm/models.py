@@ -12,6 +12,8 @@ class AnimalExit:
         self.animal_farm_exit = animal_farm_exit  # AnimalFarmExit
         self.flock_exits = []
         self.room_exits = []
+        self.total_weight = []
+        self.average_exit_weight = []
 
         if animal_farm_exit is not None:
             self.flock_exits = self.animal_farm_exit.animalflockexit_set.all()
@@ -25,9 +27,9 @@ class AnimalExit:
             self.flock_exits = self.animal_farm_exit.animalflockexit_set.all()
             self.room_exits = self.animal_farm_exit.animalroomexit_set.all()
         elif data:
-            self.animal_farm_exit = AnimalFarmExit(number_of_animals=data['number_of_animals'],
-                                                   date=data['date'],
-                                                   weight=data['weight'])
+            self.animal_farm_exit = AnimalFarmExit(date=data['date'])
+            self.total_weight = data['weight']
+            self.average_exit_weight = self.total_weight / data['number_of_animals']
         else:
             raise ValueError('Not possible to assign flock information')
         pass
@@ -66,7 +68,7 @@ class AnimalExit:
             flock_exit = AnimalFlockExit(flock=flock,
                                          farm_exit=self.animal_farm_exit,
                                          number_of_animals=number_of_animals,
-                                         weight=self.animal_farm_exit.average_weight * number_of_animals)
+                                         weight=self.average_exit_weight * number_of_animals)
 
             self.flock_exits.append(flock_exit)
 

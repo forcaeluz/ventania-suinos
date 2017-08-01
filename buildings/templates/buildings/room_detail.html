@@ -1,0 +1,94 @@
+{% extends 'base2.html' %}
+{% load i18n %}
+{% block main_content %}
+    <h1 class="page-header">{% trans 'Room Information:' %} {{ room }}</h1>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'General Information' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li>Name: {{ room.name }}</li>
+                        <li>Capacity: {{ room.capacity }}</li>
+                        <li>Group: {{ room.group }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Animal entries' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-responsive table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Date' %}</th>
+                            <th>{% trans 'Number of Animals' %}</th>
+                            <th>{% trans 'Flock' %}</th>
+                        </tr>
+                        </thead>
+                        {% for entry in room.animalroomentry_set.all %}
+                            <tr class="table-row">
+                                <td>{{ entry.date }}</td>
+                                <td>{{ entry.number_of_animals }}</td>
+                                <td>{{ entry.flock }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Animal Exits' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-responsive table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Date' %}</th>
+                            <th>{% trans 'Number of Animals' %}</th>
+                            <th>{% trans 'Flock' %}</th>
+                        </tr>
+                        </thead>
+                        {% for entry in room.animalroomexit_set.all %}
+                            <tr class="table-row">
+                                <td>{{ entry.date }}</td>
+                                <td>{{ entry.number_of_animals }}</td>
+                                <td>{{ entry.flock }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Feeding Transitions' %}</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-responsive table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Date' %}</th>
+                            <th>{% trans 'Feed type' %}</th>
+                        </tr>
+                        </thead>
+                        {% for entry in room.roomfeedingchange_set.all %}
+                            <tr class="table-row">
+                                <td>{{ entry.date }}</td>
+                                <td>{{ entry.feed_type }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
