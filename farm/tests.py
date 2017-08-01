@@ -5,7 +5,6 @@ from flocks.models import Flock, AnimalSeparation
 
 from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
 from .forms import AnimalExitRoomFormset, AnimalExitRoomForm
-from .models import AnimalExitWizardSaver
 
 
 class FarmTestClass(TestCase):
@@ -149,7 +148,8 @@ class AnimalDistinctionFormTest(FarmTestClass):
     def test_exit_distinction(self):
         form_data = {'date': '2017-01-15',
                      'number_of_animals': '1',
-                     'weight': 30
+                     'weight': 30,
+                     'rooms': [1]
                      }
 
         form1 = GroupExitForm(data=form_data)
@@ -169,14 +169,15 @@ class GroupExitFormTest(FarmTestClass):
     def test_form(self):
         form_data = {'date': '2017-03-15',
                      'number_of_animals': '13',
-                     'weight': 1330
+                     'weight': 1330,
+                     'rooms': [1]
                      }
 
         form1 = GroupExitForm(data=form_data)
         self.assertTrue(form1.is_valid())
 
 
-class AnimalExitRoomFomsetTest(FarmTestClass):
+class AnimalExitRoomFormsetTest(FarmTestClass):
 
     def test_constructor(self):
         FormSet = formset_factory(formset=AnimalExitRoomFormset, form=AnimalExitRoomForm)
@@ -252,9 +253,3 @@ class AnimalExitRoomFomsetTest(FarmTestClass):
         self.assertEqual(0, len(formset.forms[0].errors))
         self.assertEqual(0, len(formset.forms[1].errors))
         self.assertEqual(0, len(formset.forms[2].errors))
-
-
-class AnimalExitWizardSaverTest(FarmTestClass):
-
-    def test_constructor(self):
-        saver = AnimalExitWizardSaver(None, None)

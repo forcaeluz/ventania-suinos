@@ -1,0 +1,4 @@
+Django>=1.11
+django-debug-toolbar>=1.8
+django-formtools>=2.0
+filelock>=2.0.8
