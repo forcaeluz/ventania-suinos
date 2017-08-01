@@ -11,4 +11,5 @@ script:
 
 after_success:
     - coverage report
+    - coveralls debug
     - coveralls
