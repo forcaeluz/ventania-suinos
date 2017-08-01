@@ -10,6 +10,4 @@ script:
     - coverage run --branch manage.py test
 
 after_success:
-    - coverage report
-    - coveralls debug
     - coveralls
