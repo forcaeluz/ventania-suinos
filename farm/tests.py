@@ -3,7 +3,7 @@ from django.forms import formset_factory
 from buildings.models import Building, Room
 from flocks.models import Flock, AnimalSeparation
 
-from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalDeathDistinctionForm, GroupExitForm
+from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
 from .forms import AnimalExitRoomFormset, AnimalExitRoomForm
 from .models import AnimalExitWizardSaver
 
@@ -136,7 +136,7 @@ class AnimalDistinctionFormTest(FarmTestClass):
 
         form1 = AnimalDeathForm(data=form_data)
         form_data = {'separation': self.separation1.id}
-        form2 = AnimalDeathDistinctionForm(form_data)
+        form2 = AnimalSeparationDistinctionForm(form_data)
         self.assertTrue(form2.is_valid())
         form1.set_flock(form2.cleaned_data.get('separation').flock)
         self.assertTrue(form1.is_valid())
@@ -159,7 +159,7 @@ class AnimalDistinctionFormTest(FarmTestClass):
         form2 = FormSet(form_data, number_of_animals=1)
         self.assertTrue(form2.is_valid())
         form_data = {'separation': self.separation1.id}
-        form3 = AnimalDeathDistinctionForm(form_data)
+        form3 = AnimalSeparationDistinctionForm(form_data)
         self.assertTrue(form3.is_valid())
 #         TODO: Implement further checks.
 

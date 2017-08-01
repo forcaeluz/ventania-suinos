@@ -2,84 +2,105 @@ import datetime
 from django.utils import timezone
 from django.test import TestCase
 
-from .models import Flock
+from .models import Flock, AnimalFarmExit
 
 
 class FlockTests(TestCase):
+
+    def setUp(self):
+        flock_entry_date = datetime.date(2017, 1, 1)
+        self.flock1 = Flock(entry_date=flock_entry_date, entry_weight=2600.00, number_of_animals=130)
+        self.flock1.save()
 
     def test_flock_exit_date(self):
         """
         flock_predicted_exit_date() Should return the date 90 days after entry
         """
-        time = timezone.now() + datetime.timedelta(days=112)
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
-        self.assertEqual(time.date(), flock.expected_exit_date)
+        expected_exit_date = datetime.date(2017, 4, 23)
+        self.assertEqual(expected_exit_date, self.flock1.expected_exit_date)
 
     def test_flock_name(self):
         """
-        flock_predicted_exit_date() Should return the date 90 days after entry
+        Tests the automatic name assignment to flocks.
         """
-        date = datetime.date(year=2016, month=3, day=9)
-        flock = Flock(entry_date=date, entry_weight=2600.00, number_of_animals=130)
-        flock.save()
-        self.assertEqual('2016_1', flock.flock_name)
+        self.assertEqual('2017_1', self.flock1.flock_name)
 
     def test_flock_number_of_living_animals(self):
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
-        self.assertEqual(130, flock.number_of_living_animals)
+        self.assertEqual(130, self.flock1.number_of_living_animals)
 
     def test_flock_number_of_living_animals_after_exit(self):
-        entry_date = timezone.now().date()
-        exit_date = entry_date + datetime.timedelta(days=95)
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=130)
-        flock.save()
-        flock.animalexits_set.create(date=exit_date, total_weight=1000.000, number_of_animals=10)
-        self.assertEqual(120, flock.number_of_living_animals)
+        exit_date = datetime.date(2017, 1, 10)
+        farm_animal_exit = AnimalFarmExit(date=exit_date)
+        farm_animal_exit.save()
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                            number_of_animals=10,
+                                                            weight=700)
+        flock_exit.save()
+        self.assertEqual(120, self.flock1.number_of_living_animals)
 
     def test_flock_number_of_living_animals_after_multiple_exits(self):
-        entry_date = timezone.now().date()
-        exit_date = entry_date + datetime.timedelta(days=95)
-        flock = Flock(entry_date=entry_date, entry_weight=10.00, number_of_animals=130)
-        flock.save()
-        flock.animalexits_set.create(date=exit_date, total_weight=6000.000, number_of_animals=65)
-        flock.animalexits_set.create(date=exit_date, total_weight=6000.000, number_of_animals=65)
-        self.assertEqual(0, flock.number_of_living_animals)
+        exit_date = datetime.date(2017, 4, 23)
+        farm_animal_exit = AnimalFarmExit(date=exit_date)
+        farm_animal_exit.save()
+        flock_exit1 = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                             number_of_animals=65,
+                                                             weight=7500)
+        flock_exit1.save()
+        flock_exit2 = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                             number_of_animals=65,
+                                                             weight=7500)
+        flock_exit2.save()
+
+        self.assertEqual(0, self.flock1.number_of_living_animals)
 
     def test_flock_number_of_living_animals_after_multiple_deaths(self):
-        entry_date = timezone.now().date()
-        exit_date = entry_date + datetime.timedelta(days=95)
-        flock = Flock(entry_date=entry_date, entry_weight=10.00, number_of_animals=130)
-        flock.save()
-        flock.animaldeath_set.create(date=exit_date, weight=100.00)
-        flock.animaldeath_set.create(date=exit_date, weight=100.00)
-        self.assertEqual(128, flock.number_of_living_animals)
+        exit_date = datetime.date(2017, 1, 10)
+        self.flock1.animaldeath_set.create(date=exit_date, weight=26.00)
+        self.flock1.animaldeath_set.create(date=exit_date, weight=26.00)
+        self.assertEqual(128, self.flock1.number_of_living_animals)
 
     def test_flock_average_grow_single_exit(self):
-        entry_date = timezone.now().date()
-        exit_date = entry_date + datetime.timedelta(days=100)
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=10.00, number_of_animals=1)
-        flock.save()
-        flock.animalexits_set.create(date=exit_date, total_weight=100.00, number_of_animals=1)
-        self.assertAlmostEqual(0.900, flock.computed_daily_growth)
+        exit_date = self.flock1.entry_date + datetime.timedelta(days=100)
+        farm_animal_exit = AnimalFarmExit(date=exit_date)
+        farm_animal_exit.save()
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                            number_of_animals=1,
+                                                            weight=110)
+        flock_exit.save()
+        self.assertAlmostEqual(0.900, self.flock1.computed_daily_growth)
 
     def test_flock_average_grow_dual_exit(self):
-        entry_date = timezone.now().date()
-        exit_date = entry_date + datetime.timedelta(days=100)
-        flock = Flock(entry_date=entry_date, entry_weight=20.00, number_of_animals=2)
-        flock.save()
-        flock.animalexits_set.create(date=exit_date, total_weight=100.00, number_of_animals=1)
-        flock.animalexits_set.create(date=exit_date, total_weight=150.00, number_of_animals=1)
-        self.assertAlmostEqual(1.150, flock.computed_daily_growth)
+        exit_date = self.flock1.entry_date + datetime.timedelta(days=100)
+        farm_animal_exit = AnimalFarmExit(date=exit_date)
+        farm_animal_exit.save()
+
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                            number_of_animals=1,
+                                                            weight=110)
+        flock_exit.save()
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                            number_of_animals=1,
+                                                            weight=160)
+        flock_exit.save()
+        self.assertAlmostEqual(1.150, self.flock1.computed_daily_growth)
 
     def test_flock_average_grow_dual_exit_different_dates(self):
-        entry_date = timezone.now().date()
-        exit_date1 = entry_date + datetime.timedelta(days=50)
-        exit_date2 = entry_date + datetime.timedelta(days=100)
-        flock = Flock(entry_date=entry_date, entry_weight=20.00, number_of_animals=2)
-        flock.save()
-        flock.animalexits_set.create(date=exit_date1, total_weight=110.00, number_of_animals=1)
-        flock.animalexits_set.create(date=exit_date2, total_weight=110.00, number_of_animals=1)
-        self.assertAlmostEqual(1.50, flock.computed_daily_growth)
+        exit_date1 = self.flock1.entry_date + datetime.timedelta(days=50)
+        exit_date2 = self.flock1.entry_date + datetime.timedelta(days=100)
+        farm_animal_exit1 = AnimalFarmExit(date=exit_date1)
+        farm_animal_exit1.save()
+        farm_animal_exit2 = AnimalFarmExit(date=exit_date2)
+        farm_animal_exit2.save()
+
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit1,
+                                                            number_of_animals=1,
+                                                            weight=120)
+        flock_exit.save()
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit2,
+                                                            number_of_animals=1,
+                                                            weight=120)
+        flock_exit.save()
+        self.assertAlmostEqual(1.50, self.flock1.computed_daily_growth)
 
     def test_flock_average_grow_unknown(self):
         entry_date = timezone.now().date()
@@ -89,26 +110,30 @@ class FlockTests(TestCase):
 
 
 class SeparationTests(TestCase):
+
+    def setUp(self):
+        flock_entry_date = datetime.date(2017, 1, 1)
+        self.flock1 = Flock(entry_date=flock_entry_date, entry_weight=2600.00, number_of_animals=130)
+        self.flock1.save()
+
+        self.separation = self.flock1.animalseparation_set.create(date=datetime.date(2017, 1, 2), reason='Sick.')
+
     def test_create_separation(self):
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
-        flock.save()
-        separation = flock.animalseparation_set.create(date=timezone.now().date(), reason='Sick.')
-        self.assertTrue(separation.active)
+        self.assertTrue(self.separation.active)
 
     def test_death_after_separation(self):
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
-        flock.save()
-        separation = flock.animalseparation_set.create(date=timezone.now().date(), reason='Sick.')
-        separation.save()
-        death = flock.animaldeath_set.create(date=timezone.now().date(), weight=21)
-        separation.death = death
-        self.assertFalse(separation.active)
+        death = self.flock1.animaldeath_set.create(date=datetime.date(2017, 1, 5), weight=22)
+        self.separation.death = death
+        self.assertFalse(self.separation.active)
 
     def test_exit_after_death(self):
-        flock = Flock(entry_date=timezone.now().date(), entry_weight=2600.00, number_of_animals=130)
-        flock.save()
-        separation = flock.animalseparation_set.create(date=timezone.now().date(), reason='Sick.')
-        separation.save()
-        animal_exit = flock.animalexits_set.create(date=timezone.now().date(), number_of_animals=1, total_weight=21)
-        separation.exit = animal_exit
-        self.assertFalse(separation.active)
+        exit_date = self.flock1.entry_date + datetime.timedelta(days=20)
+        farm_animal_exit = AnimalFarmExit(date=exit_date)
+        farm_animal_exit.save()
+
+        flock_exit = self.flock1.animalflockexit_set.create(farm_exit=farm_animal_exit,
+                                                            number_of_animals=1,
+                                                            weight=30)
+
+        self.separation.exit = flock_exit
+        self.assertFalse(self.separation.active)

@@ -5,8 +5,10 @@ from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, 
 # Others
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
-from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, DeathInRoom, AnimalSeparatedFromRoom
+from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, \
+    DeathInRoom, AnimalSeparatedFromRoom, RoomFeedingChange
 from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFarmExit, AnimalFlockExit
+from feeding.models import FeedType
 
 from .widgets import RoomSelectionWidget
 
@@ -136,6 +138,7 @@ class SingleAnimalExitForm(EasyFatForm):
         self.fields['room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
     def set_flock(self, flock):
+        assert(isinstance(flock, Flock))
         self.flock = flock
 
     def clean(self):
@@ -164,9 +167,7 @@ class SingleAnimalExitForm(EasyFatForm):
                 raise ValidationError('No flock distinction possible')
 
         flock = self.flock
-        animal_exit = AnimalFarmExit(date=date,
-                                     number_of_animals=1,
-                                     weight=data['weight'])
+        animal_exit = AnimalFarmExit(date=date)
         animal_exit.save()
 
         animal_flock_exit = AnimalFlockExit(number_of_animals=1,
@@ -183,7 +184,8 @@ class SingleAnimalExitForm(EasyFatForm):
                                    farm_exit=animal_exit)
 
         room_exit.save()
-        self.animal_exit = animal_exit
+
+        self.animal_exit = animal_flock_exit
 
 
 class AnimalExitDeleteForm(EasyFatForm):
@@ -371,7 +373,7 @@ class AnimalDeathForm(AnimalDeathBaseForm):
         self.death = death
 
 
-class AnimalDeathDistinctionForm(EasyFatForm):
+class AnimalSeparationDistinctionForm(EasyFatForm):
     separation = ModelChoiceField(queryset=AnimalSeparation.objects.all())
 
     def __init__(self, *args, **kwargs):
@@ -389,9 +391,14 @@ class AnimalDeathDistinctionForm(EasyFatForm):
         assert(isinstance(death, AnimalDeath))
         self.death = death
 
+    def set_exit(self, animal_exit):
+        assert (isinstance(animal_exit, AnimalFlockExit))
+        self.exit = animal_exit
+
     def save(self):
         separation = self.cleaned_data.get('separation')
         separation.death = self.death
+        separation.exit = self.exit
         separation.save()
 
 
@@ -533,3 +540,24 @@ class AnimalSeparationDeleteForm(DeleteForm):
         self.separation.delete()
         room_exit.delete()
         room_entry.delete()
+
+
+class FeedTransitionForm(EasyFatForm):
+    date = DateField()
+    feed_type = ModelChoiceField(queryset=FeedType.objects.all())
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs.update(
+            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
+             'data-date-end-date': datetime.today().date().isoformat()})
+        self.fields['date'].initial = datetime.today().date()
+
+    def save(self):
+        date = self.cleaned_data.get('date')
+        feed_type = self.cleaned_data.get('feed_type')
+        selected_rooms = self.cleaned_data.get('rooms')
+        for room in selected_rooms:
+            room_feed_change = RoomFeedingChange(date=date, feed_type=feed_type, room=room)
+            room_feed_change.save()

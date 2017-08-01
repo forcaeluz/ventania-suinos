@@ -1,5 +1,4 @@
 from django.db import models
-from flocks.models import Flock
 from datetime import datetime, timedelta
 
 
@@ -55,7 +54,7 @@ class FeedType(models.Model):
         average_entry_interval = self.__get_average_entry_interval()
         last_entry = self.feedentry_set.order_by('date').last()
         remaining_time = average_entry_interval - self.days_since_last_deliver
-        return max(0, last_entry.weight * remaining_time / average_entry_interval)
+        return max(0.0, last_entry.weight * remaining_time / average_entry_interval)
 
 
 class FeedEntry(models.Model):
@@ -64,11 +63,3 @@ class FeedEntry(models.Model):
     feed_type = models.ForeignKey(to=FeedType)
 
 
-class FeedingPeriodForFlock(models.Model):
-    """
-    Class used to link a flock to a feed type for a given period.
-    """
-    start_date = models.DateField()
-    end_date = models.DateField(null=True)
-    feed_type = models.ForeignKey(to=FeedType)
-    flock = models.ForeignKey(to=Flock)
