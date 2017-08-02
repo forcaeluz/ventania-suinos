@@ -147,8 +147,13 @@ class Room(models.Model):
 
         return animals_days
 
-    def __str__(self):
-        return self.group.name + ' - ' + self.name
+    def get_animal_days_for_feeding_period(self, start_date, end_date, feed_type):
+        feeding_periods = self.get_feeding_periods(start_date, end_date, feed_type)
+        count = 0
+        for period in feeding_periods:
+            count += self.get_animal_days_for_period(period[0], period[1])
+
+        return count
 
     def get_feeding_type_at(self, at_date=date.today()):
         feed_change = self.roomfeedingchange_set.filter(date__lte=at_date).order_by('-date').first()
@@ -156,6 +161,35 @@ class Room(models.Model):
             return None
         else:
             return feed_change.feed_type
+
+    def __str__(self):
+        return self.group.name + ' - ' + self.name
+
+    def get_feeding_periods(self, start_date, end_date, feed_type):
+        if isinstance(start_date, str):
+            start_date = parse_date(start_date)
+        if isinstance(end_date, str):
+            end_date = parse_date(end_date)
+
+        feed_change_before_period = self.roomfeedingchange_set.filter(date__lte=start_date).order_by('-date').first()
+        feeding_date = feed_change_before_period.date
+        feeding_change_set = self.roomfeedingchange_set
+        feeding_transitions = feeding_change_set.filter(date__gte=feeding_date, date__lte=end_date).order_by('date')
+        feeding_periods = []
+        start_of_feeding_period = None
+        for transition in feeding_transitions:
+            # We are looking for a start period, and we found one
+            if start_of_feeding_period is None and transition.feed_type == feed_type:
+                start_of_feeding_period = transition.date
+            # We have a start period, looking for an end period
+            elif start_of_feeding_period is not None and transition.feed_type != feed_type:
+                feeding_periods.append([start_of_feeding_period, transition.date])
+                start_of_feeding_period = None
+
+        if start_of_feeding_period is not None:
+            feeding_periods.append([start_of_feeding_period, end_date])
+
+        return feeding_periods
 
 
 class AnimalRoomEntry(models.Model):

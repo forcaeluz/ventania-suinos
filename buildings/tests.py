@@ -16,6 +16,8 @@ class RoomTestCase(TestCase):
         self.room.save()
         self.feed_type = FeedType(name='S3', start_feeding_age=0, stop_feeding_age=15)
         self.feed_type.save()
+        self.feed_type2 = FeedType(name='S2', start_feeding_age=0, stop_feeding_age=15)
+        self.feed_type2.save()
 
     def test_get_name(self):
         self.assertEqual('Room1', self.room.name)
@@ -87,3 +89,29 @@ class RoomTestCase(TestCase):
     def test_feed_type_after_change(self):
         self.room.roomfeedingchange_set.create(feed_type=self.feed_type, date='2017-01-01')
         self.assertEqual(self.feed_type, self.room.get_feeding_type_at('2017-01-02'))
+
+    def test_feed_type_two_types(self):
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type, date='2017-01-01')
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type2, date='2017-01-31')
+        self.assertEqual(self.feed_type, self.room.get_feeding_type_at('2017-01-02'))
+        self.assertEqual(self.feed_type2, self.room.get_feeding_type_at('2017-02-01'))
+
+    def test_get_feeding_periods(self):
+        expected_periods1 = [[date(2017, 1, 1), date(2017, 2, 1)],
+                             [date(2017, 3, 1), date(2017, 4, 1)]]
+
+        expected_periods2 = [[date(2017, 2, 1), date(2017, 3, 1)],
+                             [date(2017, 4, 1), date(2017, 4, 30)]]
+
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type, date='2017-01-01')
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type2, date='2017-02-01')
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type, date='2017-03-01')
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type2, date='2017-04-01')
+
+        self.assertEqual(expected_periods1, self.room.get_feeding_periods('2017-01-01', '2017-04-30', self.feed_type))
+        self.assertEqual(expected_periods2, self.room.get_feeding_periods('2017-01-01', '2017-04-30', self.feed_type2))
+
+    def test_animal_days_for_feeding_period(self):
+        self.room.animalroomentry_set.create(number_of_animals=10, flock=self.flock, date='2017-01-01')
+        self.room.roomfeedingchange_set.create(feed_type=self.feed_type, date='2017-01-01')
+        self.assertEqual(90, self.room.get_animal_days_for_feeding_period('2017-01-01', '2017-01-10', self.feed_type))
