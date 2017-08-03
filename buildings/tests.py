@@ -1,7 +1,7 @@
 from django.test import TestCase
 from datetime import date
 
-from .models import Flock, Room, Building, FeedType
+from .models import Flock, Room, RoomGroup, Building, FeedType, SiloFeedEntry, FeedEntry
 # Create your tests here.
 
 
@@ -115,3 +115,86 @@ class RoomTestCase(TestCase):
         self.room.animalroomentry_set.create(number_of_animals=10, flock=self.flock, date='2017-01-01')
         self.room.roomfeedingchange_set.create(feed_type=self.feed_type, date='2017-01-01')
         self.assertEqual(90, self.room.get_animal_days_for_feeding_period('2017-01-01', '2017-01-10', self.feed_type))
+
+
+class BuildingFeedingTestCase(TestCase):
+    def setUp(self):
+        self.flock = Flock(entry_date='2017-01-01', entry_weight=600, number_of_animals=30)
+        self.flock.save()
+        self.feed_type1 = FeedType(name='FeedType1', start_feeding_age=0, stop_feeding_age=10)
+        self.feed_type1.save()
+        self.feed_type2 = FeedType(name='FeedType2', start_feeding_age=11, stop_feeding_age=50)
+        self.feed_type2.save()
+        self.building = Building(name='TheBigBuilding')
+        self.building.save()
+        self.room_group = RoomGroup(group=self.building, name='Group1')
+        self.room_group.save()
+        self.room1 = Room(group=self.building, name='Room 1', capacity=10)
+        self.room1.save()
+        self.room2 = Room(group=self.building, name='Room 2', capacity=10)
+        self.room2.save()
+        self.room3 = Room(group=self.room_group, name='Room 3', capacity=10)
+        self.room3.save()
+        self.silo1 = self.building.silo_set.create(capacity=10000, feed_type=self.feed_type1)
+        self.silo1.save()
+        self.silo2 = self.building.silo_set.create(capacity=20000, feed_type=self.feed_type2)
+
+        self.setUpFeedingInfo()
+
+        self.room1.animalroomentry_set.create(number_of_animals=10, date='2017-01-01', flock=self.flock)
+        self.room2.animalroomentry_set.create(number_of_animals=10, date='2017-01-01', flock=self.flock)
+        self.room3.animalroomentry_set.create(number_of_animals=10, date='2017-01-01', flock=self.flock)
+
+    def setUpFeedingInfo(self):
+        self.feed1_entry1 = FeedEntry(date='2017-01-01', weight=10000, feed_type=self.feed_type1)
+        self.feed1_entry1.save()
+        self.feed1_entry2 = FeedEntry(date='2017-01-15', weight=10000, feed_type=self.feed_type1)
+        self.feed1_entry2.save()
+        self.feed2_entry1 = FeedEntry(date='2017-01-01', weight=20000, feed_type=self.feed_type2)
+        self.feed2_entry1.save()
+        self.silo1_feed_entries = []
+        self.silo2_feed_entries = []
+        self.silo1_feed_entries.append(SiloFeedEntry(silo=self.silo1, feed_entry=self.feed1_entry1))
+        self.silo1_feed_entries.append(SiloFeedEntry(silo=self.silo1, feed_entry=self.feed1_entry2))
+        self.silo2_feed_entries.append(SiloFeedEntry(silo=self.silo2, feed_entry=self.feed2_entry1))
+        for entry in self.silo1_feed_entries:
+            entry.save()
+
+        for entry in self.silo2_feed_entries:
+            entry.save()
+
+        self.room1.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
+        self.room2.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
+        self.room3.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
+
+    def test_feed_capacity(self):
+        self.assertEqual(10000, self.building.feed_capacity(self.feed_type1))
+        self.assertEqual(20000, self.building.feed_capacity(self.feed_type2))
+
+    def test_get_feed_entries(self):
+        self.assertEqual(self.silo1_feed_entries, self.building.get_feed_entries('2017-01-01',
+                                                                                 '2017-01-31',
+                                                                                 self.feed_type1))
+        self.assertEqual(self.silo2_feed_entries, self.building.get_feed_entries('2017-01-01',
+                                                                                 '2017-01-31',
+                                                                                 self.feed_type2))
+
+    def test_feed_consumption(self):
+        self.assertEqual(300, self.building.feed_consumption('2017-01-01', '2017-01-11', self.feed_type1))
+
+    def test_feed_consumption_single_day(self):
+        self.assertEqual(30, self.building.feed_consumption('2017-01-05', '2017-01-06', self.feed_type1))
+
+    def test_last_feed_entries(self):
+        actual = self.building.get_last_feed_entries('2017-01-17', self.feed_type1)
+        expected = self.silo1_feed_entries[1]
+        self.assertEqual(expected, actual)
+
+    def test_feed_estimation(self):
+        actual = self.building.get_estimated_remaining_feed('2017-01-21', self.feed_type1)
+        expected = 5000
+        self.assertEqual(expected, actual)
+
+    def test_feed_end_date_estimation(self):
+        actual = self.building.get_estimated_feed_end_date('2017-01-21', self.feed_type1)
+        expected = date(2017, 1, 28)
