@@ -92,10 +92,14 @@ class Building(RoomGroup):
         entries = []
         for silo in silos:
             s_entries = silo.silofeedentry_set.filter(feed_entry__date__lte=at_date).order_by('-feed_entry__date').first()
-            entries.append(s_entries)
+            if s_entries is not None:
+                entries.append(s_entries)
 
-        entries = sorted(entries, key=lambda instance: instance.feed_entry.date)
-        return entries[-1]
+        entries = sorted(entries, key=lambda instance: instance.date)
+        if len(entries) >= 1:
+            return entries[-1]
+        else:
+            return None
 
     def get_estimated_remaining_feed(self, at_date, feed_type):
         if isinstance(at_date, str):
@@ -103,9 +107,12 @@ class Building(RoomGroup):
 
         end_date = at_date + timedelta(days=1)
         last_feed_entry = self.get_last_feed_entries(at_date, feed_type)
-        consumption_animal_days = self.feed_consumption(last_feed_entry.date, end_date, feed_type)
-        consumption_kg = consumption_animal_days * self.get_average_feed_consumption(at_date, feed_type)
-        return last_feed_entry.weight - consumption_kg
+        if last_feed_entry is not None:
+            consumption_animal_days = self.feed_consumption(last_feed_entry.date, end_date, feed_type)
+            consumption_kg = consumption_animal_days * self.get_average_feed_consumption(at_date, feed_type)
+            return last_feed_entry.weight - consumption_kg
+        else:
+            return 0
 
     def get_average_feed_consumption(self, at_date, feed_type):
         if isinstance(at_date, str):
