@@ -124,6 +124,7 @@ class Building(RoomGroup):
         interval_count = len(entries) - 1
         average = 0
         for entry, next_entry in intervals:
+
             avg_for_entry = entry.weight / self.feed_consumption(entry.date,
                                                                  next_entry.date, feed_type)
 
@@ -136,11 +137,14 @@ class Building(RoomGroup):
             at_date = parse_date(at_date)
 
         remaining_feed = self.get_estimated_remaining_feed(at_date, feed_type)
-        daily_consumption = self.get_average_feed_consumption(at_date, feed_type)
-        remaining_days = remaining_feed / (daily_consumption * self.feed_consumption(at_date,
-                                                                                     at_date + timedelta(days=1),
-                                                                                     feed_type))
-        return at_date + timedelta(days=remaining_days)
+        average_daily_consumption = self.get_average_feed_consumption(at_date, feed_type)
+        current_consumption = self.feed_consumption(at_date,   at_date + timedelta(days=1),feed_type)
+        daily_consumption = average_daily_consumption * current_consumption
+        if daily_consumption > 0:
+            remaining_days = remaining_feed / daily_consumption
+            return at_date + timedelta(days=remaining_days)
+        else:
+            return None
 
 
 class Silo(models.Model):
@@ -275,8 +279,9 @@ class Room(models.Model):
         if start_of_feeding_period is not None:
             feeding_periods.append([start_of_feeding_period, end_date])
 
-        if feeding_periods[0][0] < start_date:
-            feeding_periods[0][0] = start_date
+        if len(feeding_periods) > 0:
+            if feeding_periods[0][0] < start_date:
+                feeding_periods[0][0] = start_date
         return feeding_periods
 
 
