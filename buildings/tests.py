@@ -213,6 +213,43 @@ class BuildingFeedingTestCase(TestCase):
         self.assertIsNone(actual)
 
 
+class BuildingLayoutInformation(TestCase):
+
+    def setUp(self):
+        self.flock = Flock(entry_date='2017-01-01', entry_weight=600, number_of_animals=30)
+        self.flock.save()
+        self.feed_type1 = FeedType(name='FeedType1', start_feeding_age=0, stop_feeding_age=10)
+        self.feed_type1.save()
+        self.feed_type2 = FeedType(name='FeedType2', start_feeding_age=11, stop_feeding_age=50)
+        self.feed_type2.save()
+        self.building = Building(name='TheBigBuilding')
+        self.building.save()
+        self.room_group = RoomGroup(group=self.building, name='Group1')
+        self.room_group.save()
+        self.room1 = Room(group=self.building, name='Room 1', capacity=10)
+        self.room1.save()
+        self.room2 = Room(group=self.building, name='Room 2', capacity=10)
+        self.room2.save()
+        self.room3 = Room(group=self.room_group, name='Room 3', capacity=10)
+        self.room3.save()
+        self.silo1 = self.building.silo_set.create(capacity=10000, feed_type=self.feed_type1)
+        self.silo1.save()
+        self.silo2 = self.building.silo_set.create(capacity=20000, feed_type=self.feed_type2)
+        self.room1.animalroomentry_set.create(number_of_animals=10, date='2017-01-01', flock=self.flock)
+
+    def test_room_count(self):
+        self.assertEqual(3, self.building.number_of_rooms)
+
+    def test_capacity(self):
+        self.assertEqual(30, self.building.animal_capacity)
+
+    def test_name(self):
+        self.assertEqual('TheBigBuilding', self.building.name)
+
+    def test_occupancy(self):
+        self.assertEqual(10, self.building.occupancy)
+
+
 class BuildingDetailViewTest(TestCase):
     def setUp(self):
         self.flock = Flock(entry_date='2017-01-01', entry_weight=600, number_of_animals=30)
