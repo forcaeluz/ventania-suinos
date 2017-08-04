@@ -256,16 +256,20 @@ class Room(models.Model):
         return self.group.name + ' - ' + self.name
 
     def get_feeding_periods(self, start_date, end_date, feed_type):
+        feeding_periods = []
         if isinstance(start_date, str):
             start_date = parse_date(start_date)
         if isinstance(end_date, str):
             end_date = parse_date(end_date)
 
         feed_change_before_period = self.roomfeedingchange_set.filter(date__lte=start_date).order_by('-date').first()
+        if feed_change_before_period is None:
+            return feeding_periods
+
         feeding_date = feed_change_before_period.date
         feeding_change_set = self.roomfeedingchange_set
         feeding_transitions = feeding_change_set.filter(date__gte=feeding_date, date__lte=end_date).order_by('date')
-        feeding_periods = []
+
         start_of_feeding_period = None
         for transition in feeding_transitions:
             # We are looking for a start period, and we found one

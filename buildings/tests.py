@@ -136,6 +136,9 @@ class BuildingFeedingTestCase(TestCase):
         self.room2.save()
         self.room3 = Room(group=self.room_group, name='Room 3', capacity=10)
         self.room3.save()
+        self.room4 = Room(group=self.room_group, name='Room 4', capacity=10)
+        self.room4.save()
+
         self.silo1 = self.building.silo_set.create(capacity=10000, feed_type=self.feed_type1)
         self.silo1.save()
         self.silo2 = self.building.silo_set.create(capacity=20000, feed_type=self.feed_type2)
@@ -196,6 +199,9 @@ class BuildingFeedingTestCase(TestCase):
     def test_feed_estimation(self):
         actual = self.building.get_estimated_remaining_feed('2017-01-21', self.feed_type1)
         expected = 5000
+        self.assertEqual(expected, actual)
+        actual = self.building.get_estimated_remaining_feed('2017-01-21', self.feed_type2)
+        expected = 20000
         self.assertEqual(expected, actual)
 
     def test_feed_etimation_without_consumption(self):
