@@ -6,9 +6,9 @@ from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, 
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, \
-    DeathInRoom, AnimalSeparatedFromRoom, RoomFeedingChange
+    DeathInRoom, AnimalSeparatedFromRoom, RoomFeedingChange, Silo, SiloFeedEntry
 from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFarmExit, AnimalFlockExit
-from feeding.models import FeedType
+from feeding.models import FeedType, FeedEntry
 
 from .widgets import RoomSelectionWidget
 
@@ -20,6 +20,14 @@ class EasyFatForm(forms.Form):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
             })
+
+            if field == 'date':
+                self.fields[field].widget.attrs.update({'data-provide': 'datepicker-inline',
+                                                        'class': 'form-control datepicker',
+                                                        'data-date-end-date': datetime.today().date().isoformat()
+                                                        })
+                self.fields[field].initial = datetime.today().date()
+
 
 
 class DeleteForm(EasyFatForm):
@@ -564,3 +572,36 @@ class FeedTransitionForm(EasyFatForm):
         for room in selected_rooms:
             room_feed_change = RoomFeedingChange(date=date, feed_type=feed_type, room=room)
             room_feed_change.save()
+
+
+class FeedEntryForm(EasyFatForm):
+    date = DateField()
+    feed_type = ModelChoiceField(queryset=FeedType.objects.all())
+    weight = FloatField()
+    silo = ModelChoiceField(queryset=Silo.objects.all())
+    remaining = FloatField()
+
+    def clean(self):
+        super().clean()
+        data = self.cleaned_data
+        feed_type = data['feed_type']
+        silo = data['silo']
+        total = data['weight'] + data['remaining']
+        if feed_type != silo.feed_type:
+            raise ValidationError('Feedtype not for this silo.')
+
+        if total > silo.capacity:
+            raise ValidationError('Total weight is more than silo capacity.')
+
+    def save(self):
+        data = self.cleaned_data
+        date = data['date']
+        feed_type = data['feed_type']
+        silo = data['silo']
+        weight = data['weight']
+        remaining = data['remaining']
+        feed_entry = FeedEntry(date=date, weight=weight, feed_type=feed_type)
+        feed_entry.save()
+        silo_feed_entry = SiloFeedEntry(feed_entry=feed_entry, silo=silo, remaining=remaining)
+        silo_feed_entry.save()
+
