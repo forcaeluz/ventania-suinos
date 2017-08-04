@@ -21,6 +21,14 @@ class EasyFatForm(forms.Form):
                 'class': 'form-control',
             })
 
+            if field == 'date':
+                self.fields[field].widget.attrs.update({'data-provide': 'datepicker-inline',
+                                                        'class': 'form-control datepicker',
+                                                        'data-date-end-date': datetime.today().date().isoformat()
+                                                        })
+                self.fields[field].initial = datetime.today().date()
+
+
 
 class DeleteForm(EasyFatForm):
 
@@ -594,6 +602,6 @@ class FeedEntryForm(EasyFatForm):
         remaining = data['remaining']
         feed_entry = FeedEntry(date=date, weight=weight, feed_type=feed_type)
         feed_entry.save()
-        silo_feed_entry = SiloFeedEntry(feed_entry=feed_entry, silo=silo)
+        silo_feed_entry = SiloFeedEntry(feed_entry=feed_entry, silo=silo, remaining=remaining)
         silo_feed_entry.save()
 

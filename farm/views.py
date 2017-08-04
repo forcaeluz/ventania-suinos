@@ -14,7 +14,7 @@ from buildings.models import Room
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
-from .forms import AnimalSeparationDistinctionForm, SingleAnimalExitForm, FeedTransitionForm
+from .forms import AnimalSeparationDistinctionForm, SingleAnimalExitForm, FeedTransitionForm, FeedEntryForm
 
 # Update forms
 from .forms import AnimalSeparationUpdateForm, AnimalDeathUpdateForm
@@ -648,6 +648,19 @@ class RegisterFeedTransition(EasyFatFormView):
     form_class = FeedTransitionForm
     template_name = 'farm/single_form.html'
     form_title = 'Register feeding transition'
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('farm:index')
+
+
+class FeedEntryView(EasyFatFormView):
+    template_name = 'farm/single_form.html'
+    form_title = _('Register new feed entry')
+    form_class = FeedEntryForm
 
     def form_valid(self, form):
         form.save()

@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 
 from .views import FarmIndexView, RegisterNewAnimalEntry, RegisterNewAnimalExit, RegisterNewAnimalDeath, \
     RegisterNewAnimalSeparation, RegisterSingleAnimalExit, EditAnimalEntry, DeleteDeath, EditAnimalDeath, \
-    EditAnimalSeparation, DeleteSeparation, DeleteAnimalEntry, DeleteExit, RegisterFeedTransition
+    EditAnimalSeparation, DeleteSeparation, DeleteAnimalEntry, DeleteExit, RegisterFeedTransition, FeedEntryView
 
 app_name = 'farm'
 urlpatterns = [
@@ -20,5 +20,6 @@ urlpatterns = [
     url(r'^edit_animal_separation/(?P<separation_id>[0-9]+)', login_required(EditAnimalSeparation.as_view()), name='edit_animal_separation'),
     url(r'^delete_separation/(?P<separation_id>[0-9]+)', login_required(DeleteSeparation.as_view()), name='delete_animal_separation'),
     url(r'^register_single_exit', login_required(RegisterSingleAnimalExit.as_view()), name='single_animal_exit'),
-    url(r'^register_feed_transition', login_required(RegisterFeedTransition.as_view()), name='new_feed_transition')
+    url(r'^register_feed_transition', login_required(RegisterFeedTransition.as_view()), name='new_feed_transition'),
+    url(r'^register_feed_entry', login_required(FeedEntryView.as_view()), name='new_feed_entry')
 ]
