@@ -1,17 +1,22 @@
+from datetime import date
+
 from django.test import TestCase
 from django.forms import formset_factory
-from buildings.models import Building, Room
+from buildings.models import Building, Room, SiloFeedEntry
 from flocks.models import Flock, AnimalSeparation
+from feeding.models import FeedType, FeedEntry
 
 from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
-from .forms import AnimalExitRoomFormset, AnimalExitRoomForm
+from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm
 
 
 class FarmTestClass(TestCase):
     def setUp(self):
         super().setUp()
+
         building = Building(name='b1')
-        building.save()
+        self.building = building
+        self.building.save()
         self.normal_room1 = Room(name='Room1', is_separation=False, capacity=13, group=building)
         self.normal_room1.save()
         self.normal_room2 = Room(name='Room1', is_separation=False, capacity=13, group=building)
@@ -253,3 +258,55 @@ class AnimalExitRoomFormsetTest(FarmTestClass):
         self.assertEqual(0, len(formset.forms[0].errors))
         self.assertEqual(0, len(formset.forms[1].errors))
         self.assertEqual(0, len(formset.forms[2].errors))
+
+
+class TestFeedEntryForm(FarmTestClass):
+
+    def setUp(self):
+        super().setUp()
+        self.feed_type1 = FeedType(name='Type1', start_feeding_age=0, stop_feeding_age=10)
+        self.feed_type1.save()
+        self.feed_type2 = FeedType(name='Type2', start_feeding_age=0, stop_feeding_age=10)
+        self.feed_type2.save()
+
+        self.silo1 = self.building.silo_set.create(name='Silo1', feed_type=self.feed_type1, capacity=10000)
+        self.silo2 = self.building.silo_set.create(name='Silo2', feed_type=self.feed_type2, capacity=10000)
+
+    def test_feed_entry_form(self):
+        form_data = {'date': '2017-01-15',
+                     'weight': '10000',
+                     'remaining': '0',
+                     'silo': self.silo1.id,
+                     'feed_type': self.feed_type1.id
+                     }
+
+        form = FeedEntryForm(data=form_data)
+        self.assertTrue(form.is_valid())
+        form.save()
+        feed_entries = FeedEntry.objects.all()
+        self.assertEqual(1, feed_entries.count())
+        entry = feed_entries.first()
+        self.assertEqual(date(2017, 1, 15), entry.date)
+        self.assertEqual(10000, entry.weight)
+        silo_entries = SiloFeedEntry.objects.all()
+        self.assertEqual(1, silo_entries.count())
+
+    def test_feed_entry_invalid_type(self):
+        form_data = {'date': '2017-01-15',
+                     'weight': '10000',
+                     'remaining': '0',
+                     'silo': self.silo1.id,
+                     'feed_type': self.feed_type2.id
+                     }
+        form = FeedEntryForm(data=form_data)
+        self.assertFalse(form.is_valid())
+
+    def test_feed_entry_over_capacity(self):
+        form_data = {'date': '2017-01-15',
+                     'weight': '9000',
+                     'remaining': '2000',
+                     'silo': self.silo1.id,
+                     'feed_type': self.feed_type1.id
+                     }
+        form = FeedEntryForm(data=form_data)
+        self.assertFalse(form.is_valid())
