@@ -43,10 +43,10 @@ class RoomGroup(models.Model):
 
         return count
 
-    def feed_consumption(self, start_date, end_date, feed_type):
+    def animal_days_for_feed_type(self, start_date, end_date, feed_type):
         total = 0
         for group in self.roomgroup_set.all():
-            total += group.feed_consumption(start_date, end_date, feed_type)
+            total += group.animal_days_for_feed_type(start_date, end_date, feed_type)
 
         for room in self.room_set.all():
             total += room.get_animal_days_for_feeding_period(start_date, end_date, feed_type)
@@ -108,9 +108,9 @@ class Building(RoomGroup):
         end_date = at_date + timedelta(days=1)
         last_feed_entry = self.get_last_feed_entries(at_date, feed_type)
         if last_feed_entry is not None:
-            consumption_animal_days = self.feed_consumption(last_feed_entry.date, end_date, feed_type)
+            consumption_animal_days = self.animal_days_for_feed_type(last_feed_entry.date, end_date, feed_type)
             consumption_kg = consumption_animal_days * self.get_average_feed_consumption(at_date, feed_type)
-            return last_feed_entry.weight - consumption_kg
+            return last_feed_entry.weight + last_feed_entry.remaining - consumption_kg
         else:
             return 0
 
@@ -124,12 +124,12 @@ class Building(RoomGroup):
         interval_count = len(entries) - 1
         average = 0
         for entry, next_entry in intervals:
-
-            avg_for_entry = entry.weight / self.feed_consumption(entry.date,
-                                                                 next_entry.date, feed_type)
+            weight_begin = entry.weight + entry.remaining
+            weight_end = next_entry.remaining
+            avg_for_entry = (weight_begin - weight_end) / self.animal_days_for_feed_type(entry.date,
+                                                                                         next_entry.date, feed_type)
 
             average += avg_for_entry / interval_count
-
         return average
 
     def get_estimated_feed_end_date(self, at_date, feed_type):
@@ -138,7 +138,7 @@ class Building(RoomGroup):
 
         remaining_feed = self.get_estimated_remaining_feed(at_date, feed_type)
         average_daily_consumption = self.get_average_feed_consumption(at_date, feed_type)
-        current_consumption = self.feed_consumption(at_date,   at_date + timedelta(days=1),feed_type)
+        current_consumption = self.animal_days_for_feed_type(at_date, at_date + timedelta(days=1), feed_type)
         daily_consumption = average_daily_consumption * current_consumption
         if daily_consumption > 0:
             remaining_days = remaining_feed / daily_consumption
@@ -332,8 +332,12 @@ class RoomFeedingChange(models.Model):
 
 
 class SiloFeedEntry(models.Model):
+    """
+    Creates the link between the Silo where the feed is placed in, and the feed entry itself.
+    """
     feed_entry = models.ForeignKey(to=FeedEntry)
     silo = models.ForeignKey(to=Silo)
+    remaining = models.FloatField(default=0)
 
     @property
     def weight(self):

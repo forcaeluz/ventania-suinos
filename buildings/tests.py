@@ -184,12 +184,12 @@ class BuildingFeedingTestCase(TestCase):
                                                                                  self.feed_type2))
 
     def test_feed_consumption(self):
-        self.assertEqual(300, self.building.feed_consumption('2017-01-01', '2017-01-11', self.feed_type1))
-        self.assertEqual(0, self.building.feed_consumption('2017-01-01', '2017-01-11', self.feed_type2))
+        self.assertEqual(300, self.building.animal_days_for_feed_type('2017-01-01', '2017-01-11', self.feed_type1))
+        self.assertEqual(0, self.building.animal_days_for_feed_type('2017-01-01', '2017-01-11', self.feed_type2))
 
     def test_feed_consumption_single_day(self):
-        self.assertEqual(30, self.building.feed_consumption('2017-01-05', '2017-01-06', self.feed_type1))
-        self.assertEqual(0, self.building.feed_consumption('2017-01-05', '2017-01-06', self.feed_type2))
+        self.assertEqual(30, self.building.animal_days_for_feed_type('2017-01-05', '2017-01-06', self.feed_type1))
+        self.assertEqual(0, self.building.animal_days_for_feed_type('2017-01-05', '2017-01-06', self.feed_type2))
 
     def test_last_feed_entries(self):
         actual = self.building.get_last_feed_entries('2017-01-17', self.feed_type1)
@@ -218,6 +218,26 @@ class BuildingFeedingTestCase(TestCase):
         actual = self.building.get_estimated_feed_end_date('2017-01-21', self.feed_type2)
         self.assertIsNone(actual)
 
+    def test_feed_estimation_with_remains(self):
+        feed1_entry3 = FeedEntry(date='2017-01-21', weight=5000, feed_type=self.feed_type1)
+        feed1_entry3.save()
+        silo_entry = SiloFeedEntry(feed_entry=feed1_entry3,
+                                   remaining=self.building.get_estimated_remaining_feed('2017-01-20', self.feed_type1),
+                                   silo=self.silo1)
+        silo_entry.save()
+        actual = self.building.get_estimated_remaining_feed('2017-01-21', self.feed_type1)
+        self.assertEqual(10000, actual)
+
+    def test_feed_date_estimation_with_remains(self):
+        feed1_entry3 = FeedEntry(date='2017-01-21', weight=5000, feed_type=self.feed_type1)
+        feed1_entry3.save()
+        silo_entry = SiloFeedEntry(feed_entry=feed1_entry3,
+                                   remaining=self.building.get_estimated_remaining_feed('2017-01-20', self.feed_type1),
+                                   silo=self.silo1)
+        silo_entry.save()
+        # Here the rules are a bit fuzzy, and an exact expectation does not make a lot of sense
+        # either.
+        self.assertEqual(date(2017, 2, 4), self.building.get_estimated_feed_end_date('2017-01-22', self.feed_type1))
 
 class BuildingLayoutInformation(TestCase):
 
