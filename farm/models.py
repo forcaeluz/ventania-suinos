@@ -106,7 +106,7 @@ class AnimalEntry:
         :return:
         """
         instance = kwargs.get('instance', None)
-        data = kwargs.get('cleaned_data', None)
+        data = kwargs.get('data', None)
         if instance:
             self.flock = instance
             self.room_entries = list(self.flock.animalroomentry_set.filter(date=self.flock.entry_date).all())

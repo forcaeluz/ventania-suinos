@@ -166,7 +166,7 @@ class RegisterNewAnimalEntry(EasyFatWizard):
         room_info = self.get_cleaned_data_for_step('building_information')
 
         animal_entry = AnimalEntry()
-        animal_entry.set_flock(cleaned_data=flock_info)
+        animal_entry.set_flock(data=flock_info)
         animal_entry.set_room_entries(room_info)
         animal_entry.clean()
         animal_entry.save()
