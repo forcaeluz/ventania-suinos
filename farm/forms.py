@@ -46,6 +46,7 @@ class BaseAnimalEntryForm(EasyFatForm):
     The base-class provides the basic fields, but no clean() method. The sub-classes should provide the clean method
     according to their needs.
     """
+
     date = DateField()
     weight = FloatField(min_value=0.0)
     number_of_animals = IntegerField()
@@ -59,6 +60,7 @@ class CreateAnimalEntryForm(BaseAnimalEntryForm):
     def clean(self):
         """ The clean method raises a validation error when the user tries to assign the flock to non-empty rooms.
         """
+
         super().clean()
         rooms = self.cleaned_data.get('rooms')
         date = self.cleaned_data.get('date')
@@ -73,6 +75,7 @@ class EditAnimalEntryForm(BaseAnimalEntryForm):
     This class requires a value for 'flock' in kwargs. It is necessary to know which flock is being updated in order
     to validate the form.
     """
+
     def __init__(self, *args, **kwargs):
         self.flock = kwargs.pop('flock')
         super().__init__(*args, **kwargs)
@@ -86,6 +89,7 @@ class EditAnimalEntryForm(BaseAnimalEntryForm):
 
         If neither one is true, a ValidationError is raised.
         """
+
         assert(self.flock is not None)
         super().clean()
         rooms = self.cleaned_data.get('rooms')
