@@ -76,6 +76,11 @@ class EditAnimalEntryForm(BaseAnimalEntryForm):
     """
 
     def __init__(self, *args, **kwargs):
+        """ Form constructor.
+
+        :param args:
+        :param kwargs: An value for 'flock' is required in the constructor.
+        """
         self.flock = kwargs.pop('flock')
         super().__init__(*args, **kwargs)
 
