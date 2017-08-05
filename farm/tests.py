@@ -7,7 +7,7 @@ from flocks.models import Flock, AnimalSeparation
 from feeding.models import FeedType, FeedEntry
 
 from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
-from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm, CreateAnimalEntryForm
+from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm, CreateAnimalEntryForm, EditAnimalEntryForm
 
 
 class FarmTestClass(TestCase):
@@ -80,6 +80,54 @@ class CreateAnimalEntryFormTest(FarmTestClass):
                 'number_of_animals': '10',
                 'rooms': [obj.id for obj in self.empty_building.room_set.filter(is_separation=False)]}
         form = CreateAnimalEntryForm(data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_with_invalid_data(self):
+        self.setUpEmptyBuilding()
+        data = {'date': '2017-01-02',
+                'weight': '220',
+                'number_of_animals': '10',
+                'rooms': [obj.id for obj in self.building.room_set.filter(is_separation=False)]}
+        form = CreateAnimalEntryForm(data=data)
+        self.assertFalse(form.is_valid())
+        error_list = form.non_field_errors()
+        self.assertTrue('not empty' in error_list[0])
+
+
+class EditAnimalEntryFormTest(FarmTestClass):
+
+    def test_empty_constructor(self):
+        with self.assertRaises(KeyError):
+            form = EditAnimalEntryForm()
+
+    def test_with_valid_data(self):
+        flock = self.flock1
+        data = {'date': '2016-12-01',
+                'weight': '220',
+                'number_of_animals': '10',
+                'rooms': [self.normal_room1.id]}
+        form = EditAnimalEntryForm(flock=flock, data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_with_invalid_data(self):
+        flock = self.flock2
+        data = {'date': '2017-01-01',
+                'weight': '220',
+                'number_of_animals': '10',
+                'rooms': [self.normal_room1.id]}
+        form = EditAnimalEntryForm(flock=flock, data=data)
+        self.assertFalse(form.is_valid())
+        error_list = form.non_field_errors()
+        self.assertTrue('not empty' in error_list[0])
+
+    def test_with_valid_data2(self):
+        self.setUpEmptyBuilding()
+        flock = self.flock1
+        data = {'date': '2017-01-02',
+                'weight': '220',
+                'number_of_animals': '10',
+                'rooms': [self.empty_building.room_set.first()]}
+        form = EditAnimalEntryForm(flock=flock, data=data)
         self.assertTrue(form.is_valid())
 
 
