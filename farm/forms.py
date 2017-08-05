@@ -60,7 +60,6 @@ class CreateAnimalEntryForm(BaseAnimalEntryForm):
     def clean(self):
         """ The clean method raises a validation error when the user tries to assign the flock to non-empty rooms.
         """
-
         super().clean()
         rooms = self.cleaned_data.get('rooms')
         date = self.cleaned_data.get('date')
@@ -89,7 +88,6 @@ class EditAnimalEntryForm(BaseAnimalEntryForm):
 
         If neither one is true, a ValidationError is raised.
         """
-
         assert(self.flock is not None)
         super().clean()
         rooms = self.cleaned_data.get('rooms')
