@@ -155,7 +155,7 @@ class AnimalEntryTest(FarmTestClass):
                 'number_of_animals': 13,
                 'date': '2016-12-02'}
         entry.update_flock(data=data)
-        entry.clean()
+        self.assertTrue(entry.is_valid())
         entry.save()
         self.assertEquals(300, self.flock1.entry_weight)
         self.assertEquals(13, self.flock1.number_of_animals)
@@ -176,7 +176,7 @@ class AnimalEntryTest(FarmTestClass):
         entry.update_room_entries(room_data)
         self.assertEquals(1, len(entry.room_entries))
         self.assertEquals(self.empty_building.room_set.first(), entry.room_entries[0].room)
-        entry.clean()
+        self.assertTrue(entry.is_valid())
         entry.save()
         self.assertEquals(0, self.normal_room1.animalroomentry_set.count())
 
@@ -193,7 +193,7 @@ class AnimalEntryTest(FarmTestClass):
         entry.update_room_entries(room_data)
         self.assertEquals(1, len(entry.room_entries))
         self.assertEquals(self.normal_room1, entry.room_entries[0].room)
-        entry.clean()
+        self.assertTrue(entry.is_valid())
         entry.save()
         room_entry = self.normal_room1.animalroomentry_set.first()
         self.assertEquals(10, room_entry.number_of_animals)

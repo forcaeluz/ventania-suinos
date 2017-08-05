@@ -88,26 +88,23 @@ class AnimalExit:
 
 
 class AnimalEntry:
-    """
-    Class that combines RoomEntry and Flock Information.
+    """ Class that combines RoomEntry and Flock Information.
     
-    This class is used to create or edit RoomEntry and Flock Information.
+    This class is used to create, edit or delete information about animal entries in the farm. That means it
+    combines the information about a new Flock, together with room entry information for this flock.
     """
 
     def __init__(self):
-        """ Constructor, only to initialize variables.
-
-        """
+        """ Constructor, only to initialize variables."""
         self.flock = None
         self.room_entries = []
 
     def set_flock(self, **kwargs):
-        """ Sets the Flock information for the AnimalEntry model.
+        """ Set the Flock information for the AnimalEntry model.
 
         :param kwargs: There are two options to set the Flock. Either by instance, or by data.
         :return:
         """
-
         instance = kwargs.get('instance', None)
         data = kwargs.get('cleaned_data', None)
         if instance:
@@ -121,6 +118,10 @@ class AnimalEntry:
             raise ValueError('Not possible to assign flock information')
 
     def update_flock(self, data):
+        """ Update the flock information.
+
+        :param data: The flock information, given as a dictionary.
+        """
         assert(self.flock is not None)
         self.flock.number_of_animals = data['number_of_animals']
         self.flock.entry_date = data['date']
@@ -129,10 +130,18 @@ class AnimalEntry:
             room_entry.date = self.flock.entry_date
 
     def set_room_entries(self, room_entries_info):
+        """ Set the room entries information.
+
+        :param room_entries_info: The room entries information, given as a dictionary.
+        """
         assert(self.flock is not None)
         self.update_room_entries(room_entries_info)
 
     def update_room_entries(self, room_entries_info):
+        """ Update the room entries information.
+
+        :param room_entries_info: New data, as a dictionary.
+        """
         assert(self.flock is not None)
         existing_room_list = [obj.room for obj in self.room_entries]
         # The final list
@@ -159,7 +168,6 @@ class AnimalEntry:
                                          room=new_room_info['room'])
             self.room_entries.append(room_entry)
 
-
     def __update_room_entry_information(self, new_info):
         for old_entry in self.room_entries:
             if old_entry.room == new_info['room']:
@@ -167,6 +175,11 @@ class AnimalEntry:
                 old_entry.date = self.flock.entry_date
 
     def clean(self):
+        """ Perform the computation to check the validity of the data.
+
+        :raises: Validation error, if the number of animals placed in rooms is not equal to the number of animals in the
+        flock.
+        """
         count = 0
         self.flock.full_clean()
         for room_entry in self.room_entries:
@@ -175,11 +188,27 @@ class AnimalEntry:
         if count != self.flock.number_of_animals:
             raise ValidationError('Number of animals in flock is different than in rooms.')
 
+    def is_valid(self):
+        """ Check the validity of the data.
+
+        :return: True if valid, false otherwise.
+        """
+        try:
+            self.clean()
+        except ValidationError:
+            return False
+        except AssertionError:
+            return False
+
+        return True
+
     def save(self):
+        """ Save the data. """
         self.flock.save()
         for room_entry in self.room_entries:
             room_entry.flock = self.flock
             room_entry.save()
 
     def delete(self):
+        """ Delete the flock and room entries information."""
         self.flock.delete()
