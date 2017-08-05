@@ -8,6 +8,7 @@ from feeding.models import FeedType, FeedEntry
 
 from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
 from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm, CreateAnimalEntryForm, EditAnimalEntryForm
+from .models import AnimalEntry
 
 
 class FarmTestClass(TestCase):
@@ -129,6 +130,73 @@ class EditAnimalEntryFormTest(FarmTestClass):
                 'rooms': [self.empty_building.room_set.first()]}
         form = EditAnimalEntryForm(flock=flock, data=data)
         self.assertTrue(form.is_valid())
+
+
+class AnimalEntryTest(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        self.setUpEmptyBuilding()
+
+    def test_constructor(self):
+        entry = AnimalEntry()
+        self.assertIsNone(entry.flock)
+        self.assertEquals(0, len(entry.room_entries))
+
+    def test_set_flock(self):
+        entry = AnimalEntry()
+        entry.set_flock(instance=self.flock1)
+        self.assertEquals(1, len(entry.room_entries))
+        self.assertEquals(self.normal_room1.animalroomentry_set.first(), entry.room_entries[0])
+
+    def test_update_flock(self):
+        entry = AnimalEntry()
+        entry.set_flock(instance=self.flock1)
+        data = {'weight': 300,
+                'number_of_animals': 13,
+                'date': '2016-12-02'}
+        entry.update_flock(data=data)
+        entry.clean()
+        entry.save()
+        self.assertEquals(300, self.flock1.entry_weight)
+        self.assertEquals(13, self.flock1.number_of_animals)
+        self.assertEquals(date(2016, 12, 2), self.flock1.entry_date)
+        room_entry = self.flock1.animalroomentry_set.filter(room=self.normal_room1).first()
+        self.assertEquals(date(2016, 12, 2), room_entry.date)
+
+    def test_remove_and_add_room_entry(self):
+        entry = AnimalEntry()
+        entry.set_flock(instance=self.flock1)
+        data = {'weight': 300,
+                'number_of_animals': 13,
+                'date': '2016-12-02'}
+        entry.update_flock(data=data)
+        room_data = [{'room': self.empty_building.room_set.first(),
+                      'number_of_animals': 13
+                     }]
+        entry.update_room_entries(room_data)
+        self.assertEquals(1, len(entry.room_entries))
+        self.assertEquals(self.empty_building.room_set.first(), entry.room_entries[0].room)
+        entry.clean()
+        entry.save()
+        self.assertEquals(0, self.normal_room1.animalroomentry_set.count())
+
+    def test_update_room_info(self):
+        entry = AnimalEntry()
+        entry.set_flock(instance=self.flock1)
+        data = {'weight': 300,
+                'number_of_animals': 10,
+                'date': '2016-12-02'}
+        entry.update_flock(data=data)
+        room_data = [{'room': self.normal_room1,
+                      'number_of_animals': 10
+                      }]
+        entry.update_room_entries(room_data)
+        self.assertEquals(1, len(entry.room_entries))
+        self.assertEquals(self.normal_room1, entry.room_entries[0].room)
+        entry.clean()
+        entry.save()
+        room_entry = self.normal_room1.animalroomentry_set.first()
+        self.assertEquals(10, room_entry.number_of_animals)
 
 
 class AnimalDeathFormTest(FarmTestClass):
