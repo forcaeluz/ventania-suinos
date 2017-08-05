@@ -12,8 +12,8 @@ from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit,
 from buildings.models import Room
 
 
-from .forms import CreateAnimalEntryForm, EditAnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
-from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
+from .forms import CreateAnimalEntryForm, EditAnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm
+from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm, AnimalExitRoomFormset
 from .forms import AnimalSeparationDistinctionForm, SingleAnimalExitForm, FeedTransitionForm, FeedEntryForm
 
 # Update forms
@@ -218,7 +218,6 @@ class EditAnimalEntry(EasyFatWizard):
     def __init__(self, **kwargs):
         self.animal_entry = AnimalEntry()
         super().__init__(**kwargs)
-
 
     def get_form_initial(self, step):
         initial = None
