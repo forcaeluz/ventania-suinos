@@ -95,13 +95,10 @@ class AnimalEntry:
     """
     def __init__(self, flock=None):
         self.flock = flock
-        if self.flock is not None:
-            self.room_entries = flock.animalroomentry_set.all()
-        else:
-            self.room_entries = []
+        self.room_entries = []
 
     def set_flock(self, **kwargs):
-        instance = kwargs.get('separation', None)
+        instance = kwargs.get('instance', None)
         data = kwargs.get('cleaned_data', None)
         if instance:
             self.flock = instance

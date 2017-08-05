@@ -7,7 +7,7 @@ from flocks.models import Flock, AnimalSeparation
 from feeding.models import FeedType, FeedEntry
 
 from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
-from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm
+from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm, CreateAnimalEntryForm
 
 
 class FarmTestClass(TestCase):
@@ -19,7 +19,7 @@ class FarmTestClass(TestCase):
         self.building.save()
         self.normal_room1 = Room(name='Room1', is_separation=False, capacity=13, group=building)
         self.normal_room1.save()
-        self.normal_room2 = Room(name='Room1', is_separation=False, capacity=13, group=building)
+        self.normal_room2 = Room(name='Room2', is_separation=False, capacity=13, group=building)
         self.normal_room2.save()
         self.separation_room = Room(name='SeparationRoom', is_separation=True, capacity=4, group=building)
         self.separation_room.save()
@@ -55,6 +55,32 @@ class FarmTestClass(TestCase):
                                                                        number_of_animals=1,
                                                                        flock=self.flock2)
         animal_entry.save()
+
+    def setUpEmptyBuilding(self):
+        building = Building(name='EmptyBuilding')
+        self.empty_building = building
+        self.empty_building.save()
+        normal_room1 = Room(name='Room1', is_separation=False, capacity=13, group=building)
+        normal_room1.save()
+        normal_room2 = Room(name='Room2', is_separation=False, capacity=13, group=building)
+        normal_room2.save()
+        separation_room = Room(name='SeparationRoom', is_separation=True, capacity=4, group=building)
+        separation_room.save()
+
+
+class CreateAnimalEntryFormTest(FarmTestClass):
+
+    def test_empty_constructor(self):
+        form = CreateAnimalEntryForm()
+
+    def test_with_valid_data(self):
+        self.setUpEmptyBuilding()
+        data = {'date': '2017-01-02',
+                'weight': '220',
+                'number_of_animals': '10',
+                'rooms': [obj.id for obj in self.empty_building.room_set.filter(is_separation=False)]}
+        form = CreateAnimalEntryForm(data=data)
+        self.assertTrue(form.is_valid())
 
 
 class AnimalDeathFormTest(FarmTestClass):

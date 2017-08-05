@@ -29,7 +29,6 @@ class EasyFatForm(forms.Form):
                 self.fields[field].initial = datetime.today().date()
 
 
-
 class DeleteForm(EasyFatForm):
 
     def __init__(self, *args, **kwargs):
@@ -41,24 +40,60 @@ class DeleteForm(EasyFatForm):
             })
 
 
-class AnimalEntryForm(EasyFatForm):
+class BaseAnimalEntryForm(EasyFatForm):
+    """ Base Class for forms used to create or edit Animal Entries in the farm.
+
+    The base-class provides the basic fields, but no clean() method. The sub-classes should provide the clean method
+    according to their needs.
+    """
     date = DateField()
     weight = FloatField(min_value=0.0)
     number_of_animals = IntegerField()
     rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
-             'data-date-end-date': datetime.today().date().isoformat()})
-        self.fields['date'].initial = datetime.today().date()
+
+class CreateAnimalEntryForm(BaseAnimalEntryForm):
+    """ Form class used to get user information about a new flock of animals entering the farm.
+    """
 
     def clean(self):
+        """ The clean method raises a validation error when the user tries to assign the flock to non-empty rooms.
+        """
+        super().clean()
         rooms = self.cleaned_data.get('rooms')
         date = self.cleaned_data.get('date')
         for room in rooms:
             if room.get_occupancy_at_date(at_date=date) > 0:
+                raise ValidationError('You selected rooms which were not empty at the specified date.')
+
+
+class EditAnimalEntryForm(BaseAnimalEntryForm):
+    """ Form class used to get user information in order to update the flock information of an already existing flock.
+
+    This class requires a value for 'flock' in kwargs. It is necessary to know which flock is being updated in order
+    to validate the form.
+    """
+    def __init__(self, *args, **kwargs):
+        self.flock = kwargs.pop('flock')
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        """ The clean function checks if the combined information of the form is valid.
+
+        For this form one of two conditions needs to be true in order for the form to be valid.
+        - The room is empty
+        - The room is currently occupied by animals of the flock being edited.
+
+        If neither one is true, a ValidationError is raised.
+        """
+        assert(self.flock is not None)
+        super().clean()
+        rooms = self.cleaned_data.get('rooms')
+        date = self.cleaned_data.get('date')
+        for room in rooms:
+            room_has_animals_from_flock = room.get_animals_for_flock(flock_id=self.flock.id, at_date=date) > 0
+            room_is_empty = room.get_occupancy_at_date(at_date=date) == 0
+            if not room_has_animals_from_flock and not room_is_empty:
                 raise ValidationError('You selected rooms which were not empty at the specified date.')
 
 

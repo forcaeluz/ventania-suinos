@@ -12,7 +12,7 @@ from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit,
 from buildings.models import Room
 
 
-from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
+from .forms import CreateAnimalEntryForm, EditAnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm, AnimalExitRoomFormset
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm
 from .forms import AnimalSeparationDistinctionForm, SingleAnimalExitForm, FeedTransitionForm, FeedEntryForm
 
@@ -153,7 +153,7 @@ class RegisterNewAnimalEntry(EasyFatWizard):
     """
 
     form_list = [
-        ('flock_information', AnimalEntryForm),
+        ('flock_information', CreateAnimalEntryForm),
         ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
     ]
     wizard_name = _('Register animal entry')
@@ -207,7 +207,7 @@ class RegisterNewAnimalEntry(EasyFatWizard):
 
 class EditAnimalEntry(EasyFatWizard):
     form_list = [
-        ('flock_information', AnimalEntryForm),
+        ('flock_information', EditAnimalEntryForm),
         ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
     ]
     wizard_name = _('Edit animal entry')
@@ -219,14 +219,17 @@ class EditAnimalEntry(EasyFatWizard):
         self.animal_entry = AnimalEntry()
         super().__init__(**kwargs)
 
+
     def get_form_initial(self, step):
         initial = None
         flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
         self.animal_entry.set_flock(instance=flock)
+        rooms = [an_entry.room for an_entry in flock.animalroomentry_set.all()]
         if step == 'flock_information':
             initial = {'number_of_animals': flock.number_of_animals,
                        'date': flock.entry_date,
-                       'weight': flock.entry_weight}
+                       'weight': flock.entry_weight,
+                       'rooms': rooms}
 
         if step == 'building_information':
             room_entries = self.animal_entry.flock.animalroomentry_set.all()
@@ -250,7 +253,12 @@ class EditAnimalEntry(EasyFatWizard):
 
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
-        if step == 'building_information':
+        flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
+        self.animal_entry.set_flock(instance=flock)
+
+        if step == 'flock_information':
+            kwargs.update({'flock': self.animal_entry.flock})
+        elif step == 'building_information':
             number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
             kwargs.update({'number_of_animals': number_of_animals})
 
