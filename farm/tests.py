@@ -220,6 +220,24 @@ class AnimalEntryTest(FarmTestClass):
         self.assertEquals(1, Flock.objects.count())
         self.assertEquals(0, self.normal_room1.animalroomentry_set.count())
 
+    def test_invalid_data(self):
+        entry = AnimalEntry()
+        data = {'weight': 300,
+                'number_of_animals': 13,
+                'date': '2017-03-01'}
+        room_data = [{'room': self.empty_building.room_set.first(),
+                      'number_of_animals': 14
+                      }]
+
+        entry.set_flock(data=data)
+        entry.update_room_entries(room_data)
+        self.assertFalse(entry.is_valid())
+
+    def test_set_flock_invalid(self):
+        entry = AnimalEntry()
+        with self.assertRaises(ValueError):
+            entry.set_flock(flock=self.flock1)
+
 
 class AnimalDeathFormTest(FarmTestClass):
 
