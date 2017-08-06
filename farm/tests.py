@@ -238,6 +238,14 @@ class AnimalEntryTest(FarmTestClass):
         with self.assertRaises(ValueError):
             entry.set_flock(flock=self.flock1)
 
+    def test_set_room_info_before_flock(self):
+        entry = AnimalEntry()
+        room_data = [{'room': self.empty_building.room_set.first(),
+                      'number_of_animals': 14
+                      }]
+        with self.assertRaises(AssertionError):
+            entry.update_room_entries(room_data)
+
 
 class AnimalDeathFormTest(FarmTestClass):
 

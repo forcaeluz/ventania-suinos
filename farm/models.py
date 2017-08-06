@@ -35,7 +35,7 @@ class AnimalExit:
         pass
 
     def set_room_exit_information(self, room_exits_information):
-        assert (self.animal_farm_exit is not None)
+        assert self.animal_farm_exit is not None
         date = self.animal_farm_exit.date
 
         for room_exit_info in room_exits_information:
@@ -122,27 +122,19 @@ class AnimalEntry:
 
         :param data: The flock information, given as a dictionary.
         """
-        assert(self.flock is not None)
+        assert self.flock is not None
         self.flock.number_of_animals = data['number_of_animals']
         self.flock.entry_date = data['date']
         self.flock.entry_weight = data['weight']
         for room_entry in self.room_entries:
             room_entry.date = self.flock.entry_date
 
-    def set_room_entries(self, room_entries_info):
-        """Set the room entries information.
-
-        :param room_entries_info: The room entries information, given as a dictionary.
-        """
-        assert(self.flock is not None)
-        self.update_room_entries(room_entries_info)
-
     def update_room_entries(self, room_entries_info):
         """Update the room entries information.
 
         :param room_entries_info: New data, as a dictionary.
         """
-        assert(self.flock is not None)
+        assert self.flock is not None
         existing_room_list = [obj.room for obj in self.room_entries]
         # The final list
         final_room_list = [obj['room'] for obj in room_entries_info]
@@ -196,8 +188,6 @@ class AnimalEntry:
         try:
             self.clean()
         except ValidationError:
-            return False
-        except AssertionError:
             return False
 
         return True
