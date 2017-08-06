@@ -35,7 +35,7 @@ class AnimalExit:
         pass
 
     def set_room_exit_information(self, room_exits_information):
-        assert (self.animal_farm_exit is not None)
+        assert self.animal_farm_exit is not None
         date = self.animal_farm_exit.date
 
         for room_exit_info in room_exits_information:
@@ -88,24 +88,28 @@ class AnimalExit:
 
 
 class AnimalEntry:
+    """Class that combines RoomEntry and Flock Information.
+
+    This class is used to create, edit or delete information about animal entries in the farm. That means it
+    combines the information about a new Flock, together with room entry information for this flock.
     """
-    Class that combines RoomEntry and Flock Information.
-    
-    This class is used to create or edit RoomEntry and Flock Information.
-    """
-    def __init__(self, flock=None):
-        self.flock = flock
-        if self.flock is not None:
-            self.room_entries = flock.animalroomentry_set.all()
-        else:
-            self.room_entries = []
+
+    def __init__(self):
+        """Constructor, only to initialize variables."""
+        self.flock = None
+        self.room_entries = []
 
     def set_flock(self, **kwargs):
-        instance = kwargs.get('separation', None)
-        data = kwargs.get('cleaned_data', None)
+        """Set the Flock information for the AnimalEntry model.
+
+        :param kwargs: There are two options to set the Flock. Either by instance, or by data.
+        :return:
+        """
+        instance = kwargs.get('instance', None)
+        data = kwargs.get('data', None)
         if instance:
             self.flock = instance
-            self.room_entries = self.flock.animalroomentry_set.all()
+            self.room_entries = list(self.flock.animalroomentry_set.filter(date=self.flock.entry_date).all())
         elif data:
             self.flock = Flock(number_of_animals=data['number_of_animals'],
                                entry_date=data['date'],
@@ -114,71 +118,87 @@ class AnimalEntry:
             raise ValueError('Not possible to assign flock information')
 
     def update_flock(self, data):
-        assert(self.flock is not None)
+        """Update the flock information.
+
+        :param data: The flock information, given as a dictionary.
+        """
+        assert self.flock is not None
         self.flock.number_of_animals = data['number_of_animals']
         self.flock.entry_date = data['date']
         self.flock.entry_weight = data['weight']
         for room_entry in self.room_entries:
             room_entry.date = self.flock.entry_date
 
-    def set_room_entries(self, room_entries_info):
-        assert(self.flock is not None)
-        for room_entry_info in room_entries_info:
-            room_entry = AnimalRoomEntry(number_of_animals=room_entry_info['number_of_animals'],
-                                         flock=self.flock,
-                                         date=self.flock.entry_date,
-                                         room=room_entry_info['room'])
-            self.room_entries.append(room_entry)
-
     def update_room_entries(self, room_entries_info):
-        assert(self.flock is not None)
-        existing_list = [obj.room for obj in self.room_entries]
+        """Update the room entries information.
+
+        :param room_entries_info: New data, as a dictionary.
+        """
+        assert self.flock is not None
+        existing_room_list = [obj.room for obj in self.room_entries]
         # The final list
-        final_list = [obj['room'] for obj in room_entries_info]
-        # Rooms to be deleted
-        delete_list = [obj.room for obj in self.room_entries if obj.room not in final_list]
-        # Rooms to be added
-        add_list = [obj['room'] for obj in room_entries_info if obj['room'] not in existing_list]
-        # Rooms to be updated
-        update_list = [obj for obj in final_list if obj not in add_list]
+        final_room_list = [obj['room'] for obj in room_entries_info]
+        # Room entries to be deleted
+        delete_list = [obj for obj in self.room_entries if obj.room not in final_room_list]
+        # Room entries to be added
+        add_list = [obj for obj in room_entries_info if obj['room'] not in existing_room_list]
+        # Room entries to be updated
+        update_list = [obj for obj in room_entries_info if obj not in add_list]
+        self.room_entries = [obj for obj in self.room_entries if obj.room in final_room_list]
 
         # Delete entries
-        for room_entry in self.room_entries:
-            if room_entry.room in delete_list:
-                room_entry.delete()
+        for room_entry in delete_list:
+            room_entry.delete()
 
-        # Only the update list should be in here now.
-        self.room_entries = self.flock.animalroomentry_set.all()
-        for room_entry in self.room_entries:
-            assert(room_entry.room in update_list)
-            for new_room_info in room_entries_info:
-                if new_room_info['room'] == room_entry.room:
-                    room_entry.number_of_animals = new_room_info['number_of_animals']
-                    room_entry.date = self.flock.entry_date
+        for room_entry in update_list:
+            self.__update_room_entry_information(room_entry)
 
-        for room in add_list:
-            for new_room_info in room_entries_info:
-                if new_room_info['room'] == room:
-                    room_entry = AnimalRoomEntry(number_of_animals=new_room_info['number_of_animals'],
-                                                 flock=self.flock,
-                                                 date=self.flock.entry_date,
-                                                 room=new_room_info['room'])
-                    self.room_entries.append(room_entry)
+        for new_room_info in add_list:
+            room_entry = AnimalRoomEntry(number_of_animals=new_room_info['number_of_animals'],
+                                         flock=self.flock,
+                                         date=self.flock.entry_date,
+                                         room=new_room_info['room'])
+            self.room_entries.append(room_entry)
+
+    def __update_room_entry_information(self, new_info):
+        for old_entry in self.room_entries:
+            if old_entry.room == new_info['room']:
+                old_entry.number_of_animals = new_info['number_of_animals']
+                old_entry.date = self.flock.entry_date
 
     def clean(self):
+        """Perform the computation to check the validity of the data.
+
+        :raises: Validation error, if the number of animals placed in rooms is not equal to the number of animals in the
+        flock.
+        """
         count = 0
         self.flock.full_clean()
         for room_entry in self.room_entries:
             count += room_entry.number_of_animals
 
         if count != self.flock.number_of_animals:
-            raise ValidationError('Something went wrong.')
+            raise ValidationError('Number of animals in flock is different than in rooms.')
+
+    def is_valid(self):
+        """Check the validity of the data.
+
+        :return: True if valid, false otherwise.
+        """
+        try:
+            self.clean()
+        except ValidationError:
+            return False
+
+        return True
 
     def save(self):
+        """Save the data. """
         self.flock.save()
         for room_entry in self.room_entries:
             room_entry.flock = self.flock
             room_entry.save()
 
     def delete(self):
+        """Delete the flock and room entries information."""
         self.flock.delete()

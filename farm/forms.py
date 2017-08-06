@@ -29,7 +29,6 @@ class EasyFatForm(forms.Form):
                 self.fields[field].initial = datetime.today().date()
 
 
-
 class DeleteForm(EasyFatForm):
 
     def __init__(self, *args, **kwargs):
@@ -42,30 +41,53 @@ class DeleteForm(EasyFatForm):
 
 
 class AnimalEntryForm(EasyFatForm):
+    """ Form class used to get user information about a new flock of animals entering the farm."""
+
     date = DateField()
-    weight = FloatField(min_value=0.0)
-    number_of_animals = IntegerField()
+    weight = FloatField(min_value=0.1)
+    number_of_animals = IntegerField(min_value=1)
     rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
 
     def __init__(self, *args, **kwargs):
+        """ Form constructor.
+
+        :param args:
+        :param kwargs: An value for 'flock' is required in the constructor.
+        """
+        self.flock = kwargs.pop('flock', None)
         super().__init__(*args, **kwargs)
-        self.fields['date'].widget.attrs.update(
-            {'data-provide': 'datepicker-inline', 'class': 'form-control datepicker',
-             'data-date-end-date': datetime.today().date().isoformat()})
-        self.fields['date'].initial = datetime.today().date()
 
     def clean(self):
+        """ The clean method raises a validation error when the user tries to assign the flock to non-empty rooms."""
+        if self.flock is None:
+            self.__clean_new_flock_form()
+        else:
+            self.__clean_edit_flock_form()
+
+    def __clean_new_flock_form(self):
+        super().clean()
         rooms = self.cleaned_data.get('rooms')
         date = self.cleaned_data.get('date')
         for room in rooms:
             if room.get_occupancy_at_date(at_date=date) > 0:
                 raise ValidationError('You selected rooms which were not empty at the specified date.')
 
+    def __clean_edit_flock_form(self):
+        assert self.flock is not None
+        super().clean()
+        rooms = self.cleaned_data.get('rooms')
+        date = self.cleaned_data.get('date')
+        for room in rooms:
+            room_has_animals_from_flock = room.get_animals_for_flock(flock_id=self.flock.id, at_date=date) > 0
+            room_is_empty = room.get_occupancy_at_date(at_date=date) == 0
+            if not room_has_animals_from_flock and not room_is_empty:
+                raise ValidationError('You selected rooms which were not empty at the specified date.')
+
 
 class AnimalEntryDeleteForm(EasyFatForm):
     def __init__(self, *args, **kwargs):
         self.flock = kwargs.pop('flock', None)  # Flock
-        assert(isinstance(self.flock, Flock))
+        assert isinstance(self.flock, Flock)
         super().__init__(*args, **kwargs)
 
     def save(self):
@@ -146,7 +168,7 @@ class SingleAnimalExitForm(EasyFatForm):
         self.fields['room'].queryset = Room.objects.filter(pk__in=non_empty_rooms)
 
     def set_flock(self, flock):
-        assert(isinstance(flock, Flock))
+        assert isinstance(flock, Flock)
         self.flock = flock
 
     def clean(self):
@@ -202,7 +224,7 @@ class AnimalExitDeleteForm(EasyFatForm):
         self.exit = kwargs.pop('exit', None)  # AnimalFarmExit
         self.instance = self.exit
         super().__init__(*args, **kwargs)
-        assert (isinstance(self.exit, AnimalFarmExit))
+        assert isinstance(self.exit, AnimalFarmExit)
 
     def save(self):
         room_exits = self.exit.animalroomexit_set.all()
@@ -327,7 +349,7 @@ class AnimalDeathUpdateForm(AnimalDeathBaseForm):
             else:
                 raise ValidationError('No flock distinction possible')
 
-        assert(self.death is not None)
+        assert self.death is not None
         flock = self.flock
         self.death.date = date
         self.death.flock = flock
@@ -399,11 +421,11 @@ class AnimalSeparationDistinctionForm(EasyFatForm):
             self.fields['separation'].queryset = AnimalSeparation.objects.filter(pk__in=separations)
 
     def set_death(self, death):
-        assert(isinstance(death, AnimalDeath))
+        assert isinstance(death, AnimalDeath)
         self.death = death
 
     def set_exit(self, animal_exit):
-        assert (isinstance(animal_exit, AnimalFlockExit))
+        assert isinstance(animal_exit, AnimalFlockExit)
         self.exit = animal_exit
 
     def save(self):
@@ -541,7 +563,7 @@ class AnimalSeparationDeleteForm(DeleteForm):
         self.instance = self.separation
         self.sep_from_room = AnimalSeparatedFromRoom.objects.get(separation=self.separation)
         super().__init__(*args, **kwargs)
-        assert(isinstance(self.separation, AnimalSeparation))
+        assert isinstance(self.separation, AnimalSeparation)
 
     def save(self):
         date = self.separation.date
