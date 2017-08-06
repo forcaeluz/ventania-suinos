@@ -159,7 +159,6 @@ class AnimalEntryBaseWizard(EasyFatWizard):
         ('flock_information', AnimalEntryForm),
         ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
     ]
-    wizard_name = _('Register animal entry')
 
     title_dict = {'flock_information': _('General flock information'),
                   'building_information': _('Placement of animals in the buildings')}
@@ -169,7 +168,7 @@ class AnimalEntryBaseWizard(EasyFatWizard):
         self.animal_entry = AnimalEntry()
 
     def done(self, form_list, **kwargs):
-        """Should be implemented in sub-classes"""
+        """Should be implemented in sub-classes."""
         raise NotImplementedError('EasyFatWizard is only an abstraction.')
 
     def _guess_initial_building_info(self):
@@ -202,6 +201,8 @@ class AnimalEntryBaseWizard(EasyFatWizard):
 class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
     """A wizard for registering new animal entries."""
 
+    wizard_name = _('Register new animal entry')
+
     def done(self, form_list, **kwargs):
         """Save the wizard's data if valid, and redirects to the index page."""
         flock_info = self.get_cleaned_data_for_step('flock_information')
@@ -232,13 +233,16 @@ class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
 
 
 class EditAnimalEntry(AnimalEntryBaseWizard):
+    """A wizard to edit existing new animal entries."""
+
+    wizard_name = _('Register animal entry')
 
     def get_form_initial(self, step):
         """Get initial data for the form for the given step."""
         initial = None
         flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
         self.animal_entry.set_flock(instance=flock)
-        rooms = [an_entry.room for an_entry in flock.animalroomentry_set.all()]
+        rooms = [an_entry.room for an_entry in self.animal_entry.room_entries]
         if step == 'flock_information':
             initial = {'number_of_animals': flock.number_of_animals,
                        'date': flock.entry_date,
@@ -246,7 +250,7 @@ class EditAnimalEntry(AnimalEntryBaseWizard):
                        'rooms': rooms}
 
         if step == 'building_information':
-            initial = super()._get_initial_building_info()
+            initial = super()._guess_initial_building_info()
 
         return initial
 

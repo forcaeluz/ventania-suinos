@@ -298,6 +298,59 @@ class NewAnimalEntryWizardTest(FarmTestClass):
         self.assertEquals(3, Flock.objects.count())
 
 
+class EditAnimalEntryWizardTest(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        super().setUpEmptyBuilding()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get_view(self):
+        response = self.client.get(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}))
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'flock_information')
+        form = response.context['wizard']['form']
+        self.assertEquals(self.flock1.entry_weight, form.initial['weight'])
+        self.assertEquals([self.normal_room1], form.initial['rooms'])
+        self.assertEquals(date(2016, 12, 1), form.initial['date'])
+
+    def test_post_step1(self):
+        response = self.client.get(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}))
+        form = response.context['wizard']['form']
+        data = {'edit_animal_entry-current_step': 'flock_information',
+                'flock_information-date': '2016-12-01',
+                'flock_information-weight': '250',
+                'flock_information-number_of_animals': '10',
+                'flock_information-rooms': [self.normal_room1.id]}
+
+        response = self.client.post(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'building_information')
+
+    def test_post_step2(self):
+        response = self.client.get(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}))
+        form = response.context['wizard']['form']
+        data = {'edit_animal_entry-current_step': 'flock_information',
+                'flock_information-date': '2016-12-01',
+                'flock_information-weight': '250',
+                'flock_information-number_of_animals': '10',
+                'flock_information-rooms': [self.empty_building.room_set.first().id]}
+
+        response = self.client.post(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}), data)
+        form = response.context['form']
+        data = {'edit_animal_entry-current_step': 'building_information',
+                'building_information-TOTAL_FORMS': 1,
+                'building_information-INITIAL_FORMS': 1,
+                'building_information-MIN_NUM_FORMS': 0,
+                'building_information-MAX_NUM_FORMS': 1000,
+                'building_information-0-room': self.empty_building.room_set.first().id,
+                'building_information-0-number_of_animals': '10',
+                }
+        response = self.client.post(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}), data)
+        self.assertEquals(302, response.status_code)
+        self.assertEquals(0, self.normal_room1.animalroomentry_set.count())
+
+
 class AnimalDeathFormTest(FarmTestClass):
 
     def test_death_from_normal_room(self):
