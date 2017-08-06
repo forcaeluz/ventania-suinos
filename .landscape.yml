@@ -1,6 +1,6 @@
 doc-warnings: true
 test-warnings: false
-strictness: veryhigh
+strictness: high
 max-line-length: 120
 uses:
   - django
@@ -13,3 +13,9 @@ python-targets:
 pylint:
   options:
     max-parents: 15
+
+mccabe:
+  run: true
+
+dodgy:
+  run: true
