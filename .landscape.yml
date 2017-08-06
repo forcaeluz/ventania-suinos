@@ -9,3 +9,7 @@ requirements:
   - requirements.txt
 python-targets:
   - 3
+
+pylint:
+  options:
+    - max-parents=15
