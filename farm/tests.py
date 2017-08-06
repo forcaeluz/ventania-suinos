@@ -51,8 +51,8 @@ class FarmTestClass(TestCase):
                                                                   flock=self.flock2)
         animal_exit.save()
         animal_entry = self.separation_room.animalroomentry_set.create(date='2016-12-15',
-                                                                    number_of_animals=1,
-                                                                    flock=self.flock1)
+                                                                       number_of_animals=1,
+                                                                       flock=self.flock1)
         animal_entry.save()
         animal_entry = self.separation_room.animalroomentry_set.create(date='2017-01-15',
                                                                        number_of_animals=1,
@@ -167,7 +167,7 @@ class AnimalEntryTest(FarmTestClass):
         entry.update_flock(data=data)
         room_data = [{'room': self.empty_building.room_set.first(),
                       'number_of_animals': 13
-                     }]
+                      }]
         entry.update_room_entries(room_data)
         self.assertEquals(1, len(entry.room_entries))
         self.assertEquals(self.empty_building.room_set.first(), entry.room_entries[0].room)
@@ -329,7 +329,6 @@ class EditAnimalEntryWizardTest(FarmTestClass):
 
     def test_post_step2(self):
         response = self.client.get(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}))
-        form = response.context['wizard']['form']
         data = {'edit_animal_entry-current_step': 'flock_information',
                 'flock_information-date': '2016-12-01',
                 'flock_information-weight': '250',
@@ -337,7 +336,6 @@ class EditAnimalEntryWizardTest(FarmTestClass):
                 'flock_information-rooms': [self.empty_building.room_set.first().id]}
 
         response = self.client.post(reverse('farm:edit_animal_entry', kwargs={'flock_id': 1}), data)
-        form = response.context['form']
         data = {'edit_animal_entry-current_step': 'building_information',
                 'building_information-TOTAL_FORMS': 1,
                 'building_information-INITIAL_FORMS': 1,
@@ -423,7 +421,7 @@ class AnimalDistinctionFormTest(FarmTestClass):
                 'form-1-number_of_animals': 0,
                 'form-2-room': self.separation_room.id,
                 'form-2-number_of_animals': 1,
-        }
+                }
         return data
 
     def test_death_distinction(self):
