@@ -48,8 +48,8 @@ class BaseAnimalEntryForm(EasyFatForm):
     """
 
     date = DateField()
-    weight = FloatField(min_value=0.0)
-    number_of_animals = IntegerField()
+    weight = FloatField(min_value=0.1)
+    number_of_animals = IntegerField(min_value=1)
     rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
 
 

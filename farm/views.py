@@ -146,10 +146,13 @@ class EasyFatFormView(FormView):
         return context
 
 
-class RegisterNewAnimalEntry(EasyFatWizard):
-    """
-        This class is a generic view for registering new flocks. It registers the new flock, as well as building
-        information about where the flock has been placed.
+class AnimalEntryBaseWizard(EasyFatWizard):
+    """Base class for the AnimalEntry wizards.
+
+    This class is a base class for the wizards used to create and update the AnimalEntries. It provides the form list,
+    title_dict.
+
+    The sub-classes are responsible for implementing the functions to collect and save the data.
     """
 
     form_list = [
@@ -161,63 +164,74 @@ class RegisterNewAnimalEntry(EasyFatWizard):
     title_dict = {'flock_information': _('General flock information'),
                   'building_information': _('Placement of animals in the buildings')}
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.animal_entry = AnimalEntry()
+
+    def done(self, form_list, **kwargs):
+        raise NotImplementedError('EasyFatWizard is only an abstraction.')
+
+    def _guess_initial_building_information(self):
+        """Guess values for the form initial information for the building information step."""
+        initial = []
+        selected_rooms = self.get_cleaned_data_for_step('flock_information').get('rooms')
+        animals = self.get_cleaned_data_for_step('flock_information').get('number_of_animals')
+        default_entry = int(animals / len(selected_rooms))
+        for room in selected_rooms:
+            initial.append({'room': room, 'number_of_animals': default_entry})
+
+        return initial
+
+    def _get_initial_building_information(self):
+        """Get the form initial information for the building information step, based on the AnimalEntry."""
+        room_entries = self.animal_entry.flock.animalroomentry_set.all()
+        initial = []
+
+        for room in room_entries:
+            initial.append({'room': room.room, 'number_of_animals': room.number_of_animals})
+
+        return initial
+
+    def _get_form_kwargs_building_information(self):
+        """Get the form kwargs for the building information step."""
+        number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
+        return {'number_of_animals': number_of_animals}
+
+
+class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
+    """A wizard for registering new animal entries."""
+
     def done(self, form_list, **kwargs):
         flock_info = self.get_cleaned_data_for_step('flock_information')
         room_info = self.get_cleaned_data_for_step('building_information')
 
-        animal_entry = AnimalEntry()
-        animal_entry.set_flock(data=flock_info)
-        animal_entry.set_room_entries(room_info)
-        animal_entry.clean()
-        animal_entry.save()
+        self.animal_entry.set_flock(data=flock_info)
+        self.animal_entry.update_room_entries(room_info)
+        if self.animal_entry.is_valid():
+            self.animal_entry.save()
 
         return HttpResponseRedirect(reverse('farm:index'))
 
     def get_form_initial(self, step):
-        initial = []
+        initial = None
         if step == 'building_information':
-            selected_rooms = self.get_cleaned_data_for_step('flock_information').get('rooms')
-            animals = self.get_cleaned_data_for_step('flock_information').get('number_of_animals')
-            default_entry = int(animals / len(selected_rooms))
-
-            for room in selected_rooms:
-                initial.append({'room': room, 'number_of_animals': default_entry})
+            initial = super()._guess_initial_building_information()
 
         return initial
-
-    def get_context_data(self, form, **kwargs):
-        context = super().get_context_data(form=form, **kwargs)
-
-        if self.steps.current == 'building_information':
-            for sub_form in form.forms:
-                if sub_form.warnings:
-                    context.update({'warnings': ['With the suggested distribution, some rooms have '
-                                                 'more animals than capacity.']})
-
-        return context
 
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
         if step == 'building_information':
-            number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
-            kwargs.update({'number_of_animals': number_of_animals})
+            kwargs.update(super()._get_form_kwargs_building_information())
 
         return kwargs
 
 
-class EditAnimalEntry(EasyFatWizard):
+class EditAnimalEntry(AnimalEntryBaseWizard):
     form_list = [
         ('flock_information', EditAnimalEntryForm),
         ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
     ]
-    wizard_name = _('Edit animal entry')
-
-    title_dict = {'flock_information': _('General flock information'),
-                  'building_information': _('Placement of animals in the buildings')}
-
-    def __init__(self, **kwargs):
-        self.animal_entry = AnimalEntry()
-        super().__init__(**kwargs)
 
     def get_form_initial(self, step):
         initial = None
@@ -231,24 +245,9 @@ class EditAnimalEntry(EasyFatWizard):
                        'rooms': rooms}
 
         if step == 'building_information':
-            room_entries = self.animal_entry.flock.animalroomentry_set.all()
-            initial = []
-
-            for room in room_entries:
-                initial.append({'room': room.room, 'number_of_animals': room.number_of_animals})
+            initial = super()._get_initial_building_information()
 
         return initial
-
-    def get_context_data(self, form, **kwargs):
-        context = super().get_context_data(form=form, **kwargs)
-        context.update({'warnings': [_('Altering entry information might cause data inconsistency.')]})
-        if self.steps.current == 'building_information':
-            for sub_form in form.forms:
-                if sub_form.warnings:
-                    context.update({'warnings': ['With the suggested distribution, some rooms have '
-                                                 'more animals than capacity.']})
-
-        return context
 
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
@@ -258,8 +257,7 @@ class EditAnimalEntry(EasyFatWizard):
         if step == 'flock_information':
             kwargs.update({'flock': self.animal_entry.flock})
         elif step == 'building_information':
-            number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
-            kwargs.update({'number_of_animals': number_of_animals})
+            kwargs.update(super()._get_form_kwargs_building_information())
 
         return kwargs
 
@@ -270,8 +268,9 @@ class EditAnimalEntry(EasyFatWizard):
         self.animal_entry.set_flock(instance=flock)
         self.animal_entry.update_flock(flock_data)
         self.animal_entry.update_room_entries(building_data)
-        self.animal_entry.clean()
-        self.animal_entry.save()
+        if self.animal_entry.is_valid():
+            self.animal_entry.save()
+
         return HttpResponseRedirect(reverse('flocks:detail', kwargs={'flock_id': self.animal_entry.flock.id}))
 
 

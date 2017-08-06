@@ -2,6 +2,8 @@ from datetime import date
 
 from django.test import TestCase
 from django.forms import formset_factory
+from django.shortcuts import reverse
+from django.contrib.auth.models import User
 from buildings.models import Building, Room, SiloFeedEntry
 from flocks.models import Flock, AnimalSeparation
 from feeding.models import FeedType, FeedEntry
@@ -14,7 +16,7 @@ from .models import AnimalEntry
 class FarmTestClass(TestCase):
     def setUp(self):
         super().setUp()
-
+        User.objects.create_user(username='NormalUser', email='none@noprovider.test', password='Password')
         building = Building(name='b1')
         self.building = building
         self.building.save()
@@ -245,6 +247,62 @@ class AnimalEntryTest(FarmTestClass):
                       }]
         with self.assertRaises(AssertionError):
             entry.update_room_entries(room_data)
+
+
+class NewAnimalEntryWizardTest(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        super().setUpEmptyBuilding()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get_view(self):
+        response = self.client.get(reverse('farm:new_animal_entry'))
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'flock_information')
+
+    def test_post_invalid_first_step(self):
+        data = {'register_new_animal_entry-current_step': 'flock_information',
+                'flock_information-date': '2017-01-01',
+                'flock_information-weight': '0',
+                'flock_information-number_of_animals': '10',
+                'flock_information-rooms': [self.empty_building.room_set.first().id]}
+
+        response = self.client.post(reverse('farm:new_animal_entry'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'flock_information')
+
+    def test_post_first_step(self):
+        data = {'register_new_animal_entry-current_step': 'flock_information',
+                'flock_information-date': '2017-01-01',
+                'flock_information-weight': '200',
+                'flock_information-number_of_animals': '10',
+                'flock_information-rooms': [self.empty_building.room_set.first().id]}
+
+        response = self.client.post(reverse('farm:new_animal_entry'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'building_information')
+
+    def test_post_second_step(self):
+        data = {'register_new_animal_entry-current_step': 'flock_information',
+                'flock_information-date': '2017-01-01',
+                'flock_information-weight': '200',
+                'flock_information-number_of_animals': '10',
+                'flock_information-rooms': [self.empty_building.room_set.first().id]}
+        self.client.post(reverse('farm:new_animal_entry'), data)
+
+        data = {'register_new_animal_entry-current_step': 'building_information',
+                'building_information-TOTAL_FORMS': 1,
+                'building_information-INITIAL_FORMS': 1,
+                'building_information-MIN_NUM_FORMS': 0,
+                'building_information-MAX_NUM_FORMS': 1000,
+                'building_information-0-room': self.empty_building.room_set.first().id,
+                'building_information-0-number_of_animals': '10',
+                }
+        response = self.client.post(reverse('farm:new_animal_entry'), data)
+        self.assertEquals(302, response.status_code)
+        # New flock should have been created now.
+        self.assertEquals(3, Flock.objects.count())
 
 
 class AnimalDeathFormTest(FarmTestClass):
