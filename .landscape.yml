@@ -12,4 +12,4 @@ python-targets:
 
 pylint:
   options:
-    max-parents=15
+    max-parents: 15
