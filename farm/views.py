@@ -12,7 +12,7 @@ from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit,
 from buildings.models import Room
 
 
-from .forms import CreateAnimalEntryForm, EditAnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm
+from .forms import AnimalEntryForm, AnimalEntryRoomForm, GroupExitForm, AnimalExitRoomForm
 from .forms import EasyFatForm, AnimalEntryRoomFormset, AnimalDeathForm, AnimalSeparationForm, AnimalExitRoomFormset
 from .forms import AnimalSeparationDistinctionForm, SingleAnimalExitForm, FeedTransitionForm, FeedEntryForm
 
@@ -156,7 +156,7 @@ class AnimalEntryBaseWizard(EasyFatWizard):
     """
 
     form_list = [
-        ('flock_information', CreateAnimalEntryForm),
+        ('flock_information', AnimalEntryForm),
         ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
     ]
     wizard_name = _('Register animal entry')
@@ -228,10 +228,6 @@ class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
 
 
 class EditAnimalEntry(AnimalEntryBaseWizard):
-    form_list = [
-        ('flock_information', EditAnimalEntryForm),
-        ('building_information', formset_factory(form=AnimalEntryRoomForm, formset=AnimalEntryRoomFormset, extra=0))
-    ]
 
     def get_form_initial(self, step):
         initial = None

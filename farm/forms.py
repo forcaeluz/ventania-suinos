@@ -40,40 +40,13 @@ class DeleteForm(EasyFatForm):
             })
 
 
-class BaseAnimalEntryForm(EasyFatForm):
-    """ Base Class for forms used to create or edit Animal Entries in the farm.
-
-    The base-class provides the basic fields, but no clean() method. The sub-classes should provide the clean method
-    according to their needs.
-    """
+class AnimalEntryForm(EasyFatForm):
+    """ Form class used to get user information about a new flock of animals entering the farm."""
 
     date = DateField()
     weight = FloatField(min_value=0.1)
     number_of_animals = IntegerField(min_value=1)
     rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
-
-
-class CreateAnimalEntryForm(BaseAnimalEntryForm):
-    """ Form class used to get user information about a new flock of animals entering the farm.
-    """
-
-    def clean(self):
-        """ The clean method raises a validation error when the user tries to assign the flock to non-empty rooms.
-        """
-        super().clean()
-        rooms = self.cleaned_data.get('rooms')
-        date = self.cleaned_data.get('date')
-        for room in rooms:
-            if room.get_occupancy_at_date(at_date=date) > 0:
-                raise ValidationError('You selected rooms which were not empty at the specified date.')
-
-
-class EditAnimalEntryForm(BaseAnimalEntryForm):
-    """ Form class used to get user information in order to update the flock information of an already existing flock.
-
-    This class requires a value for 'flock' in kwargs. It is necessary to know which flock is being updated in order
-    to validate the form.
-    """
 
     def __init__(self, *args, **kwargs):
         """ Form constructor.
@@ -81,18 +54,25 @@ class EditAnimalEntryForm(BaseAnimalEntryForm):
         :param args:
         :param kwargs: An value for 'flock' is required in the constructor.
         """
-        self.flock = kwargs.pop('flock')
+        self.flock = kwargs.pop('flock', None)
         super().__init__(*args, **kwargs)
 
     def clean(self):
-        """ The clean function checks if the combined information of the form is valid.
+        """ The clean method raises a validation error when the user tries to assign the flock to non-empty rooms."""
+        if self.flock is None:
+            self.__clean_new_flock_form()
+        else:
+            self.__clean_edit_flock_form()
 
-        For this form one of two conditions needs to be true in order for the form to be valid.
-        - The room is empty
-        - The room is currently occupied by animals of the flock being edited.
+    def __clean_new_flock_form(self):
+        super().clean()
+        rooms = self.cleaned_data.get('rooms')
+        date = self.cleaned_data.get('date')
+        for room in rooms:
+            if room.get_occupancy_at_date(at_date=date) > 0:
+                raise ValidationError('You selected rooms which were not empty at the specified date.')
 
-        If neither one is true, a ValidationError is raised.
-        """
+    def __clean_edit_flock_form(self):
         assert self.flock is not None
         super().clean()
         rooms = self.cleaned_data.get('rooms')
