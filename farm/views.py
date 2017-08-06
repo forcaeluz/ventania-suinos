@@ -169,9 +169,10 @@ class AnimalEntryBaseWizard(EasyFatWizard):
         self.animal_entry = AnimalEntry()
 
     def done(self, form_list, **kwargs):
+        """Should be implemented in sub-classes"""
         raise NotImplementedError('EasyFatWizard is only an abstraction.')
 
-    def _guess_initial_building_information(self):
+    def _guess_initial_building_info(self):
         """Guess values for the form initial information for the building information step."""
         initial = []
         selected_rooms = self.get_cleaned_data_for_step('flock_information').get('rooms')
@@ -182,7 +183,7 @@ class AnimalEntryBaseWizard(EasyFatWizard):
 
         return initial
 
-    def _get_initial_building_information(self):
+    def _get_initial_building_info(self):
         """Get the form initial information for the building information step, based on the AnimalEntry."""
         room_entries = self.animal_entry.flock.animalroomentry_set.all()
         initial = []
@@ -192,7 +193,7 @@ class AnimalEntryBaseWizard(EasyFatWizard):
 
         return initial
 
-    def _get_form_kwargs_building_information(self):
+    def _get_form_kwargs_building_info(self):
         """Get the form kwargs for the building information step."""
         number_of_animals = self.get_cleaned_data_for_step('flock_information')['number_of_animals']
         return {'number_of_animals': number_of_animals}
@@ -202,6 +203,7 @@ class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
     """A wizard for registering new animal entries."""
 
     def done(self, form_list, **kwargs):
+        """Save the wizard's data if valid, and redirects to the index page."""
         flock_info = self.get_cleaned_data_for_step('flock_information')
         room_info = self.get_cleaned_data_for_step('building_information')
 
@@ -213,16 +215,18 @@ class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
         return HttpResponseRedirect(reverse('farm:index'))
 
     def get_form_initial(self, step):
+        """Get initial data for the form for the given step."""
         initial = None
         if step == 'building_information':
-            initial = super()._guess_initial_building_information()
+            initial = super()._guess_initial_building_info()
 
         return initial
 
     def get_form_kwargs(self, step=None):
+        """Get the kwargs data for the given step."""
         kwargs = super().get_form_kwargs(step)
         if step == 'building_information':
-            kwargs.update(super()._get_form_kwargs_building_information())
+            kwargs.update(super()._get_form_kwargs_building_info())
 
         return kwargs
 
@@ -230,6 +234,7 @@ class RegisterNewAnimalEntry(AnimalEntryBaseWizard):
 class EditAnimalEntry(AnimalEntryBaseWizard):
 
     def get_form_initial(self, step):
+        """Get initial data for the form for the given step."""
         initial = None
         flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
         self.animal_entry.set_flock(instance=flock)
@@ -241,11 +246,12 @@ class EditAnimalEntry(AnimalEntryBaseWizard):
                        'rooms': rooms}
 
         if step == 'building_information':
-            initial = super()._get_initial_building_information()
+            initial = super()._get_initial_building_info()
 
         return initial
 
     def get_form_kwargs(self, step=None):
+        """Get the kwargs data for the given step."""
         kwargs = super().get_form_kwargs(step)
         flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
         self.animal_entry.set_flock(instance=flock)
@@ -253,11 +259,12 @@ class EditAnimalEntry(AnimalEntryBaseWizard):
         if step == 'flock_information':
             kwargs.update({'flock': self.animal_entry.flock})
         elif step == 'building_information':
-            kwargs.update(super()._get_form_kwargs_building_information())
+            kwargs.update(super()._get_form_kwargs_building_info())
 
         return kwargs
 
     def done(self, form_list, **kwargs):
+        """Save the wizard's data if valid, and redirects to the index page."""
         flock = Flock.objects.get(id=self.kwargs.get('flock_id', None))
         flock_data = self.get_cleaned_data_for_step('flock_information')
         building_data = self.get_cleaned_data_for_step('building_information')
