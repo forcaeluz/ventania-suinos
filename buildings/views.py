@@ -39,7 +39,8 @@ class BuildingDetailView(TemplateView):
         context_data.update({'building': building, 'feed_types': feed_types})
         return context_data
 
-    def __generate_feeding_data(self, building):
+    @staticmethod
+    def __generate_feeding_data(building):
         data = []
         feed_types = FeedType.objects.all()
         for feed_type in feed_types:

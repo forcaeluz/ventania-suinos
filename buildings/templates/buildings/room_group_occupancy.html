@@ -1,0 +1,27 @@
+{% load i18n %}
+{% load building_occupancy %}
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ group.name }}</h3>
+    </div>
+    <div class="panel-body">
+        <table class="table table-occupancy">
+
+            {% for room in group.room_set.all %}
+                <tr class="table-row">
+                    <td class="table-occupancy" style="width: 2em">
+                        <a href="{% url 'buildings:room_detail' room.id %}">
+                            {{ room.name|truncatechars:6 }}
+                        </a>
+                    </td>
+                    <td class="table-occupancy">
+                        <a href="{% url 'buildings:room_detail' room.id %}">
+                            {% room_occupancy_bar room %}
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
