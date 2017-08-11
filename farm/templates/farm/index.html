@@ -2,13 +2,14 @@
 {% load i18n %}
 {% load l10n %}
 {% load static %}
+{% load kpi %}
 
 {% block page_header %}{% trans 'Farm Overview' %}{% endblock %}
 {% block main_content %}
     <h2 class="sub-header">KPI's</h2>
     <div class="row placeholders">
-        {% for kpi in kpis %}
-            {% include 'farm/kpi.html' with kpi=kpi %}
+        {% for kpi_info in kpis %}
+            {% kpi kpi_info %}
         {% endfor %}
     </div>
     <h2 class="sub-header">{% trans 'Alerts' %}</h2>
