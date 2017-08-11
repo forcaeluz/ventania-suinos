@@ -5,9 +5,9 @@ from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry
 
 
 class AnimalExit:
-    """
-    Class that combines Farm, Flock and Room exit information.
-    """
+
+    """Class that combines Farm, Flock and Room exit information."""
+
     def __init__(self, animal_farm_exit=None):
         self.animal_farm_exit = animal_farm_exit  # AnimalFarmExit
         self.flock_exits = []
