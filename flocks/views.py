@@ -1,10 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
+from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
-from .models import Flock, AnimalSeparation
-from .forms import FlockForm, AnimalDeathForm
-from .forms import AnimalSeparationForm, SeparationDeathForm
+from .forms import FlockForm
+from .kpis import *
 
 
 @login_required
@@ -51,116 +50,22 @@ class FlockDetailView(TemplateView):
         context.update({'separation_list': self.flock.animalseparation_set.all()})
         context.update({'exits_list': self.flock.animalflockexit_set.all()})
         context.update({'current_rooms': self.__get_building_info()})
+        context.update({'kpi_list': self.__create_kpis()})
         return context
 
     def __get_building_info(self):
         room_entries = self.flock.animalroomentry_set.all()
         current_rooms = [obj.room for obj in room_entries if obj.room.get_animals_for_flock(self.flock.id) > 0]
-        return {obj.__str__(): obj.get_animals_for_flock(self.flock.id) for obj in current_rooms}
+        return [{'name': obj.__str__(), 'occupancy': obj.get_animals_for_flock(self.flock.id)} for obj in current_rooms]
 
-
-@login_required
-def create_animal_death(request):
-    form = AnimalDeathForm()
-    return render(request, 'animaldeaths/create.html', {'form': form})
-
-
-@login_required
-def save_animal_death(request):
-    form = AnimalDeathForm(request.POST)
-    if form.is_valid():
-        form.save()
-        return HttpResponseRedirect('/flocks/detail/%d' % form.cleaned_data['flock'].id)
-
-    return render(request, 'animaldeaths/create.html', {'form': form})
-
-
-@login_required
-def create_animal_exit(request):
-    form = AnimalExitsForm()
-    return render(request, 'animalexits/create.html', {'form': form})
-
-
-@login_required
-def save_animal_exit(request):
-    form = AnimalExitsForm(request.POST)
-
-    if form.is_valid():
-        form.save()
-        return HttpResponseRedirect('/flocks/detail/%d' % form.cleaned_data['flock'].id)
-
-    return render(request, 'animalexits/create.html', {'form': form})
-
-
-@login_required
-def create_animal_separation(request):
-    form = AnimalSeparationForm()
-    flock_id = request.GET.get('flockid', None)
-    if flock_id:
-        flock = Flock.objects.filter(id=flock_id)[0]
-        form = AnimalSeparationForm(initial={'flock': flock})
-
-    return render(request, 'animal_separations/create.html', {'form': form})
-
-
-@login_required
-def save_animal_separation(request):
-    form = AnimalSeparationForm(request.POST)
-
-    if form.is_valid():
-        form.save()
-        return HttpResponseRedirect('/flocks/detail/%d' % form.cleaned_data['flock'].id)
-
-    return render(request, 'animal_separations/create.html', {'form': form})
-
-
-@login_required
-def view_animal_separation(request, separation_id):
-    separation = get_object_or_404(AnimalSeparation, pk=separation_id)
-    return render(request, 'animal_separations/detail.html', {'separation': separation})
-
-
-@login_required()
-def create_separation_death(request):
-    separation_id = request.GET.get('separation_id', None)
-    if separation_id is None:
-        return HttpResponseBadRequest()
-    separation = AnimalSeparation.objects.get(id=separation_id)
-    form = SeparationDeathForm(separation_id=separation_id)
-    parameters = {
-        'form': form,
-        'separation': separation
-    }
-    return render(request, 'animal_separations/register_death.html', parameters)
-
-
-@login_required()
-def save_separation_death(request):
-    form = SeparationDeathForm(request.POST)
-    if form.is_valid():
-        form.save()
-        return HttpResponseRedirect('/flocks/')
-    return render(request, 'animal_separations/register_death.html', {'form': form})
-
-
-@login_required()
-def create_separation_exit(request):
-    separation_id = request.GET.get('separation_id', None)
-    if separation_id is None:
-        return HttpResponseBadRequest()
-    separation = AnimalSeparation.objects.get(id=separation_id)
-    form = SeparationExitForm(separation_id=separation_id)
-    parameters = {
-        'form': form,
-        'separation': separation
-    }
-    return render(request, 'animal_separations/register_exit.html', parameters)
-
-
-@login_required()
-def save_separation_exit(request):
-    form = SeparationExitForm(request.POST)
-    if form.is_valid():
-        form.save()
-        return HttpResponseRedirect('/flocks/')
-    return render(request, 'animal_separations/register_exit.html', {'form': form})
+    def __create_kpis(self):
+        kpi_list = []
+        number_of_animals = self.flock.number_of_living_animals
+        weight = self.flock.estimated_avg_weight
+        kpi_list.append(LivingAnimalsKpi(number_of_animals))
+        kpi_list.append(EstimatedWeightKpi(weight))
+        kpi_list.append(ExitDateKpi(self.flock.expected_exit_date))
+        kpi_list.append(DeathPercentageKpi(self.flock.death_percentage))
+        kpi_list.append(CurrentFeedTypeKpi(self.flock))
+        kpi_list.append(AnimalSeparationKpi(self.flock.separated_animals*100/self.flock.number_of_animals))
+        return kpi_list
