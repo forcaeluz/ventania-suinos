@@ -1,16 +1,20 @@
 {% extends "base2.html" %}
 {% load i18n %}
 {% load static %}
-
-<title>{% trans "Flock Information" %}{{ flock.flock_name }}</title>
+{% load kpi %}
 {% block main_content %}
-    <h1>{% trans "Flock information" %}</h1>
+    <h1>{% trans "Flock information:" %} {{ flock.flock_name }}</h1>
+    <div class="row">
+        {% for kpi in kpi_list %}
+            {% kpi kpi%}
+        {% endfor %}
+    </div>
     <div class="row">
         <div class="col-sm-6 col-md-3">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">{% trans 'General Information' %}
-                        <div class="btn-group">
+                        <div class="btn-group btn-group-sm">
                             <a title="{% trans 'Edit animal entry' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_entry' flock.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
                             <a title="{% trans 'Delete animal entry' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_entry' flock.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                         </div>
@@ -18,8 +22,6 @@
                 </div>
                 <div class="panel-body">
                     <ul>
-                        <li>{% trans "ID:" %} {{ flock.id }}</li>
-                        <li>{% trans "Friendly Identifier:" %} {{ flock.flock_name }}</li>
                         <li>{% trans "Entry Date:" %} {{ flock.entry_date }}</li>
                         <li>{% trans "Entry Weight:" %} {{ flock.entry_weight }}</li>
                         <li>{% trans "Entry Count:" %} {{ flock.number_of_animals }}</li>
@@ -99,10 +101,6 @@
                                     {% endif %}
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            {% if separation.active %}
-                                                {#                                                    <a href="{% url 'flocks:make_animal_separation_died' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal died"><span class="glyphicon glyphicon-remove"></span></a>#}
-                                                {#                                                    <a href="{% url 'flocks:make_animal_separation_exit' %}?separation_id={{ separation.id }}" class="btn btn-danger" title="Animal exited the farm"><span class="glyphicon glyphicon-road"></span></a>#}
-                                            {% endif %}
                                             <a title="{% trans 'Edit animal separation' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
                                             <a title="{% trans 'Delete animal separation' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_separation' separation.id %}"><span class="glyphicon glyphicon-trash"></span></a>
                                         </div>
@@ -172,10 +170,10 @@
                                 <th>{% trans "N. of animals" %}</th>
                             </tr>
                             </thead>
-                            {% for room, n_of_animals in current_rooms.items %}
+                            {% for room in current_rooms %}
                                 <tr class="table-row">
-                                    <td>{{room}}</td>
-                                    <td>{{n_of_animals}}</td>
+                                    <td>{{room.name}}</td>
+                                    <td>{{room.occupancy}}</td>
                                 </tr>
                             {% endfor %}
                         </table>
