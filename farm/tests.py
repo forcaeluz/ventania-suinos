@@ -410,6 +410,32 @@ class AnimalSeparationFormTest(FarmTestClass):
         self.assertEqual(2, self.flock1.animalseparation_set.count())
 
 
+class AnimalSeparationViewTest(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        super().setUpEmptyBuilding()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get_view(self):
+        response = self.client.get(reverse('farm:new_animal_separation'))
+        self.assertEquals(200, response.status_code)
+        form = response.context['form']
+        self.assertTrue(isinstance(form, AnimalSeparationForm))
+
+    def test_post_view_valid(self):
+        self.client.get(reverse('farm:new_animal_separation'))
+        form_data = {'date': '2017-01-16',
+                     'reason': 'Random',
+                     'src_room': self.normal_room1.id,
+                     'dst_room': self.separation_room.id}
+        response = self.client.post(reverse('farm:new_animal_separation'), form_data)
+        self.assertEquals(302, response.status_code)
+        self.assertEqual(3, self.separation_room.occupancy)
+        self.assertEqual(11, self.normal_room1.occupancy)
+        self.assertEqual(2, self.flock1.animalseparation_set.count())
+
+
 class AnimalDistinctionFormTest(FarmTestClass):
     def create_room_exit_formset_data(self):
         data = {'form-TOTAL_FORMS': '3',
