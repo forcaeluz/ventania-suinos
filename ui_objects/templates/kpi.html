@@ -1,0 +1,22 @@
+<div class="col-lg-3 col-md-6">
+    <div class="panel panel-{{ kpi.color }}">
+        <div class="panel-heading">
+            <div class="row">
+                <div class="col-xs-3">
+                        <i class="fa fa-5x fa-{{ kpi.icon }}"></i>
+                </div>
+                <div class="col-xs-9 text-right">
+                    <div class="huge">{{ kpi.value }}</div>
+                    <div>{{ kpi.description }}</div>
+                </div>
+            </div>
+        </div>
+        <a href="{{ kpi.action }}">
+            <div class="panel-footer">
+                <span class="pull-left">{{ kpi.action_name }}</span>
+                <span class="pull-right glyphicon glyphicon-arrow-right"></span>
+                <div class="clearfix"></div>
+            </div>
+        </a>
+    </div>
+</div>
