@@ -1,12 +1,11 @@
 from django.db import models
 from django.db.models import Sum
 from django.core.validators import ValidationError
-from datetime import timedelta, date
+from datetime import timedelta
 
 from flocks.models import Flock
 
 
-# Create your models here.
 class Medication(models.Model):
     name = models.CharField(max_length=140, unique=True, null=False)
     recommended_age_start = models.IntegerField()
@@ -39,7 +38,6 @@ class Medication(models.Model):
 
         return entry_quantity - (used_quantity + discarded_quantity)
 
-    @property
     def is_recommended_for_flock(self, flock):
         """
             This property tells if this medicine is recommended to give to a certain flock.
@@ -119,3 +117,18 @@ class MedicationDiscard(models.Model):
     medication = models.ForeignKey(Medication)
     quantity = models.FloatField()
     reason = models.CharField(max_length=100)
+
+
+class Surgery(models.Model):
+
+    """Surgery Model
+
+    This model describes a surgery event. It could be coupled to a medical treatment, but that is not
+    necessarily the case.
+    """
+
+    date = models.DateField()
+    description = models.TextField()
+    recovery_time = models.IntegerField()
+    treatment = models.ForeignKey(Treatment, null=True)
+    flock = models.ForeignKey(Flock)
