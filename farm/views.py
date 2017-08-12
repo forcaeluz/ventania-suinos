@@ -68,7 +68,6 @@ class FarmIndexView(TemplateView):
     @staticmethod
     def generate_flock_kpis():
         """Generate KPIs with flock related information."""
-
         kpi_list = []
 
         kpi_list.append(NumberOfAnimalsKpi())
