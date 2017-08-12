@@ -71,7 +71,7 @@ class SeparationsKpi(Kpi):
         if flock is None:
             self.__setup_farm_level()
         elif isinstance(flock, Flock):
-            self.float_value = flock.death_percentage
+            self.float_value = flock.separated_animals * 100 / flock.number_of_animals
         self.__setup_color()
         self.value = "{:.2f}%".format(self.float_value)
 
@@ -79,16 +79,16 @@ class SeparationsKpi(Kpi):
         """Set's the KPI information up on Farm Level."""
         flocks_on_farm = Flock.objects.present_at_farm()
         entry_count = 0
-        death_count = 0
+        separation_count = 0
         for flock in flocks_on_farm:
             entry_count += flock.number_of_animals
-            death_count += flock.animaldeath_set.count()
-        self.float_value = death_count * 100 / entry_count
+            separation_count += flock.separated_animals
+        self.float_value = separation_count * 100 / entry_count
 
     def __setup_color(self):
-        if 1.0 <= self.float_value < 2.0:
+        if 1.5 <= self.float_value < 3.0:
             self.color = 'yellow'
-        elif self.float_value >= 2.0:
+        elif self.float_value >= 3.0:
             self.color = 'red'
         else:
             self.color = 'green'
