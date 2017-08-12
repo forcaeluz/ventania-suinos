@@ -141,7 +141,7 @@ class GrowRateKpi(Kpi):
         considering_from = date.today() - timedelta(days=365)
         flocks_exited_past_year = AnimalFlockExit.objects.filter(
             flock__animalflockexit__farm_exit__date__gt=considering_from)
-        if not flocks_exited_past_year:
+        if flocks_exited_past_year.count() == 0:
             self.value = 'Unknown'
             self.float_value = None
         else:
