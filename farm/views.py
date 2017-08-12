@@ -4,11 +4,10 @@ from django.urls import reverse
 from django.forms import formset_factory
 from django.utils.translation import ugettext as _
 from formtools.wizard.views import SessionWizardView
-from datetime import datetime, timedelta
 
 
 from feeding.models import FeedType
-from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFlockExit, AnimalFarmExit
+from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFarmExit
 from flocks.kpis import NumberOfAnimalsKpi, DeathPercentageKpi, SeparationsKpi, GrowRateKpi
 from buildings.models import Room
 
@@ -61,16 +60,15 @@ class FarmIndexView(TemplateView):
         return context
 
     def generate_kpi_data(self):
+        """Generate all the desired KPIs."""
         kpi_list = []
         kpi_list.extend(self.generate_flock_kpis())
         return kpi_list
 
     @staticmethod
     def generate_flock_kpis():
-        """
-        Generates the FarmKpi for the flocks currently in the farm.
-        :return:
-        """
+        """Generate KPIs with flock related information."""
+
         kpi_list = []
 
         kpi_list.append(NumberOfAnimalsKpi())

@@ -4,12 +4,22 @@ from .models import Flock, AnimalFlockExit
 
 
 class NumberOfAnimalsKpi(InfoKpi):
+    """ Kpi for number of animals in the Farm.
+
+        Although not strictly a Key Performance Indicator, this information is displayed in the same style of
+        UI.
+    """
     icon = 'address-book'
     description = 'Number of animals on farm'
     action = '#'
     action_name = 'Details'
 
     def __init__(self, flock=None):
+        """Constructor.
+
+        When a flock is provided, a KPI is created with only information for that flock. If no flock is supplied, the
+        information is collected from all the flocks currently in the farm.
+        """
         super().__init__()
         if flock is None:
             self.__setup_farm_level()
@@ -27,12 +37,18 @@ class NumberOfAnimalsKpi(InfoKpi):
 
 
 class DeathPercentageKpi(Kpi):
+    """Kpi for the death percentage."""
     icon = 'heartbeat'
     description = 'Death percentage'
     action_name = 'Details'
     action = '#'
 
     def __init__(self, flock=None):
+        """Constructor.
+
+        When a flock is provided, a KPI is created with only information for that flock. If no flock is supplied, the
+        information is collected from all the flocks currently in the farm.
+        """
         super().__init__()
         if flock is None:
             self.__setup_farm_level()
@@ -61,12 +77,18 @@ class DeathPercentageKpi(Kpi):
 
 
 class SeparationsKpi(Kpi):
+    """Kpi for the percentage of separated animals."""
     icon = 'exclamation-triangle'
     description = 'Separation percentage'
     action_name = 'Details'
     action = '#'
 
     def __init__(self, flock=None):
+        """Constructor.
+
+        When a flock is provided, a KPI is created with only information for that flock. If no flock is supplied, the
+        information is collected from all the flocks currently in the farm.
+        """
         super().__init__()
         if flock is None:
             self.__setup_farm_level()
@@ -95,12 +117,18 @@ class SeparationsKpi(Kpi):
 
 
 class GrowRateKpi(Kpi):
+    """Kpi for the GrowRate in the past 12 months.
+
+    This KPI is based on historical data only. It considers all the animal exits in the past 365 days,
+    and computes a weighted average of the grow rate in this period.
+    """
     icon = 'line-chart'
     description = 'Grow Rate'
     action_name = 'Details'
     action = '#'
 
     def __init__(self):
+        """Constructor."""
         super().__init__()
         considering_from = date.today() - timedelta(days=365)
         flocks_exited_past_year = AnimalFlockExit.objects.filter(
