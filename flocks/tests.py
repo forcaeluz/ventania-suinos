@@ -1,8 +1,11 @@
 import datetime
+from unittest import mock
+
 from django.utils import timezone
 from django.test import TestCase
 
-from .models import Flock, AnimalFarmExit
+from .models import Flock, AnimalFarmExit, CurrentFlocksManager
+from .kpis import NumberOfAnimalsKpi, DeathPercentageKpi
 
 
 class FlockTests(TestCase):
@@ -137,3 +140,49 @@ class SeparationTests(TestCase):
 
         self.separation.exit = flock_exit
         self.assertFalse(self.separation.active)
+
+
+class LivingAnimalsKpiTest(TestCase):
+
+    def test_single_flock(self):
+        number_of_animals_mock = mock.PropertyMock(return_value=130)
+        with mock.patch.object(Flock, 'number_of_living_animals', new_callable=number_of_animals_mock):
+            flock_mock = Flock()
+            kpi = NumberOfAnimalsKpi(flock=flock_mock)
+            number_of_animals_mock.assert_any_call()
+            self.assertEquals(130, kpi.value)
+
+    @mock.patch.object(CurrentFlocksManager, 'present_at_farm')
+    def test_multiple_flocks(self, manager_mock):
+        assert isinstance(manager_mock, mock.MagicMock)
+        flock1 = mock.create_autospec(Flock)
+        flock2 = mock.create_autospec(Flock)
+        flock1.number_of_living_animals = 10
+        flock2.number_of_living_animals = 30
+        manager_mock.return_value = [flock1, flock2]
+        kpi = NumberOfAnimalsKpi()
+        self.assertEquals(40, kpi.value)
+
+
+class DeathPercentageKpiTest(TestCase):
+    def test_single_flock(self):
+        number_of_animals_mock = mock.PropertyMock(return_value=0.561)
+        with mock.patch.object(Flock, 'death_percentage', new_callable=number_of_animals_mock):
+            flock_mock = Flock()
+            kpi = DeathPercentageKpi(flock=flock_mock)
+            number_of_animals_mock.assert_any_call()
+            self.assertEquals('0.56%', kpi.value)
+            self.assertEquals('green', kpi.color)
+
+    @mock.patch.object(CurrentFlocksManager, 'present_at_farm')
+    def test_multiple_flocks(self, manager_mock):
+        flock1 = mock.create_autospec(Flock)
+        flock2 = mock.create_autospec(Flock)
+        flock1.number_of_animals = 100
+        flock1.animaldeath_set.count = mock.MagicMock(return_value=1)
+        flock2.number_of_animals = 100
+        flock2.animaldeath_set.count = mock.MagicMock(return_value=2)
+        manager_mock.return_value = [flock1, flock2]
+        kpi = DeathPercentageKpi()
+        self.assertEquals('1.50%', kpi.value)
+        self.assertEquals('yellow', kpi.color)
