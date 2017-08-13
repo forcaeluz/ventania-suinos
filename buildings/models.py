@@ -3,6 +3,7 @@ from django.utils.dateparse import parse_date
 
 from flocks.models import Flock, AnimalDeath, AnimalSeparation, AnimalFarmExit
 from feeding.models import FeedType, FeedEntry
+from medications.models import Treatment, Surgery
 
 from datetime import date, timedelta
 from itertools import chain
@@ -346,3 +347,31 @@ class SiloFeedEntry(models.Model):
     @property
     def date(self):
         return self.feed_entry.date
+
+
+class TreatmentInRoom(models.Model):
+
+    """Model to link a treatment to building information.
+
+    It contains information about the room where the animal started the treatment, and the current room.
+    The start is kept for statistics, so that the number of animals getting sick per room can be traced.
+    The current room is kept for traceability, in order to know where the treatment is going on, and issue warnings
+    if this animal is to leave the farm soon.
+    """
+
+    start_room = models.ForeignKey(Room, related_name='start_room')
+    current_room = models.ForeignKey(Room, related_name='current_room')
+    treatment = models.ForeignKey(Treatment)
+
+
+class SurgeryFromRoom(models.Model):
+
+    """Model to link a surgery to building information.
+
+    It contains information about the room where the animal was before the surgery, and to
+    which room it went after surgery.
+    """
+
+    before_room = models.ForeignKey(Room, related_name='before_room')
+    after_room = models.ForeignKey(Room, related_name='after_room')
+    surgery = models.ForeignKey(Surgery)
