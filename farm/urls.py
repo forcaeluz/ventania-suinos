@@ -1,9 +1,11 @@
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 
-from .views import FarmIndexView, RegisterNewAnimalEntry, RegisterNewAnimalExit, RegisterNewAnimalDeath, \
-    RegisterNewAnimalSeparation, RegisterSingleAnimalExit, EditAnimalEntry, DeleteDeath, EditAnimalDeath, \
-    EditAnimalSeparation, DeleteSeparation, DeleteAnimalEntry, DeleteExit, RegisterFeedTransition, FeedEntryView
+from .views import FarmIndexView, RegisterNewAnimalSeparation,  DeleteDeath, EditAnimalSeparation, DeleteSeparation, \
+    DeleteAnimalEntry, DeleteExit, RegisterFeedTransition, FeedEntryView
+from .wizards import RegisterNewAnimalEntry, RegisterNewAnimalExit, RegisterNewAnimalDeath, RegisterSingleAnimalExit, \
+    EditAnimalEntry, EditAnimalDeath
+
 
 app_name = 'farm'
 urlpatterns = [

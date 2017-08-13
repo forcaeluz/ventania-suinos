@@ -10,6 +10,7 @@ from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, \
 from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFarmExit, AnimalFlockExit
 from feeding.models import FeedType, FeedEntry
 
+
 from .widgets import RoomSelectionWidget
 
 
@@ -627,3 +628,15 @@ class FeedEntryForm(EasyFatForm):
         silo_feed_entry = SiloFeedEntry(feed_entry=feed_entry, silo=silo, remaining=remaining)
         silo_feed_entry.save()
 
+
+# class NewAnimalTreatmentForm(EasyFatForm):
+#
+#     """Form to register new animal treatments.
+#
+#     This form gathers the data necessary to register a new treatment, with medications. When saving, it should save
+#     a treatment object and a TreatmentInRoom object.
+#     """
+#     date = DateField()
+#     room = ModelChoiceField(queryset=Room.objects.all())
+#     medication = ModelChoiceField(queryset=Medication.objects.all())
+#     separate = BooleanField()
