@@ -2,13 +2,16 @@ from datetime import datetime
 
 # Fields
 from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, CharField, ModelMultipleChoiceField
+from django.forms import BooleanField
 # Others
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, \
     DeathInRoom, AnimalSeparatedFromRoom, RoomFeedingChange, Silo, SiloFeedEntry
+
 from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFarmExit, AnimalFlockExit
 from feeding.models import FeedType, FeedEntry
+from medications.models import Medication
 
 
 from .widgets import RoomSelectionWidget
@@ -629,14 +632,28 @@ class FeedEntryForm(EasyFatForm):
         silo_feed_entry.save()
 
 
-# class NewAnimalTreatmentForm(EasyFatForm):
-#
-#     """Form to register new animal treatments.
-#
-#     This form gathers the data necessary to register a new treatment, with medications. When saving, it should save
-#     a treatment object and a TreatmentInRoom object.
-#     """
-#     date = DateField()
-#     room = ModelChoiceField(queryset=Room.objects.all())
-#     medication = ModelChoiceField(queryset=Medication.objects.all())
-#     separate = BooleanField()
+class TreatmentRoomAndSymptomsForm(EasyFatForm):
+
+    """First form in the New Treatment Wizard."""
+
+    date = DateField()
+    room = ModelChoiceField(queryset=Room.objects.all())
+    symptoms = CharField()
+
+
+class MedicationChoiceForm(EasyFatForm):
+
+    """Second step in the New Treatment Wizard."""
+
+    medication = ModelChoiceField(queryset=Medication.objects.all())
+    override = ModelChoiceField(queryset=Medication.objects.all(), required=False)
+
+
+class DosageConfirmationForm(EasyFatForm):
+
+    """Third step in the New Treatment Wizard."""
+
+    dosage = FloatField(min_value=0.01)
+    confirm_application = BooleanField(required=False)
+    separate = BooleanField(required=False)
+    destination_room = ModelChoiceField(queryset=Room.objects.filter(is_separation=True), required=False)
