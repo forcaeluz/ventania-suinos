@@ -11,9 +11,9 @@ from buildings.models import Room
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, AnimalEntryRoomFormset, GroupExitForm, AnimalExitRoomForm
 from .forms import EasyFatForm, AnimalDeathForm, AnimalExitRoomFormset, AnimalSeparationDistinctionForm
-from .forms import SingleAnimalExitForm
+from .forms import SingleAnimalExitForm, AnimalDeathUpdateForm
 
-from .forms import AnimalDeathUpdateForm
+from .forms import TreatmentRoomAndSymptomsForm, DosageConfirmationForm, MedicationChoiceForm
 
 from .models import AnimalEntry, AnimalExit
 
@@ -444,3 +444,39 @@ class EditAnimalDeath(EasyFatWizard):
         if data:
             return data['room'].is_separation and data['room'].occupancy > 1
         return True
+
+
+class StartNewTreatment(EasyFatWizard):
+
+    """Wizard for a treatment with medications.
+
+    The wizard not only collects data about the treatment and building information but also gives the user suggestion
+    about treatment options.
+    """
+
+    wizard_name = _('Register new treatment')
+    form_list = [
+        ('room_symptoms_information', TreatmentRoomAndSymptomsForm),
+        ('medication_choice_information', MedicationChoiceForm),
+        ('dosage_information', DosageConfirmationForm),
+        ('overview', EasyFatForm)
+    ]
+
+    title_dict = {'room_symptoms_information': _('Room and Symptoms'),
+                  'medication_choice_information': _('Medication'),
+                  'dosage_information': _('Dosage and separation'),
+                  'overview': _('Overview')
+                  }
+
+    def done(self, form_list, **kwargs):
+        return HttpResponseRedirect(reverse('farm:index'))
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form, **kwargs)
+        current_step = self.steps.current
+        if current_step == 'medication_choice_information':
+            context.update({'suggestions': ['The first list contains the suggested medications. If your choice is not'
+                                            'in that list, pick your choice in the second list, but be aware that is '
+                                            'not a suggested medication.']})
+
+        return context
