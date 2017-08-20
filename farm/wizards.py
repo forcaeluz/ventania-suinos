@@ -492,7 +492,8 @@ class StartNewTreatment(EasyFatWizard):
             self.treatment.process_symptom_form(form.cleaned_data)
         elif self.steps.current == 'medication_choice_information':
             self.treatment.process_medication_form(form.cleaned_data)
-
+        elif self.steps.current == 'dosage_information':
+            self.treatment.process_dosage_and_separation_form(form.cleaned_data)
         return super().process_step(form)
 
     def post(self, request, *args, **kwargs):

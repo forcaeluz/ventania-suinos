@@ -839,3 +839,56 @@ class TestNewTreatmentWizard(FarmTestClass):
         self.assertEquals(1, self.mocked_model.process_medication_form.call_count)
         self.assertEquals(1, self.mocked_model.suggest_dosage.call_count)
 
+    def test_post_third_form(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'medication_choice_information',
+                'medication_choice_information-medication': '1',
+                'medication_choice_information-override': ''}
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'dosage_information',
+                'dosage_information-dosage': '10.0',
+                'dosage_information-confirm_application': 'True',
+                'dosage_information-separate': 'False',
+                'dosage_information-separation_room': ''}
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals('overview', response.context_data['wizard']['steps'].current)
+        self.assertEquals(3, self.mocked_model.process_symptom_form.call_count)
+        self.assertEquals(3, self.mocked_model.suggest_medications.call_count)
+        self.assertEquals(2, self.mocked_model.process_medication_form.call_count)
+        self.assertEquals(2, self.mocked_model.suggest_dosage.call_count)
+        self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)
+
+    def post_submit_wizard(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'medication_choice_information',
+                'medication_choice_information-medication': '1',
+                'medication_choice_information-override': ''}
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'dosage_information',
+                'dosage_information-dosage': '10.0',
+                'dosage_information-confirm_application': 'True',
+                'dosage_information-separate': 'False',
+                'dosage_information-separation_room': ''}
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'overview'}
+
+        self.mocked_model.reset_mock()
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(302, response.status_code)
+        self.assertEquals('overview', response.context_data['wizard']['steps'].current)
+        self.assertEquals(1, self.mocked_model.process_symptom_form.call_count)
+        self.assertEquals(1, self.mocked_model.process_medication_form.call_count)
+        self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)
+        self.assertEquals(1, self.mocked_model.save.call_count)
+
