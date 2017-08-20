@@ -505,6 +505,14 @@ class StartNewTreatment(EasyFatWizard):
 
         return super().post(request, *args, **kwargs)
 
+    def get_form_kwargs(self, step=None):
+        """Generate the kwargs dict for the form in the specified step."""
+        kwargs_data = super().get_form_kwargs(step)
+        if step == 'medication_choice_information':
+            kwargs_data.update({'suggested': self.treatment.suggest_medications()})
+
+        return kwargs_data
+
     def get_form_initial(self, step):
         """Generate the initial data for the given step.
 

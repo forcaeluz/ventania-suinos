@@ -645,8 +645,15 @@ class MedicationChoiceForm(EasyFatForm):
 
     """Second step in the New Treatment Wizard."""
 
-    medication = ModelChoiceField(queryset=Medication.objects.all())
+    medication = ModelChoiceField(queryset=Medication.objects.all(), required=False)
     override = ModelChoiceField(queryset=Medication.objects.all(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        suggested_list = kwargs.pop('suggested', [])
+        super().__init__(*args, **kwargs)
+        self.fields['medication'].queryset = Medication.objects.filter(pk__in=suggested_list)
+        self.fields['override'].queryset = Medication.objects.exclude(pk__in=suggested_list)
+
 
     def clean(self):
         medication = self.cleaned_data['medication']

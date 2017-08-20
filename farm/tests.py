@@ -795,17 +795,22 @@ class TestNewTreatmentWizard(FarmTestClass):
                                      quantity_unit='ml')
         self.medication1.save()
         self.medication2.save()
+
+        self.mocked_model = mock.create_autospec(NewTreatment)
+        self.mocked_model.suggest_medications.return_value = [self.medication1.id]
+        patcher = mock.patch('farm.wizards.NewTreatment', autospec=True)
+        class_mocker = patcher.start()
+        class_mocker.return_value = self.mocked_model
+        self.addCleanup(patcher.stop)
         response = self.client.login(username='NormalUser', password='Password')
         self.assertTrue(response)
 
-    @mock.patch.object(NewTreatment, 'reset')
-    def test_get(self, reset_mock):
+    def test_get(self):
         response = self.client.get(reverse('farm:new_treatment'))
-        self.assertTrue(reset_mock.called)
         self.assertEquals(200, response.status_code)
+        self.assertTrue(self.mocked_model.reset.called)
 
-    @mock.patch.object(NewTreatment, 'process_symptom_form', autospec=True)
-    def test_post_first_form(self, mocked):
+    def test_post_first_form(self):
         data = {'start_new_treatment-current_step': 'room_symptoms_information',
                 'room_symptoms_information-date': '2017-01-01',
                 'room_symptoms_information-room': self.normal_room1.id,
@@ -813,6 +818,24 @@ class TestNewTreatmentWizard(FarmTestClass):
 
         response = self.client.post(reverse('farm:new_treatment'), data)
         self.assertEquals(200, response.status_code)
-        self.assertTrue(mocked.called)
+        self.assertTrue(self.mocked_model.process_symptom_form.called)
+        self.assertTrue(self.mocked_model.suggest_medications.called)
 
+    def test_post_second_form(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'medication_choice_information',
+                'medication_choice_information-medication': '1',
+                'medication_choice_information-override': ''}
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals('dosage_information', response.context_data['wizard']['steps'].current)
+        self.assertEquals(2, self.mocked_model.process_symptom_form.call_count)
+        self.assertEquals(2, self.mocked_model.suggest_medications.call_count)
+        self.assertEquals(1, self.mocked_model.process_medication_form.call_count)
+        self.assertEquals(1, self.mocked_model.suggest_dosage.call_count)
 
