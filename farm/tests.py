@@ -864,7 +864,7 @@ class TestNewTreatmentWizard(FarmTestClass):
         self.assertEquals(2, self.mocked_model.suggest_dosage.call_count)
         self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)
 
-    def post_submit_wizard(self):
+    def test_post_submit_wizard(self):
         data = {'start_new_treatment-current_step': 'room_symptoms_information',
                 'room_symptoms_information-date': '2017-01-01',
                 'room_symptoms_information-room': self.normal_room1.id,
@@ -886,7 +886,6 @@ class TestNewTreatmentWizard(FarmTestClass):
         self.mocked_model.reset_mock()
         response = self.client.post(reverse('farm:new_treatment'), data)
         self.assertEquals(302, response.status_code)
-        self.assertEquals('overview', response.context_data['wizard']['steps'].current)
         self.assertEquals(1, self.mocked_model.process_symptom_form.call_count)
         self.assertEquals(1, self.mocked_model.process_medication_form.call_count)
         self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)

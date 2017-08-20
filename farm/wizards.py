@@ -503,7 +503,10 @@ class StartNewTreatment(EasyFatWizard):
         elif self.steps.current == 'dosage_information':
             self.treatment.process_symptom_form(self.get_cleaned_data_for_step('room_symptoms_information'))
             self.treatment.process_medication_form(self.get_cleaned_data_for_step('medication_choice_information'))
-
+        elif self.steps.current == 'overview':
+            self.treatment.process_symptom_form(self.get_cleaned_data_for_step('room_symptoms_information'))
+            self.treatment.process_medication_form(self.get_cleaned_data_for_step('medication_choice_information'))
+            self.treatment.process_dosage_and_separation_form(self.get_cleaned_data_for_step('dosage_information'))
         return super().post(request, *args, **kwargs)
 
     def get_form_kwargs(self, step=None):
