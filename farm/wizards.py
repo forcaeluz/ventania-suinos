@@ -469,17 +469,25 @@ class StartNewTreatment(EasyFatWizard):
                   }
 
     def __init__(self, **kwargs):
+        """Constructor."""
         self.treatment = NewTreatment()
         super().__init__(**kwargs)
 
     def done(self, form_list, **kwargs):
+        """Save the new treatment data, and all the necessary objects with it."""
+        self.treatment.save()
         return HttpResponseRedirect(reverse('farm:index'))
 
     def get(self, request, *args, **kwargs):
+        """Clean the data from the new treatment."""
         self.treatment.reset()
         return super().get(request, *args, **kwargs)
 
     def process_step(self, form):
+        """Process the data submitted for the current step.
+
+        This is necessary to be able to provide suggestions for the next step.
+        """
         if self.steps.current == 'room_symptoms_information':
             self.treatment.process_symptom_form(form.cleaned_data)
         elif self.steps.current == 'medication_choice_information':
@@ -498,13 +506,20 @@ class StartNewTreatment(EasyFatWizard):
         return super().post(request, *args, **kwargs)
 
     def get_form_initial(self, step):
+        """Generate the initial data for the given step.
+
+        For now, only the dosage information has an initial value.
+        """
         initial = super().get_form_initial(step)
         if step == 'dosage_information':
             initial.update({'dosage': self.treatment.suggest_dosage()})
         return initial
 
     def get_context_data(self, form, **kwargs):
-        print("Step 2")
+        """Generate the context data to be displayed.
+
+        In this wizard this is used to display information about the suggestions given to the user.
+        """
         context = super().get_context_data(form, **kwargs)
         current_step = self.steps.current
         if current_step == 'medication_choice_information':
