@@ -56,7 +56,38 @@
                 </div>
             </div>
         </div>
-
+        <div class="col-xs-12 col-sm-6 placeholder">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Ongoing treatments</h3>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr class="table-header">
+                            <th>{% trans 'Flock' %}</th>
+                            <th>{% trans 'Start Date' %}</th>
+                            <th>{% trans 'Medication' %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        {% for treatment in treatments %}
+                            <tr class="table-row">
+                                <td><a href="{% url 'medications:view_treatment' treatment.id %}">{{treatment.flock}}</a></td>
+                                <td>{{ treatment.start_date }}</td>
+                                <td>{{ treatment.medication.name }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'medications:new_application' %}?treatment_id={{ treatment.id }}" title="New Application" class="btn btn-default"><i class="fa fa-medkit"></i></a>
+                                        <a href="{% url 'medications:stop_treatment' %}?treatment_id={{ treatment.id }}" title="Stop Treatment" class="btn btn-warning"><i class="fa fa-stop"></i> </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
         <div class="col-xs-12 col-sm-6 placeholder">
             <div class="panel panel-info">
                 <div class="panel-heading">

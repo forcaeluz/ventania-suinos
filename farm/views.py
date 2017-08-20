@@ -6,9 +6,9 @@ from django.utils.translation import ugettext as _
 
 from feeding.models import FeedType
 from flocks.models import Flock, AnimalSeparation, AnimalDeath, AnimalFarmExit
-from flocks.kpis import NumberOfAnimalsKpi, DeathPercentageKpi, SeparationsKpi, GrowRateKpi
+from flocks.kpis import NumberOfAnimalsKpi, DeathPercentageKpi, SeparationsKpi, GrowRateKpi, InTreatmentKpi
 from buildings.models import Room
-
+from medications.models import Treatment
 
 from .forms import AnimalSeparationForm, AnimalSeparationUpdateForm
 from .forms import FeedTransitionForm, FeedEntryForm
@@ -40,6 +40,7 @@ class FarmIndexView(TemplateView):
         context['separations'] = [obj for obj in AnimalSeparation.objects.all() if obj.active]
         context['feed_types'] = FeedType.objects.all()
         context['kpis'] = self.generate_kpi_data()
+        context['treatments'] = [obj for obj in Treatment.objects.all() if obj.is_active is True]
         context['warnings'] = self.generate_warnings()
         return context
 
@@ -58,7 +59,7 @@ class FarmIndexView(TemplateView):
         kpi_list.append(DeathPercentageKpi())
         kpi_list.append(SeparationsKpi())
         kpi_list.append(GrowRateKpi())
-
+        kpi_list.append(InTreatmentKpi())
         return kpi_list
 
     def generate_warnings(self):
