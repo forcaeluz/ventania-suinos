@@ -40,8 +40,8 @@
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#"><span class="glyphicon glyphicon-cog"></span> Settings</a></li>
                 <li><a href="#"><span class="glyphicon glyphicon-user"></span> Profile {{ LANGUAGE_CODE }} </a></li>
-                <li><a href="#"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span> Help</a>
-                <li><a class="dropdown-toggle" href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-plus-sign"></span>Actions</a>
+                <li><a href="#"><span class="glyphicon glyphicon-question-sign"></span> Help</a>
+                <li><a class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false"><span class="glyphicon glyphicon-plus-sign"></span>Actions</a>
                     <ul class="dropdown-menu">
                         <li><a href="{% url 'farm:new_animal_entry' %}">{% trans 'New Flock' %}</a></li>
                         <li><a href="{% url 'farm:new_animal_separation' %}">{% trans 'New Separation' %}</a></li>
@@ -52,7 +52,7 @@
                         <li><a href="{% url 'farm:new_feed_entry' %}">{% trans 'New Feed Delivery' %}</a></li>
                         <li><a href="{% url 'farm:new_feed_transition' %}">{% trans 'New Feeding Transition' %}</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="{% url 'medications:new_treatment' %}">{% trans 'New Treatment' %}</a></li>
+                        <li><a href="{% url 'farm:new_treatment' %}">{% trans 'New Treatment' %}</a></li>
                         <li class="disabled"><a href="{% url 'medications:new_application' %}">{% trans 'New Medication Application' %}</a></li>
                     </ul>
                 </li>

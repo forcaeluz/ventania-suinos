@@ -654,7 +654,6 @@ class MedicationChoiceForm(EasyFatForm):
         self.fields['medication'].queryset = Medication.objects.filter(pk__in=suggested_list)
         self.fields['override'].queryset = Medication.objects.exclude(pk__in=suggested_list)
 
-
     def clean(self):
         medication = self.cleaned_data['medication']
         override = self.cleaned_data['override']

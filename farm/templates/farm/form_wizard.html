@@ -12,6 +12,11 @@
                     </h3>
                 </div>
                 <div class="panel-body">
+                    {% for suggestion in suggestions %}
+                    <div class="alert alert-info">
+                            {{ suggestion }}
+                    </div>
+                    {% endfor %}
                     <form action="{{ form_action }}" method="post">{% csrf_token %}
                         {{ wizard.management_form }}
                         {% if wizard.form.forms %}
