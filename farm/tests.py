@@ -1,5 +1,5 @@
 from datetime import date
-
+from unittest import mock
 from django.test import TestCase
 from django.forms import formset_factory
 from django.shortcuts import reverse
@@ -782,3 +782,37 @@ class TestNewTreatmentModel(FarmTestClass):
         self.assertEquals(1, Treatment.objects.count())
         self.assertEquals(1, AnimalSeparation.objects.filter(date='2017-02-01', reason='Treatment').count())
         self.assertEquals(3, self.separation_room.get_occupancy_at_date('2017-02-02'))
+
+
+class TestNewTreatmentWizard(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        self.medication1 = Medication(name='Medication1', recommended_age_start=1, recommended_age_stop=100,
+                                     dosage_per_kg=1, grace_period_days=10, instructions='DoSomething',
+                                     quantity_unit='ml')
+        self.medication2 = Medication(name='Medication2', recommended_age_start=1, recommended_age_stop=100,
+                                     dosage_per_kg=0.1, grace_period_days=10, instructions='DoSomething',
+                                     quantity_unit='ml')
+        self.medication1.save()
+        self.medication2.save()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    @mock.patch.object(NewTreatment, 'reset')
+    def test_get(self, reset_mock):
+        response = self.client.get(reverse('farm:new_treatment'))
+        self.assertTrue(reset_mock.called)
+        self.assertEquals(200, response.status_code)
+
+    @mock.patch.object(NewTreatment, 'process_symptom_form', autospec=True)
+    def test_post_first_form(self, mocked):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertTrue(mocked.called)
+
+
