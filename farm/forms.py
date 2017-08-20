@@ -648,6 +648,12 @@ class MedicationChoiceForm(EasyFatForm):
     medication = ModelChoiceField(queryset=Medication.objects.all())
     override = ModelChoiceField(queryset=Medication.objects.all(), required=False)
 
+    def clean(self):
+        medication = self.cleaned_data['medication']
+        override = self.cleaned_data['override']
+        if (medication is not None) and (override is not None):
+            raise ValidationError('Choose only one medication from one of the lists.')
+
 
 class DosageConfirmationForm(EasyFatForm):
 

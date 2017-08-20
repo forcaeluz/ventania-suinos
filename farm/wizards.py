@@ -15,7 +15,7 @@ from .forms import SingleAnimalExitForm, AnimalDeathUpdateForm
 
 from .forms import TreatmentRoomAndSymptomsForm, DosageConfirmationForm, MedicationChoiceForm
 
-from .models import AnimalEntry, AnimalExit
+from .models import AnimalEntry, AnimalExit, NewTreatment
 
 
 class EasyFatWizard(SessionWizardView):
@@ -468,15 +468,52 @@ class StartNewTreatment(EasyFatWizard):
                   'overview': _('Overview')
                   }
 
+    def __init__(self, **kwargs):
+        self.treatment = NewTreatment()
+        super().__init__(**kwargs)
+
     def done(self, form_list, **kwargs):
         return HttpResponseRedirect(reverse('farm:index'))
 
+    def get(self, request, *args, **kwargs):
+        self.treatment.reset()
+        return super().get(request, *args, **kwargs)
+
+    def process_step(self, form):
+        if self.steps.current == 'room_symptoms_information':
+            self.treatment.process_symptom_form(form.cleaned_data)
+        elif self.steps.current == 'medication_choice_information':
+            self.treatment.process_medication_form(form.cleaned_data)
+
+        return super().process_step(form)
+
+    def post(self, request, *args, **kwargs):
+        """Override the parent method, in order to load data from previous steps."""
+        if self.steps.current == 'medication_choice_information':
+            self.treatment.process_symptom_form(self.get_cleaned_data_for_step('room_symptoms_information'))
+        elif self.steps.current == 'dosage_information':
+            self.treatment.process_symptom_form(self.get_cleaned_data_for_step('room_symptoms_information'))
+            self.treatment.process_medication_form(self.get_cleaned_data_for_step('medication_choice_information'))
+
+        return super().post(request, *args, **kwargs)
+
+    def get_form_initial(self, step):
+        initial = super().get_form_initial(step)
+        if step == 'dosage_information':
+            initial.update({'dosage': self.treatment.suggest_dosage()})
+        return initial
+
     def get_context_data(self, form, **kwargs):
+        print("Step 2")
         context = super().get_context_data(form, **kwargs)
         current_step = self.steps.current
         if current_step == 'medication_choice_information':
             context.update({'suggestions': ['The first list contains the suggested medications. If your choice is not'
                                             'in that list, pick your choice in the second list, but be aware that is '
                                             'not a suggested medication.']})
+        elif current_step == 'dosage_information':
+            context.update({'suggestions': ['The suggested dosage is based on an estimated weight.',
+                                            'It is strongly advised to separate the animal, to avoid having an animal'
+                                            ' being treated in the flock when it exits.']})
 
         return context

@@ -1,7 +1,8 @@
 from django.core.validators import ValidationError
 
-from flocks.models import Flock, AnimalFarmExit, AnimalFlockExit
-from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry
+from flocks.models import Flock, AnimalFarmExit, AnimalFlockExit, AnimalSeparation
+from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry, AnimalSeparatedFromRoom, TreatmentInRoom
+from medications.models import Medication, Treatment, MedicationApplication
 
 
 class AnimalExit:
@@ -32,7 +33,6 @@ class AnimalExit:
             self.average_exit_weight = self.total_weight / data['number_of_animals']
         else:
             raise ValueError('Not possible to assign flock information')
-        pass
 
     def set_room_exit_information(self, room_exits_information):
         assert self.animal_farm_exit is not None
@@ -202,3 +202,116 @@ class AnimalEntry:
     def delete(self):
         """Delete the flock and room entries information."""
         self.flock.delete()
+
+
+class NewTreatment:
+
+    """Class that combines all the information related to a new animal treatment.
+
+    This class handles the objects that have to be created when a new animal treatment is started. Depending on the user
+    input, the following objects are created:
+    - Treatment: Is always created after successfully passing all the steps.
+    - TreatmentInRoom: Is always created after successfully passing all the steps.
+    - MedicationApplication: Is created if the user confirms that the first application have also been done.
+    - AnimalSeparation: Is created if the user marks the animal as being separated for the treatment.
+    - AnimalRoomExit: Is created if the user marks the animal as being separated for the treatment.
+    - AnimalRoomEntry: Is created if the user marks the animal as being separated for the treatment.
+    - AnimalSeparatedFromRoom: Is created if the user marks the animal as being separated for the treatment.
+    """
+
+    def __init__(self):
+        """Constructor."""
+        self.date = None
+        self.room = None
+        self.destination_room = None
+        self.flock = None
+        self.medication = None
+        self.separation = None
+        self.separation_room = None
+        self.treatment = None
+        self.treatment_in_room = None
+        self.application = None
+        self.symptom = None
+        self.reset()
+
+    def reset(self):
+        """Clean all the objects."""
+        self.date = None
+        self.room = None
+        self.flock = None
+        self.medication = None
+        self.separation = None
+        self.separation_room = None
+        self.treatment = None
+        self.treatment_in_room = None
+        self.application = None
+        self.symptom = None
+
+    def process_symptom_form(self, data):
+        """Process the data from the first form."""
+        self.date = data['date']
+        self.room = data['room']
+        self.symptom = data['symptoms']
+        flocks = self.room.get_flocks_present_at(self.date)
+        self.flock = next(iter(flocks.keys()))
+
+    def suggest_medications(self):
+        """Provide a list of suggestions for medications."""
+        assert self.flock is not None
+        return [obj.id for obj in Medication.objects.all() if obj.is_recommended_for_flock(self.flock)]
+
+    def suggest_dosage(self):
+        """Provide a suggestion for a dosage, based on flock and medication information."""
+        assert self.flock is not None
+        assert self.medication is not None
+        return round(self.medication.dosage_per_kg * self.flock.estimated_average_weight_at_date(self.date), 2)
+
+    def process_medication_form(self, data):
+        """Process the data for the medication form."""
+        from_suggested_list = data.get('medication', None)
+        from_override_list = data.get('override', None)
+        if from_suggested_list is not None:
+            self.medication = from_suggested_list
+        elif from_override_list is not None:
+            self.medication = from_override_list
+
+        assert self.medication is not None
+
+        self.treatment = Treatment(start_date=self.date, medication=self.medication, flock=self.flock,
+                                   comments=self.symptom)
+
+    def process_dosage_and_separation_form(self, data):
+        """Process the data related to dosage and animal separation."""
+        assert self.flock is not None
+        assert self.medication is not None
+        assert self.treatment is not None
+        confirm_application = data['confirm_application']
+        confirm_separation = data['separate']
+        if confirm_application:
+            self.application = MedicationApplication(date=self.date, dosage=data['dosage'], treatment=self.treatment)
+        if confirm_separation:
+            self.separation = AnimalSeparation(flock=self.flock, date=self.date, reason='Treatment')
+            self.separation_room = data['destination_room']
+
+    def save(self):
+        """Save the objects related to this New Treatment."""
+        self.treatment.save()
+        self.treatment_in_room = TreatmentInRoom(treatment=self.treatment, start_room=self.room)
+        if self.application:
+            self.application.treatment = self.treatment
+            self.application.save()
+
+        if self.separation:
+            self.separation.save()
+            animal_exit = AnimalRoomExit(flock=self.flock, room=self.room, date=self.date, number_of_animals=1)
+            animal_exit.save()
+            animal_entry = AnimalRoomEntry(flock=self.flock, room=self.separation_room,
+                                           date=self.date, number_of_animals=1)
+            animal_entry.save()
+            animal_separation = AnimalSeparatedFromRoom(separation=self.separation, room=self.room)
+            animal_separation.save()
+            self.treatment_in_room.current_room = self.separation_room
+        else:
+            self.treatment_in_room.current_room = self.room
+
+        self.treatment_in_room.save()
