@@ -143,7 +143,7 @@ class GrowRateKpi(Kpi):
             flock__animalflockexit__farm_exit__date__gt=considering_from)
         if flocks_exited_past_year.count() == 0:
             self.value = 'Unknown'
-            self.float_value = None
+            self.float_value = 0
         else:
             number_of_animals = sum([obj.number_of_animals for obj in flocks_exited_past_year])
             weighted_grow_rate = sum([obj.grow_rate * obj.number_of_animals for obj in flocks_exited_past_year])
