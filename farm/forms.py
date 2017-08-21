@@ -2,13 +2,17 @@ from datetime import datetime
 
 # Fields
 from django.forms import DateField, IntegerField, FloatField, ModelChoiceField, CharField, ModelMultipleChoiceField
+from django.forms import BooleanField
 # Others
 from django.forms import forms, BaseFormSet, Form, ValidationError
 
 from buildings.models import Room, AnimalRoomEntry, AnimalRoomExit, \
     DeathInRoom, AnimalSeparatedFromRoom, RoomFeedingChange, Silo, SiloFeedEntry
+
 from flocks.models import AnimalDeath, AnimalSeparation, Flock, AnimalFarmExit, AnimalFlockExit
 from feeding.models import FeedType, FeedEntry
+from medications.models import Medication
+
 
 from .widgets import RoomSelectionWidget
 
@@ -627,3 +631,41 @@ class FeedEntryForm(EasyFatForm):
         silo_feed_entry = SiloFeedEntry(feed_entry=feed_entry, silo=silo, remaining=remaining)
         silo_feed_entry.save()
 
+
+class TreatmentRoomAndSymptomsForm(EasyFatForm):
+
+    """First form in the New Treatment Wizard."""
+
+    date = DateField()
+    room = ModelChoiceField(queryset=Room.objects.all())
+    symptoms = CharField()
+
+
+class MedicationChoiceForm(EasyFatForm):
+
+    """Second step in the New Treatment Wizard."""
+
+    medication = ModelChoiceField(queryset=Medication.objects.all(), required=False)
+    override = ModelChoiceField(queryset=Medication.objects.all(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        suggested_list = kwargs.pop('suggested', [])
+        super().__init__(*args, **kwargs)
+        self.fields['medication'].queryset = Medication.objects.filter(pk__in=suggested_list)
+        self.fields['override'].queryset = Medication.objects.exclude(pk__in=suggested_list)
+
+    def clean(self):
+        medication = self.cleaned_data['medication']
+        override = self.cleaned_data['override']
+        if (medication is not None) and (override is not None):
+            raise ValidationError('Choose only one medication from one of the lists.')
+
+
+class DosageConfirmationForm(EasyFatForm):
+
+    """Third step in the New Treatment Wizard."""
+
+    dosage = FloatField(min_value=0.01)
+    confirm_application = BooleanField(required=False)
+    separate = BooleanField(required=False)
+    destination_room = ModelChoiceField(queryset=Room.objects.filter(is_separation=True), required=False)

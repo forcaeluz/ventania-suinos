@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Sum
+from django.utils.dateparse import parse_date
 
 from math import ceil
 import datetime
@@ -95,14 +96,19 @@ class Flock(models.Model):
 
     @property
     def estimated_avg_weight(self):
+        return self.estimated_average_weight_at_date(datetime.date.today())
+
+    def estimated_average_weight_at_date(self, at_date):
+        if isinstance(at_date, str):
+            at_date = parse_date(at_date)
         date_year_before = self.entry_date - datetime.timedelta(days=365)
         exits = AnimalFlockExit.objects.filter(farm_exit__date__gte=date_year_before)
         grow_rate = self.__compute_grow_rate_for_exits_set(exits)
         if grow_rate is None:
             grow_rate = 0.850
 
-        days_at_farm = datetime.date.today() - self.entry_date
-        return self.average_entry_weight + grow_rate*days_at_farm.days
+        days_at_farm = at_date - self.entry_date
+        return self.average_entry_weight + grow_rate * days_at_farm.days
 
     @staticmethod
     def __compute_grow_rate_for_exits_set(exits_set):

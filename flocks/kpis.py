@@ -143,7 +143,7 @@ class GrowRateKpi(Kpi):
             flock__animalflockexit__farm_exit__date__gt=considering_from)
         if flocks_exited_past_year.count() == 0:
             self.value = 'Unknown'
-            self.float_value = None
+            self.float_value = 0
         else:
             number_of_animals = sum([obj.number_of_animals for obj in flocks_exited_past_year])
             weighted_grow_rate = sum([obj.grow_rate * obj.number_of_animals for obj in flocks_exited_past_year])
@@ -156,6 +156,39 @@ class GrowRateKpi(Kpi):
         if 0.500 <= self.float_value < 0.800:
             self.color = 'yellow'
         elif self.float_value < 0.500:
+            self.color = 'red'
+        else:
+            self.color = 'green'
+
+
+class InTreatmentKpi(Kpi):
+    icon = 'medkit'
+    description = 'Ongoing treatments'
+    action_name = 'Details'
+
+    def __init__(self):
+        self.float_value = 0.0
+        self.__setup_farm_level()
+        self.__setup_color()
+
+    def __setup_farm_level(self):
+        """Set's the KPI information up on Farm Level."""
+        flocks_on_farm = Flock.objects.present_at_farm()
+        count = 0
+        t_count = 0
+        for flock in flocks_on_farm:
+            count += flock.number_of_living_animals
+            t_count += len([obj for obj in flock.treatment_set.all() if obj.is_active is True])
+
+        t_count = 1
+        self.float_value = float(t_count) / count
+        self.float_value = 100 * self.float_value
+        self.value = str(t_count)
+
+    def __setup_color(self):
+        if 1.5 <= self.float_value < 3.0:
+            self.color = 'yellow'
+        elif self.float_value >= 3.0:
             self.color = 'red'
         else:
             self.color = 'green'

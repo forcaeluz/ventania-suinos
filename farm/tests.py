@@ -1,5 +1,5 @@
 from datetime import date
-
+from unittest import mock
 from django.test import TestCase
 from django.forms import formset_factory
 from django.shortcuts import reverse
@@ -7,10 +7,11 @@ from django.contrib.auth.models import User
 from buildings.models import Building, Room, SiloFeedEntry
 from flocks.models import Flock, AnimalSeparation
 from feeding.models import FeedType, FeedEntry
+from medications.models import Medication, Treatment, MedicationApplication
 
 from .forms import AnimalDeathForm, AnimalSeparationForm, AnimalSeparationDistinctionForm, GroupExitForm
 from .forms import AnimalExitRoomFormset, AnimalExitRoomForm, FeedEntryForm, AnimalEntryForm
-from .models import AnimalEntry
+from .models import AnimalEntry, NewTreatment
 
 
 class FarmTestClass(TestCase):
@@ -628,3 +629,276 @@ class TestFeedEntryForm(FarmTestClass):
                      }
         form = FeedEntryForm(data=form_data)
         self.assertFalse(form.is_valid())
+
+
+class TestNewTreatmentModel(FarmTestClass):
+
+    def setUp(self):
+        super().setUp()
+        self.medication1 = Medication(name='Medication1', recommended_age_start=1, recommended_age_stop=100,
+                                     dosage_per_kg=1, grace_period_days=10, instructions='DoSomething',
+                                     quantity_unit='ml')
+        self.medication2 = Medication(name='Medication2', recommended_age_start=1, recommended_age_stop=100,
+                                     dosage_per_kg=0.1, grace_period_days=10, instructions='DoSomething',
+                                     quantity_unit='ml')
+        self.medication1.save()
+        self.medication2.save()
+
+    def test_object_creation(self):
+        new_treatment = NewTreatment()
+
+    def test_symptoms_step(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room1,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+
+    def test_medication_suggestion(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room1,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        suggestions = new_treatment.suggest_medications()
+        self.assertEquals(2, len(suggestions))
+        self.assertTrue(self.medication1.id in suggestions)
+        self.assertTrue(self.medication2.id in suggestions)
+
+    def test_medication_step(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room1,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': self.medication1,
+                'override': None}
+        new_treatment.process_medication_form(data)
+
+    def test_medication_step_with_override(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room1,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': None,
+                'override': self.medication2}
+        new_treatment.process_medication_form(data)
+
+    def test_suggest_dosage_med2(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room2,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': None,
+                'override': self.medication2}
+        new_treatment.process_medication_form(data)
+        suggested_dosaged = new_treatment.suggest_dosage()
+        self.assertAlmostEquals(4.712, suggested_dosaged, places=2)
+
+    def test_suggest_dosage_med1(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room2,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': self.medication1,
+                'override': None}
+        new_treatment.process_medication_form(data)
+        suggested_dosaged = new_treatment.suggest_dosage()
+        self.assertAlmostEquals(47.12, suggested_dosaged, places=2)
+
+    def test_application_form(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room2,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': self.medication1,
+                'override': None}
+        new_treatment.process_medication_form(data)
+
+        data = {'dosage': 45.0,
+                'confirm_application': True,
+                'separate': False,
+                'destination_room': None}
+        new_treatment.process_dosage_and_separation_form(data)
+
+    def test_save_with_application(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room2,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': self.medication1,
+                'override': None}
+        new_treatment.process_medication_form(data)
+
+        data = {'dosage': 45.0,
+                'confirm_application': True,
+                'separate': False,
+                'destination_room': None}
+        new_treatment.process_dosage_and_separation_form(data)
+        new_treatment.save()
+        self.assertEquals(1, Treatment.objects.count())
+        self.assertEquals(1, MedicationApplication.objects.count())
+
+    def test_save_without_application(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room2,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': self.medication1,
+                'override': None}
+        new_treatment.process_medication_form(data)
+
+        data = {'dosage': 45.0,
+                'confirm_application': False,
+                'separate': False,
+                'destination_room': None}
+        new_treatment.process_dosage_and_separation_form(data)
+        new_treatment.save()
+        self.assertEquals(1, Treatment.objects.count())
+        self.assertEquals(0, MedicationApplication.objects.count())
+
+    def test_save_without_application_with_separation(self):
+        data = {'date': '2017-02-01',
+                'room': self.normal_room2,
+                'symptoms': 'Sickness'}
+        new_treatment = NewTreatment()
+        new_treatment.process_symptom_form(data)
+        data = {'medication': self.medication1,
+                'override': None}
+        new_treatment.process_medication_form(data)
+
+        data = {'dosage': 45.0,
+                'confirm_application': False,
+                'separate': True,
+                'destination_room': self.separation_room}
+        new_treatment.process_dosage_and_separation_form(data)
+        new_treatment.save()
+        self.assertEquals(1, Treatment.objects.count())
+        self.assertEquals(1, AnimalSeparation.objects.filter(date='2017-02-01', reason='Treatment').count())
+        self.assertEquals(3, self.separation_room.get_occupancy_at_date('2017-02-02'))
+
+
+class TestNewTreatmentWizard(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        self.medication1 = Medication(name='Medication1', recommended_age_start=1, recommended_age_stop=100,
+                                     dosage_per_kg=1, grace_period_days=10, instructions='DoSomething',
+                                     quantity_unit='ml')
+        self.medication2 = Medication(name='Medication2', recommended_age_start=1, recommended_age_stop=100,
+                                     dosage_per_kg=0.1, grace_period_days=10, instructions='DoSomething',
+                                     quantity_unit='ml')
+        self.medication1.save()
+        self.medication2.save()
+
+        self.mocked_model = mock.create_autospec(NewTreatment)
+        self.mocked_model.suggest_medications.return_value = [self.medication1.id]
+        patcher = mock.patch('farm.wizards.NewTreatment', autospec=True)
+        class_mocker = patcher.start()
+        class_mocker.return_value = self.mocked_model
+        self.addCleanup(patcher.stop)
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get(self):
+        response = self.client.get(reverse('farm:new_treatment'))
+        self.assertEquals(200, response.status_code)
+        self.assertTrue(self.mocked_model.reset.called)
+
+    def test_post_first_form(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertTrue(self.mocked_model.process_symptom_form.called)
+        self.assertTrue(self.mocked_model.suggest_medications.called)
+
+    def test_post_second_form(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'medication_choice_information',
+                'medication_choice_information-medication': '1',
+                'medication_choice_information-override': ''}
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals('dosage_information', response.context_data['wizard']['steps'].current)
+        self.assertEquals(2, self.mocked_model.process_symptom_form.call_count)
+        self.assertEquals(2, self.mocked_model.suggest_medications.call_count)
+        self.assertEquals(1, self.mocked_model.process_medication_form.call_count)
+        self.assertEquals(1, self.mocked_model.suggest_dosage.call_count)
+
+    def test_post_third_form(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'medication_choice_information',
+                'medication_choice_information-medication': '1',
+                'medication_choice_information-override': ''}
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'dosage_information',
+                'dosage_information-dosage': '10.0',
+                'dosage_information-confirm_application': 'True',
+                'dosage_information-separate': 'False',
+                'dosage_information-separation_room': ''}
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals('overview', response.context_data['wizard']['steps'].current)
+        self.assertEquals(3, self.mocked_model.process_symptom_form.call_count)
+        self.assertEquals(3, self.mocked_model.suggest_medications.call_count)
+        self.assertEquals(2, self.mocked_model.process_medication_form.call_count)
+        self.assertEquals(2, self.mocked_model.suggest_dosage.call_count)
+        self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)
+
+    def test_post_submit_wizard(self):
+        data = {'start_new_treatment-current_step': 'room_symptoms_information',
+                'room_symptoms_information-date': '2017-01-01',
+                'room_symptoms_information-room': self.normal_room1.id,
+                'room_symptoms_information-symptoms': 'Symptom'}
+
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'medication_choice_information',
+                'medication_choice_information-medication': '1',
+                'medication_choice_information-override': ''}
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'dosage_information',
+                'dosage_information-dosage': '10.0',
+                'dosage_information-confirm_application': 'True',
+                'dosage_information-separate': 'False',
+                'dosage_information-separation_room': ''}
+        self.client.post(reverse('farm:new_treatment'), data)
+        data = {'start_new_treatment-current_step': 'overview'}
+
+        self.mocked_model.reset_mock()
+        response = self.client.post(reverse('farm:new_treatment'), data)
+        self.assertEquals(302, response.status_code)
+        self.assertEquals(1, self.mocked_model.process_symptom_form.call_count)
+        self.assertEquals(1, self.mocked_model.process_medication_form.call_count)
+        self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)
+        self.assertEquals(1, self.mocked_model.save.call_count)
+
+
+class TestFarmIndexView(FarmTestClass):
+
+    def setUp(self):
+        super().setUp()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get(self):
+        response = self.client.get(reverse('farm:index'))
+        self.assertEquals(200, response.status_code)
