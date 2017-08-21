@@ -17,13 +17,6 @@ from .forms import FeedTransitionForm, FeedEntryForm
 from .forms import AnimalDeathDeleteForm, AnimalSeparationDeleteForm, AnimalEntryDeleteForm, AnimalExitDeleteForm
 
 
-class FarmWarning:
-    def __init__(self, title, content, link):
-        self.title = title
-        self.content = content
-        self.link = link
-
-
 class FarmIndexView(TemplateView):
     template_name = "farm/index.html"
 
