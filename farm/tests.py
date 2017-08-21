@@ -891,3 +891,14 @@ class TestNewTreatmentWizard(FarmTestClass):
         self.assertEquals(1, self.mocked_model.process_dosage_and_separation_form.call_count)
         self.assertEquals(1, self.mocked_model.save.call_count)
 
+
+class TestFarmIndexView(FarmTestClass):
+
+    def setUp(self):
+        super().setUp()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get(self):
+        response = self.client.get(reverse('farm:index'))
+        self.assertEquals(200, response.status_code)
