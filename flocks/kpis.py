@@ -180,7 +180,6 @@ class InTreatmentKpi(Kpi):
             count += flock.number_of_living_animals
             t_count += len([obj for obj in flock.treatment_set.all() if obj.is_active is True])
 
-        t_count = 1
         self.float_value = float(t_count) / count
         self.float_value = 100 * self.float_value
         self.value = str(t_count)
