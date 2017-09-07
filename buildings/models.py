@@ -111,7 +111,7 @@ class Building(RoomGroup):
         if last_feed_entry is not None:
             consumption_animal_days = self.animal_days_for_feed_type(last_feed_entry.date, end_date, feed_type)
             consumption_kg = consumption_animal_days * self.get_average_feed_consumption(at_date, feed_type)
-            return last_feed_entry.weight + last_feed_entry.remaining - consumption_kg
+            return max([last_feed_entry.weight + last_feed_entry.remaining - consumption_kg, 0])
         else:
             return 0
 

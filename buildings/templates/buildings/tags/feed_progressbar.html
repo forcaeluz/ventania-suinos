@@ -1,4 +1,4 @@
-<div class="progress" title="{{ name }} - {{remaining}}/{{capacity}}">
+<div class="progress" title="{{ name }} - {{remaining|stringformat:".2f"}}/{{capacity|stringformat:".2f"}}">
 
     {% if critical %}
     <div class="progress-bar progress-bar-danger" style="width: {% widthratio remaining_after_consumption capacity 100 %}%;"></div>
