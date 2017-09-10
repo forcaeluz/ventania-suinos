@@ -21,13 +21,13 @@ class RoomDetailView(TemplateView):
 
 
 class BuildingDetailView(TemplateView):
-    """ Class view for detailed information about a building.
 
-    """
+    """Class view for detailed information about a building."""
+
     template_name = 'buildings/building.html'
 
     def get_context_data(self, **kwargs):
-        """ Get the context data for the building view.
+        """Get the context data for the building view.
 
         :param kwargs:
         :return:

@@ -6,7 +6,7 @@ register = template.Library()
 
 @register.inclusion_tag('buildings/tags/progressbar.html')
 def room_occupancy_bar(room):
-    """ Template tag for the progress bar that shows room occupancy.
+    """Template tag for the progress bar that shows room occupancy.
 
     :param room: The room
     :return: A dictionary used in the progressbar template.
@@ -19,7 +19,7 @@ def room_occupancy_bar(room):
 
 @register.inclusion_tag('buildings/tags/room_group_occupancy.html')
 def room_group_occupancy(group):
-    """ Template tag for the table for progress-bars for a room groupd.
+    """Template tag for the table for progress-bars for a room groupd.
 
     :param group: The room group.
     :return: A dict for the room-group used in the template.
@@ -29,7 +29,7 @@ def room_group_occupancy(group):
 
 @register.inclusion_tag('buildings/tags/feed_progressbar.html')
 def feed_remains(feed_type, building):
-    """ Template tag for the progress bar for feed availability.
+    """Template tag for the progress bar for feed availability.
 
     :param feed_type: The feed type for which information is desired.
     :param building: The building.
