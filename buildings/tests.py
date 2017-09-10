@@ -1,6 +1,7 @@
 from django.test import TestCase
 from datetime import date
 from django.contrib.auth.models import User
+from django.shortcuts import reverse
 
 from .models import Flock, Room, RoomGroup, Building, FeedType, SiloFeedEntry, FeedEntry
 # Create your tests here.
@@ -337,4 +338,6 @@ class BuildingDetailViewTest(TestCase):
         self.assertEqual(context_data['building'], self.building)
 
     def test_request(self):
-        self.client.get(reversed('buildings:index'))
+        self.setupRequest()
+        response = self.client.get(reverse('buildings:index'))
+        self.assertEquals(302, response.status_code)
