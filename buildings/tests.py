@@ -1,5 +1,6 @@
 from django.test import TestCase
 from datetime import date
+from django.contrib.auth.models import User
 
 from .models import Flock, Room, RoomGroup, Building, FeedType, SiloFeedEntry, FeedEntry
 # Create your tests here.
@@ -325,8 +326,15 @@ class BuildingDetailViewTest(TestCase):
         self.room2.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
         self.room3.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
 
+    def setupRequest(self):
+        User.objects.create_user(username='NormalUser', email='none@noprovider.test', password='Password')
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
     def test_get_context_data(self):
         view = BuildingDetailView(kwargs={'building_id': 1})
         context_data = view.get_context_data()
         self.assertEqual(context_data['building'], self.building)
-        output = BuildingDetailView.as_view()
+
+    def test_request(self):
+        self.client.get(reversed('buildings:index'))
