@@ -3,13 +3,6 @@ from django.views.generic import TemplateView
 from .models import Building, Room, FeedType
 
 
-class GroupData:
-    def __init__(self, name):
-        self.name = name
-        self.rooms = []
-        self.groups = {}
-
-
 def index(request):
     buildings = Building.objects.all()
     if len(buildings) == 1:
@@ -28,9 +21,17 @@ class RoomDetailView(TemplateView):
 
 
 class BuildingDetailView(TemplateView):
+    """ Class view for detailed information about a building.
+
+    """
     template_name = 'buildings/building.html'
 
     def get_context_data(self, **kwargs):
+        """ Get the context data for the building view.
+
+        :param kwargs:
+        :return:
+        """
         context_data = super().get_context_data(**kwargs)
         building = get_object_or_404(Building, id=self.kwargs['building_id'])
         feed_types = FeedType.objects.all()
