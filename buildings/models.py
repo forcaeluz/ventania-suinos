@@ -177,6 +177,9 @@ class Room(models.Model):
         return self.get_occupancy_at_date(at_date)
 
     def get_occupancy_at_date(self, at_date=date.today()):
+        if isinstance(at_date, str):
+            at_date = parse_date(at_date)
+
         count = 0
         for entry in self.__get_entry_list(start_date=None, end_date=at_date):
             count += entry.number_of_animals
