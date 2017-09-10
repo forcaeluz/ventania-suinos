@@ -1,15 +1,6 @@
-from datetime import date
-
 from django.shortcuts import render, get_object_or_404, HttpResponseRedirect, reverse
 from django.views.generic import TemplateView
 from .models import Building, Room, FeedType
-
-
-class GroupData:
-    def __init__(self, name):
-        self.name = name
-        self.rooms = []
-        self.groups = {}
 
 
 def index(request):
@@ -30,23 +21,20 @@ class RoomDetailView(TemplateView):
 
 
 class BuildingDetailView(TemplateView):
+
+    """Class view for detailed information about a building."""
+
     template_name = 'buildings/building.html'
 
     def get_context_data(self, **kwargs):
+        """Get the context data for the building view.
+
+        :param kwargs:
+        :return:
+        """
         context_data = super().get_context_data(**kwargs)
         building = get_object_or_404(Building, id=self.kwargs['building_id'])
-        feed_types = self.__generate_feeding_data(building)
+        feed_types = FeedType.objects.all()
         context_data.update({'building': building, 'feed_types': feed_types})
         return context_data
 
-    def __generate_feeding_data(self, building):
-        data = []
-        feed_types = FeedType.objects.all()
-        for feed_type in feed_types:
-            name = feed_type.name
-            capacity = building.feed_capacity(feed_type)
-            remaining = building.get_estimated_remaining_feed(date.today(), feed_type)
-            consumption = building.get_average_feed_consumption(date.today(), feed_type)
-            data.append({'name': name, 'capacity': capacity, 'remaining': remaining, 'consumption': consumption})
-
-        return data

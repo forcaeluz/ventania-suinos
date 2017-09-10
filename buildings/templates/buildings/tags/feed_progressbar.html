@@ -1,0 +1,13 @@
+<div class="progress" title="{{ name }} - {{remaining|stringformat:".2f"}}/{{capacity|stringformat:".2f"}}">
+
+    {% if critical %}
+    <div class="progress-bar progress-bar-danger" style="width: {% widthratio remaining_after_consumption capacity 100 %}%;"></div>
+    {% else %}
+    <div class="progress-bar progress-bar-info" style="width: {% widthratio remaining_after_consumption capacity 100 %}%;"></div>
+    {% endif %}
+    {% if remaining > consumption %}
+    <div class="progress-bar progress-bar-warning progress-bar-striped" style="width: {% widthratio consumption capacity 100 %}%;"></div>
+    {% else %}
+    <div class="progress-bar progress-bar-striped progress-bar-danger" style="width: {% widthratio consumption capacity 100 %}%;"></div>
+    {% endif %}
+</div>

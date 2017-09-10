@@ -1,5 +1,7 @@
 from django.test import TestCase
 from datetime import date
+from django.contrib.auth.models import User
+from django.shortcuts import reverse
 
 from .models import Flock, Room, RoomGroup, Building, FeedType, SiloFeedEntry, FeedEntry
 # Create your tests here.
@@ -239,6 +241,7 @@ class BuildingFeedingTestCase(TestCase):
         # either.
         self.assertEqual(date(2017, 2, 4), self.building.get_estimated_feed_end_date('2017-01-22', self.feed_type1))
 
+
 class BuildingLayoutInformation(TestCase):
 
     def setUp(self):
@@ -324,7 +327,17 @@ class BuildingDetailViewTest(TestCase):
         self.room2.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
         self.room3.roomfeedingchange_set.create(feed_type=self.feed_type1, date='2017-01-01')
 
+    def setupRequest(self):
+        User.objects.create_user(username='NormalUser', email='none@noprovider.test', password='Password')
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
     def test_get_context_data(self):
         view = BuildingDetailView(kwargs={'building_id': 1})
         context_data = view.get_context_data()
         self.assertEqual(context_data['building'], self.building)
+
+    def test_request(self):
+        self.setupRequest()
+        response = self.client.get(reverse('buildings:index'))
+        self.assertEquals(302, response.status_code)

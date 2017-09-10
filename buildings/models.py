@@ -111,7 +111,7 @@ class Building(RoomGroup):
         if last_feed_entry is not None:
             consumption_animal_days = self.animal_days_for_feed_type(last_feed_entry.date, end_date, feed_type)
             consumption_kg = consumption_animal_days * self.get_average_feed_consumption(at_date, feed_type)
-            return last_feed_entry.weight + last_feed_entry.remaining - consumption_kg
+            return max([last_feed_entry.weight + last_feed_entry.remaining - consumption_kg, 0])
         else:
             return 0
 
@@ -164,22 +164,27 @@ class Room(models.Model):
     group = models.ForeignKey(RoomGroup)
     is_separation = models.BooleanField(default=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.occupancy_transitions = {}
+        self.transition_start_date = None
+        self.transition_end_date = None
+        self._entry_list = []
+        self._exit_list = []
+
     @property
     def occupancy(self, at_date=date.today()):
-        count = 0
-        for entry in self.animalroomentry_set.filter(date__lte=at_date):
-            count += entry.number_of_animals
-
-        for room_exit in self.animalroomexit_set.filter(date__lte=at_date):
-            count -= room_exit.number_of_animals
-        return count
+        return self.get_occupancy_at_date(at_date)
 
     def get_occupancy_at_date(self, at_date=date.today()):
+        if isinstance(at_date, str):
+            at_date = parse_date(at_date)
+
         count = 0
-        for entry in self.animalroomentry_set.filter(date__lte=at_date):
+        for entry in self.__get_entry_list(start_date=None, end_date=at_date):
             count += entry.number_of_animals
 
-        for room_exit in self.animalroomexit_set.filter(date__lte=at_date):
+        for room_exit in self.__get_exit_list(start_date=None, end_date=at_date):
             count -= room_exit.number_of_animals
         return count
 
@@ -212,16 +217,17 @@ class Room(models.Model):
         if isinstance(end_date, str):
             end_date = parse_date(end_date)
 
-        entries = self.animalroomentry_set.filter(date__gt=start_date, date__lte=end_date)
-        exits = self.animalroomexit_set.filter(date__gt=start_date, date__lte=end_date)
-        changes = chain(entries, exits)
-        changes = sorted(changes, key=lambda instance: instance.date)
-        start = self.get_occupancy_at_date(start_date)
-        results = {start_date: start}
-        for change in changes:
-            results.update({change.date: self.get_occupancy_at_date(change.date)})
+        self._compute_occupancy_transitions(start_date, end_date)
 
-        results.update({end_date: self.get_occupancy_at_date(end_date)})
+        results = {key: self.occupancy_transitions[key] for key in self.occupancy_transitions.keys()
+                   if start_date <= key <= end_date}
+
+        first_date = min(results.keys())
+        last_date = max(results.keys())
+
+        results.update({start_date: results[first_date]})
+        results.update({end_date: results[last_date]})
+
         return results
 
     def get_animal_days_for_period(self, start_date, end_date):
@@ -288,6 +294,65 @@ class Room(models.Model):
             if feeding_periods[0][0] < start_date:
                 feeding_periods[0][0] = start_date
         return feeding_periods
+
+    def _compute_occupancy_transitions(self, start_date, end_date):
+        entries = self.__get_entry_list(start_date, end_date)
+        exits = self.__get_exit_list(start_date, end_date)
+        changes = chain(entries, exits)
+        changes = sorted(changes, key=lambda instance: instance.date)
+        occupancy = self.get_occupancy_at_date(start_date)
+        results = {start_date: occupancy}
+        for change in changes:
+            if change.date != start_date:
+                occupancy += self.__compute_occupance_change(change)
+                results.update({change.date: occupancy})
+        results.update({end_date: occupancy})
+
+        self.transition_start_date = start_date
+        self.transition_end_date = end_date
+        self.occupancy_transitions = results
+
+    def __get_entry_list(self, start_date=None, end_date=None):
+        self._entry_list = list(self.animalroomentry_set.all())
+
+        return_list = []
+        if start_date is None:
+            if end_date is None:
+                return_list = self._entry_list
+            else:
+                return_list = [obj for obj in self._entry_list if obj.date <= end_date]
+        else:
+            if end_date is None:
+                return_list = [obj for obj in self._entry_list if start_date < obj.date]
+            else:
+                return_list = [obj for obj in self._entry_list if start_date < obj.date <= end_date]
+
+        return return_list
+
+    def __get_exit_list(self, start_date=None, end_date=None):
+        self._exit_list = list(self.animalroomexit_set.all())
+        return_list = []
+        if start_date is None:
+            if end_date is None:
+                return_list = self._exit_list
+            else:
+                return_list = [obj for obj in self._exit_list if obj.date <= end_date]
+        else:
+            if end_date is None:
+                return_list = [obj for obj in self._exit_list if start_date < obj.date]
+            else:
+                return_list = [obj for obj in self._exit_list if start_date < obj.date <= end_date]
+
+        return return_list
+
+    @staticmethod
+    def __compute_occupance_change(change_event):
+        if isinstance(change_event, AnimalRoomEntry):
+            return change_event.number_of_animals
+        elif isinstance(change_event, AnimalRoomExit):
+            return -change_event.number_of_animals
+        else:
+            raise ValueError('Invalid change event')
 
 
 class AnimalRoomEntry(models.Model):

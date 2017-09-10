@@ -1,30 +1,22 @@
 {% extends 'base2.html' %}
 {% load i18n %}
-
+{% load building_occupancy %}
 {% block main_content %}
     <h1 class="page-header">{{ building.name }}</h1>
     <div class="row">
         <div class="col-xs-6 col-sm-4">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Feeding Information: ' %}</h3>
+                    <h3 class="panel-title">{% trans 'Feed Stock: ' %}</h3>
                 </div>
                 <div class="panel-body">
-                    <table class="table table-striped">
-                        <thead>
-                        <tr class="table-header">
-                            <th>{% trans "Feed Type" %}</th>
-                            <th>{% trans "Capacity" %}</th>
-                            <th>{% trans "Remaining" %}</th>
-                            <th>{% trans "Consumption" %}</th>
-                        </tr>
-                        </thead>
+                    <table class="table table-occupancy">
                         {% for feed_type in feed_types %}
                             <tr class="table-row">
-                                <td>{{ feed_type.name }}</td>
-                                <td>{{ feed_type.capacity }}</td>
-                                <td>{{ feed_type.remaining }}</td>
-                                <td>{{ feed_type.consumption }}</td>
+                                <td style="width: 5em">{{ feed_type.name | truncatechars:6 }}</td>
+                                <td>
+                                    {% feed_remains feed_type building %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </table>
@@ -36,65 +28,12 @@
     <h2 class="page-header">Detailed Occupancy Information</h2>
     <div class="row">
         <div class="col-xs-6 col-sm-2">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Ungrouped rooms: ' %}</h3>
-                </div>
-                <div class="panel-body">
-                    <table class="table table-striped">
-                        <thead>
-                        <tr class="table-header">
-                            <th>{% trans "Room" %}</th>
-                            <th>{% trans "Occupancy" %}</th>
-                        </tr>
-                        </thead>
-                        {% for room in building.room_set.all %}
-                            <tr class="table-row">
-                                <td>{{room.name}}</td>
-                                <td>
-                                    <a href="{% url 'buildings:room_detail' room.id %}">
-                                        <div class="progress" title="{{ room.name }} - {{room.occupancy}}/{{room.capacity}}">
-                                            <div class="progress-bar" role="progressbar" aria-valuenow="{{ room.occupancy }}" aria-valuemin="0" aria-valuemax="{{ room.capacity }}" style="width: {% widthratio room.occupancy room.capacity 100 %}%;">
-                                                {{room.occupancy}}/{{room.capacity}}
-                                            </div>
-                                        </div>
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-            </div>
+            {% room_group_occupancy building %}
         </div>
         <div class="col-lg-10">
             {% for room_group in building.roomgroup_set.all %}
                 <div class="col-xs-6 col-sm-3">
-                    <div class="panel panel-info">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">{{ room_group.name }}</h3>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table table-striped">
-                                <thead>
-                                <tr class="table-header">
-                                </tr>
-                                </thead>
-                                {% for room in room_group.room_set.all %}
-                                    <tr class="table-row">
-                                        <td>
-                                            <a href="{% url 'buildings:room_detail' room.id %}">
-                                                <div class="progress" title="{{ room.name }} - {{room.occupancy}}/{{room.capacity}}">
-                                                    <div class="progress-bar" role="progressbar" aria-valuenow="{{ room.occupancy }}" aria-valuemin="0" aria-valuemax="{{ room.capacity }}" style="width: {% widthratio room.occupancy room.capacity 100 %}%;">
-                                                        {{room.occupancy}}/{{room.capacity}}
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-                        </div>
-                    </div>
+                    {% room_group_occupancy room_group %}
                 </div>
             {% endfor %}
         </div>
