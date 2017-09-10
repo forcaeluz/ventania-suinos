@@ -239,6 +239,7 @@ class BuildingFeedingTestCase(TestCase):
         # either.
         self.assertEqual(date(2017, 2, 4), self.building.get_estimated_feed_end_date('2017-01-22', self.feed_type1))
 
+
 class BuildingLayoutInformation(TestCase):
 
     def setUp(self):
@@ -328,3 +329,4 @@ class BuildingDetailViewTest(TestCase):
         view = BuildingDetailView(kwargs={'building_id': 1})
         context_data = view.get_context_data()
         self.assertEqual(context_data['building'], self.building)
+        output = BuildingDetailView.as_view()
