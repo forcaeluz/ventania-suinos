@@ -295,10 +295,6 @@ class Room(models.Model):
                 feeding_periods[0][0] = start_date
         return feeding_periods
 
-    def _prefetch_animal_days_data(self, start_date, end_date):
-        """Load all the necessary data for the computations, bringing some speed improvement."""
-        pass
-
     def _compute_occupancy_transitions(self, start_date, end_date):
         entries = self.__get_entry_list(start_date, end_date)
         exits = self.__get_exit_list(start_date, end_date)
