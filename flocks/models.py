@@ -91,7 +91,7 @@ class Flock(models.Model):
     @property
     def separated_animals(self):
         separation_set = self.animalseparation_set.all()
-        active_separations = len([obj for obj in separation_set if obj.active])
+        active_separations = len([obj for obj in separation_set])
         return active_separations
 
     @property

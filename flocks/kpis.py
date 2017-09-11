@@ -102,7 +102,7 @@ class SeparationsKpi(Kpi):
         if flock is None:
             self.__setup_farm_level()
         elif isinstance(flock, Flock):
-            self.float_value = flock.animalseparation_set.count() * 100 / flock.number_of_animals
+            self.float_value = flock.separated_animals * 100 / flock.number_of_animals
         self.__setup_color()
         self.value = "{:.2f}%".format(self.float_value)
 
@@ -217,7 +217,7 @@ class ExitDateKpi(Kpi):
     icon = 'calendar'
     description = 'Expected exit date'
     action_name = 'Register Group Exit'
-    action = reverse_lazy('farm:new_animal_entry')
+    action = reverse_lazy('farm:animal_exit')
 
     def __init__(self, flock):
         self.float_value = flock.expected_exit_date
