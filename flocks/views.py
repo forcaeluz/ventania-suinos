@@ -60,12 +60,10 @@ class FlockDetailView(TemplateView):
 
     def __create_kpis(self):
         kpi_list = []
-        number_of_animals = self.flock.number_of_living_animals
-        weight = self.flock.estimated_avg_weight
-        kpi_list.append(LivingAnimalsKpi(number_of_animals))
-        kpi_list.append(EstimatedWeightKpi(weight))
-        kpi_list.append(ExitDateKpi(self.flock.expected_exit_date))
-        kpi_list.append(DeathPercentageKpi(self.flock.death_percentage))
+        kpi_list.append(NumberOfAnimalsKpi(self.flock))
+        kpi_list.append(EstimatedWeightKpi(self.flock))
+        kpi_list.append(ExitDateKpi(self.flock))
+        kpi_list.append(DeathPercentageKpi(self.flock))
         kpi_list.append(CurrentFeedTypeKpi(self.flock))
-        kpi_list.append(AnimalSeparationKpi(self.flock.separated_animals*100/self.flock.number_of_animals))
+        kpi_list.append(SeparationsKpi(self.flock))
         return kpi_list

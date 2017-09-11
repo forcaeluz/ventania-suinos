@@ -157,6 +157,7 @@ class AnimalFarmExit(models.Model):
     def weight(self):
         return self.animalflockexit_set.all().aggregate(Sum('weight'))
 
+
 class AnimalFlockExit(models.Model):
     weight = models.FloatField()
     number_of_animals = models.IntegerField()

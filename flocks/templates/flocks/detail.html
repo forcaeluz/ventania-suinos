@@ -90,7 +90,7 @@
                             </thead>
                             {% for separation in separation_list %}
                                 <tr class="table-row">
-                                    <td><a href="{% url 'flocks:separation_detail' separation.id %}">{{separation.date}}</a></td>
+                                    <td>{{separation.date}}</td>
                                     <td>{{separation.reason}}</td>
                                     {% if separation.death %}
                                         <td>{% trans "Died in:" %} {{separation.death.date}}</td>
