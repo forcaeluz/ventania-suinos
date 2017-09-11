@@ -60,6 +60,7 @@ class FlockDetailView(TemplateView):
 
     def __create_kpis(self):
         kpi_list = []
+
         kpi_list.append(NumberOfAnimalsKpi(self.flock))
         kpi_list.append(EstimatedWeightKpi(self.flock))
         kpi_list.append(ExitDateKpi(self.flock))

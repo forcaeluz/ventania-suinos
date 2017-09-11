@@ -5,6 +5,7 @@ from ui_objects.models import Kpi, InfoKpi
 from .models import Flock, AnimalFlockExit
 from feeding.models import FeedType
 
+
 class NumberOfAnimalsKpi(InfoKpi):
 
     """ Kpi for number of animals in the Farm.
@@ -207,10 +208,17 @@ class EstimatedWeightKpi(InfoKpi):
 
 
 class ExitDateKpi(Kpi):
+
+    """ Kpi for the ExitDate of a Flock.
+
+    This KPI is used to show the expected exit date. With the colors, the proximity to the end-date is shown.
+    """
+
     icon = 'calendar'
     description = 'Expected exit date'
     action_name = 'Register Group Exit'
-    action = reverse_lazy('farm:create_output')
+    action = reverse_lazy('farm:new_animal_entry')
+
     def __init__(self, flock):
         self.float_value = flock.expected_exit_date
         self.value = date_format(flock.expected_exit_date, format='SHORT_DATE_FORMAT', use_l10n=True)
@@ -228,6 +236,13 @@ class ExitDateKpi(Kpi):
 
 
 class CurrentFeedTypeKpi(Kpi):
+
+    """ Kpi for displaying the recommended feed type.
+
+    This KPI is used to show the recommended feed types. With the colors, the match between the recommended and the
+    actually being used feed-types are displayed.
+    """
+
     icon = 'cutlery'
     description = 'Current feed type'
     action_name = 'Register feeding transition'
@@ -275,4 +290,5 @@ class CurrentFeedTypeKpi(Kpi):
 
             if beyond_start and before_end:
                 self.value = feed_type.name
+
                 return feed_type
