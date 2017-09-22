@@ -3,9 +3,9 @@ from unittest import mock
 
 from django.utils import timezone
 from django.test import TestCase
-
+from django.utils.formats import date_format
 from .models import Flock, AnimalFarmExit, CurrentFlocksManager
-from .kpis import NumberOfAnimalsKpi, DeathPercentageKpi, SeparationsKpi
+from .kpis import NumberOfAnimalsKpi, DeathPercentageKpi, SeparationsKpi, ExitDateKpi, CurrentFeedTypeKpi
 
 
 class FlockTests(TestCase):
@@ -231,3 +231,56 @@ class SeparationsKpiTest(TestCase):
         kpi = SeparationsKpi()
         self.assertEquals('2.00%', kpi.value)
         self.assertEquals('yellow', kpi.color)
+
+
+class ExitDateKpiTest(TestCase):
+    @mock.patch.object(Flock, 'expected_exit_date', new_callable=mock.PropertyMock)
+    def test_over_16_days(self, exit_date_mock):
+        exit_date_value = datetime.date.today() + datetime.timedelta(days=16)
+        exit_date_mock.return_value = exit_date_value
+        value = date_format(exit_date_value, format='SHORT_DATE_FORMAT', use_l10n=True)
+        flock_mock = Flock()
+        kpi = ExitDateKpi(flock=flock_mock)
+        self.assertEquals(value, kpi.value)
+        self.assertEquals('green', kpi.color)
+
+    @mock.patch.object(Flock, 'expected_exit_date', new_callable=mock.PropertyMock)
+    def test_over_15_days(self, exit_date_mock):
+        exit_date_value = datetime.date.today() + datetime.timedelta(days=15)
+        exit_date_mock.return_value = exit_date_value
+        value = date_format(exit_date_value, format='SHORT_DATE_FORMAT', use_l10n=True)
+        flock_mock = Flock()
+        kpi = ExitDateKpi(flock=flock_mock)
+        self.assertEquals(value, kpi.value)
+        self.assertEquals('yellow', kpi.color)
+
+    @mock.patch.object(Flock, 'expected_exit_date', new_callable=mock.PropertyMock)
+    def test_over_1_days(self, exit_date_mock):
+        exit_date_value = datetime.date.today() + datetime.timedelta(days=1)
+        exit_date_mock.return_value = exit_date_value
+        value = date_format(exit_date_value, format='SHORT_DATE_FORMAT', use_l10n=True)
+        flock_mock = Flock()
+        kpi = ExitDateKpi(flock=flock_mock)
+        self.assertEquals(value, kpi.value)
+        self.assertEquals('yellow', kpi.color)
+
+    @mock.patch.object(Flock, 'expected_exit_date', new_callable=mock.PropertyMock)
+    def test_over_0_days(self, exit_date_mock):
+        exit_date_value = datetime.date.today() + datetime.timedelta(days=0)
+        exit_date_mock.return_value = exit_date_value
+        value = date_format(exit_date_value, format='SHORT_DATE_FORMAT', use_l10n=True)
+        flock_mock = Flock()
+        kpi = ExitDateKpi(flock=flock_mock)
+        self.assertEquals(value, kpi.value)
+        self.assertEquals('red', kpi.color)
+
+
+class FeedTypeKpiTest(TestCase):
+
+    @mock.patch.object(Flock, 'entry_date', new_callable=mock.PropertyMock)
+    @mock.patch.object(Flock, 'expected_exit_date', new_callable=mock.PropertyMock)
+    def test_empty_flock(self, entry_date_mock, exit_date_mock):
+        entry_date_mock.return_value = datetime.date.today() - datetime.timedelta(days=10)
+        exit_date_mock.return_value = datetime.date.today() + datetime.timedelta(days=10)
+        flock = Flock()
+        kpi = CurrentFeedTypeKpi(flock)

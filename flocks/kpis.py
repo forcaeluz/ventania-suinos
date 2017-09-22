@@ -207,6 +207,17 @@ class EstimatedWeightKpi(InfoKpi):
         self.value = "{:.2f} kg".format(self.float_value)
 
 
+class AverageExitWeightKpi(InfoKpi):
+
+    icon = 'balance-scale'
+    description = 'Estimated Weight (kg)'
+    action_name = 'Details'
+
+    def __init__(self, flock):
+        self.float_value = flock.estimated_avg_weight
+        self.value = "{:.2f} kg".format(self.float_value)
+
+
 class ExitDateKpi(Kpi):
 
     """ Kpi for the ExitDate of a Flock.
@@ -265,7 +276,7 @@ class CurrentFeedTypeKpi(Kpi):
         room_entries = self.flock.animalroomentry_set.all()
         for entry in room_entries:
             room = entry.room
-            if room.get_animals_for_flock(flock_id=self.flock.id) > 0:
+            if room.get_animals_for_flock(flock_id=self.flock.id) > 0 and not room.is_separation:
                 feed_type = room.get_feeding_type_at()
                 feed_types.update({feed_type: feed_types.get(feed_type, 0) + 1})
         return feed_types
@@ -283,6 +294,7 @@ class CurrentFeedTypeKpi(Kpi):
                 beyond_start = True
             else:
                 beyond_start = False
+
             if (time_to_exit <= stop <= 0) or (stop > 0 and time_since_entry <= stop):
                 before_end = True
             else:
