@@ -1,6 +1,9 @@
 from datetime import date, timedelta
+from django.utils.formats import date_format
+from django.urls import reverse, reverse_lazy
 from ui_objects.models import Kpi, InfoKpi
 from .models import Flock, AnimalFlockExit
+from feeding.models import FeedType
 
 
 class NumberOfAnimalsKpi(InfoKpi):
@@ -191,3 +194,113 @@ class InTreatmentKpi(Kpi):
             self.color = 'red'
         else:
             self.color = 'green'
+
+
+class EstimatedWeightKpi(InfoKpi):
+
+    icon = 'balance-scale'
+    description = 'Estimated Weight (kg)'
+    action_name = 'Details'
+
+    def __init__(self, flock):
+        self.float_value = flock.estimated_avg_weight
+        self.value = "{:.2f} kg".format(self.float_value)
+
+
+class AverageExitWeightKpi(InfoKpi):
+
+    icon = 'balance-scale'
+    description = 'Estimated Weight (kg)'
+    action_name = 'Details'
+
+    def __init__(self, flock):
+        self.float_value = flock.estimated_avg_weight
+        self.value = "{:.2f} kg".format(self.float_value)
+
+
+class ExitDateKpi(Kpi):
+
+    """ Kpi for the ExitDate of a Flock.
+
+    This KPI is used to show the expected exit date. With the colors, the proximity to the end-date is shown.
+    """
+
+    icon = 'calendar'
+    description = 'Expected exit date'
+    action_name = 'Register Group Exit'
+    action = reverse_lazy('farm:animal_exit')
+
+    def __init__(self, flock):
+        self.float_value = flock.expected_exit_date
+        self.value = date_format(flock.expected_exit_date, format='SHORT_DATE_FORMAT', use_l10n=True)
+        self.__setup_color()
+
+    def __setup_color(self):
+        interval = self.float_value - date.today()
+        interval_days = interval.days
+        if interval_days > 15:
+            self.color = 'green'
+        elif interval_days > 0:
+            self.color = 'yellow'
+        else:
+            self.color = 'red'
+
+
+class CurrentFeedTypeKpi(Kpi):
+
+    """ Kpi for displaying the recommended feed type.
+
+    This KPI is used to show the recommended feed types. With the colors, the match between the recommended and the
+    actually being used feed-types are displayed.
+    """
+
+    icon = 'cutlery'
+    description = 'Current feed type'
+    action_name = 'Register feeding transition'
+
+    def __init__(self, flock):
+        self.flock = flock
+        used_types = self.__get_actual_feeding_types()
+        recommended = self.__get_recommended_type()
+        if used_types.get(recommended, 0) > 0:
+            if len(used_types.keys()) == 1:
+                self.color = 'green'
+                self.action_name = 'Details'
+            else:
+                self.color = 'yellow'
+        else:
+            self.color = 'red'
+
+    def __get_actual_feeding_types(self):
+        feed_types = {}
+        room_entries = self.flock.animalroomentry_set.all()
+        for entry in room_entries:
+            room = entry.room
+            if room.get_animals_for_flock(flock_id=self.flock.id) > 0 and not room.is_separation:
+                feed_type = room.get_feeding_type_at()
+                feed_types.update({feed_type: feed_types.get(feed_type, 0) + 1})
+        return feed_types
+
+    def __get_recommended_type(self):
+        time_since_entry = date.today() - self.flock.entry_date
+        time_since_entry = time_since_entry.days
+        time_to_exit = date.today() - self.flock.expected_exit_date
+        time_to_exit = time_to_exit.days
+
+        for feed_type in FeedType.objects.all():
+            start = feed_type.start_feeding_age
+            stop = feed_type.stop_feeding_age
+            if (time_since_entry >= start >= 0) or (start < 0 and time_to_exit >= start):
+                beyond_start = True
+            else:
+                beyond_start = False
+
+            if (time_to_exit <= stop <= 0) or (stop > 0 and time_since_entry <= stop):
+                before_end = True
+            else:
+                before_end = False
+
+            if beyond_start and before_end:
+                self.value = feed_type.name
+
+                return feed_type

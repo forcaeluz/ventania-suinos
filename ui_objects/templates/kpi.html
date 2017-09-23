@@ -6,7 +6,7 @@
                         <i class="fa fa-5x fa-{{ kpi.icon }}"></i>
                 </div>
                 <div class="col-xs-9 text-right">
-                    <div class="huge">{{ kpi.value }}</div>
+                    <div class="huge">{{ kpi.value|truncatechars:12 }}</div>
                     <div>{{ kpi.description }}</div>
                 </div>
             </div>
