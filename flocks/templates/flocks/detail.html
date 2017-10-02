@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% load kpi %}
+
 {% block main_content %}
     <h1>{% trans "Flock information:" %} {{ flock.flock_name }}</h1>
     <div class="row">
@@ -10,176 +11,41 @@
         {% endfor %}
     </div>
     <div class="row">
+        <div class="col-sm-6 col-md-9">
+            <div class="col-sm-12">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Time Line' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {{ time_chart.as_html }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div class="col-sm-6 col-md-3">
+            {% if state_chart %}
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'General Information' %}
-                        <div class="btn-group btn-group-sm">
-                            <a title="{% trans 'Edit animal entry' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_entry' flock.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
-                            <a title="{% trans 'Delete animal entry' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_entry' flock.id %}"><span class="glyphicon glyphicon-trash"></span></a>
-                        </div>
-                    </h3>
+                    <h3 class="panel-title">{% trans 'Animals Status' %}</h3>
                 </div>
                 <div class="panel-body">
-                    <ul>
-                        <li>{% trans "Entry Date:" %} {{ flock.entry_date }}</li>
-                        <li>{% trans "Entry Weight:" %} {{ flock.entry_weight }}</li>
-                        <li>{% trans "Entry Count:" %} {{ flock.number_of_animals }}</li>
-                        <li>{% trans "Average Entry Weight:" %} {{ flock.average_entry_weight|stringformat:".2f" }}</li>
-                        <li>{% trans "Number of animals on farm" %} {{ flock.number_of_living_animals }}</li>
-                        {% if flock.number_of_living_animals > 0 %}
-                            <li>{% trans "Expected Exit Date" %} {{ flock.expected_exit_date }}</li>
-                        {% endif %}
-                    </ul>
+                    {{ state_chart.as_html }}
                 </div>
             </div>
-        </div>
-        <div class="col-sm-6 col-md-4">
+            {% endif %}
+            {% if distribution_chart %}
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Animal Deaths' %}</h3>
+                    <h3 class="panel-title">{% trans 'Room Distribution' %}</h3>
                 </div>
                 <div class="panel-body">
-                    {% if death_list %}
-                        <table class="table table-stripped">
-                            <thead>
-                            <tr class="table-header">
-                                <th>{% trans "Date" %}</th>
-                                <th>{% trans "Weight" %}</th>
-                                <th>{% trans "Cause" %}</th>
-                                <th></th>
-                            </tr>
-                            </thead>
-                            {% for death in death_list %}
-                                <tr class="table-row">
-                                    <td>{{death.date}}</td>
-                                    <td>{{death.weight}}</td>
-                                    <td>{{death.cause}}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a title="{% trans 'Edit animal death' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_death' death.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
-                                            <a title="{% trans 'Delete animal death' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_death' death.id %}"><span class="glyphicon glyphicon-trash"></span></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-
-                    {% else %}
-                        <p>{% trans "No deaths in this flock." %}</p>
-                    {% endif %}
-
+                    {{ distribution_chart.as_html }}
                 </div>
             </div>
-        </div>
-        <div class="col-sm-6 col-md-5">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Animal Separations' %}</h3>
-                </div>
-                <div class="panel-body">
-                    {% if separation_list %}
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th>{% trans "Separation Date" %}</th>
-                                <th>{% trans "Reason" %}</th>
-                                <th>{% trans "Ended" %}</th>
-                                <th></th>
-                            </tr>
-                            </thead>
-                            {% for separation in separation_list %}
-                                <tr class="table-row">
-                                    <td>{{separation.date}}</td>
-                                    <td>{{separation.reason}}</td>
-                                    {% if separation.death %}
-                                        <td>{% trans "Died in:" %} {{separation.death.date}}</td>
-                                    {% elif separation.exit %}
-                                        <td>{% trans "Exit in:" %} {{separation.exit.date}}</td>
-                                    {% else %}
-                                        <td>{% trans "Still separated." %}</td>
-                                    {% endif %}
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a title="{% trans 'Edit animal separation' %}" class="btn btn-primary" href="{% url 'farm:edit_animal_separation' separation.id %}"><span class="glyphicon glyphicon-pencil"></span></a>
-                                            <a title="{% trans 'Delete animal separation' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_separation' separation.id %}"><span class="glyphicon glyphicon-trash"></span></a>
-                                        </div>
-                                    </td>
-
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    {% else %}
-                        <p>{% trans "No animals separated from this flock." %}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-12 col-md-5">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Animal Exits' %}</h3>
-                </div>
-                <div class="panel-body">
-                    {% if exits_list %}
-                        <table class="table table-stripped">
-                            <thead>
-                            <tr>
-                                <th>{% trans "Exit Date" %}</th>
-                                <th>{% trans "N. of animals" %}</th>
-                                <th>{% trans "Total weight" %}</th>
-                                <th>{% trans "Average weight" %}</th>
-                                <th></th>
-                            </tr>
-                            </thead>
-                            {% for exit in exits_list %}
-                                <tr class="table-row">
-                                    <td>{{exit.date}}</td>
-                                    <td>{{exit.number_of_animals}}</td>
-                                    <td>{{exit.weight|stringformat:".2f"}}</td>
-                                    <td>{{exit.average_weight|stringformat:".2f"}}</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a title="{% trans 'Delete animal exit' %}" class="btn btn-danger" href="{% url 'farm:delete_animal_exit' exit.farm_exit_id %}"><span class="glyphicon glyphicon-trash"></span></a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    {% else %}
-                        <p>{% trans "No animals exited." %}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-md-4">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Room Occupation' %}
-                        <div class="btn-group">
-                            <a title="{% trans 'Detailed room information' %}" class="btn btn-primary" href="{% url 'flocks:detail' flock.id %}"><span class="glyphicon glyphicon-search"></span></a>
-                        </div>
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    {% if current_rooms %}
-                        <table class="table table-stripped">
-                            <thead>
-                            <tr>
-                                <th>{% trans "Room" %}</th>
-                                <th>{% trans "N. of animals" %}</th>
-                            </tr>
-                            </thead>
-                            {% for room in current_rooms %}
-                                <tr class="table-row">
-                                    <td>{{room.name}}</td>
-                                    <td>{{room.occupancy}}</td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    {% endif %}
-                </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

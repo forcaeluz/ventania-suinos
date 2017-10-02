@@ -41,7 +41,6 @@ class Flock(models.Model):
     entry_weight = models.FloatField()
     number_of_animals = models.IntegerField()
     objects = CurrentFlocksManager()
-    # alive = CurrentFlocksManager()
 
     @property
     def flock_name(self):
@@ -69,6 +68,24 @@ class Flock(models.Model):
         number_of_gone_animals += self.animaldeath_set.count()
         return self.number_of_animals - number_of_gone_animals
 
+    def get_living_animals_at_date(self, date=datetime.datetime.today()):
+        number_of_gone_animals = 0
+        for exits in self.animalflockexit_set.filter(farm_exit__date__lte=date):
+            number_of_gone_animals += exits.number_of_animals
+
+        number_of_gone_animals += self.animaldeath_set.filter(date__lte=date).count()
+        return self.number_of_animals - number_of_gone_animals
+
+    def get_dead_animals_at_date(self, date=datetime.datetime.today()):
+        return self.animaldeath_set.filter(date__lte=date).count()
+
+    def get_exited_animals_at_date(self, date=datetime.datetime.today()):
+        number_of_gone_animals = 0
+
+        for exits in self.animalflockexit_set.filter(farm_exit__date__lte=date):
+            number_of_gone_animals += exits.number_of_animals
+        return number_of_gone_animals
+
     @property
     def average_entry_weight(self):
         return self.entry_weight / self.number_of_animals
@@ -93,6 +110,20 @@ class Flock(models.Model):
         separation_set = self.animalseparation_set.all()
         active_separations = len([obj for obj in separation_set])
         return active_separations
+
+    def get_separated_animals_at_date(self, date=datetime.datetime.today()):
+        if isinstance(date, datetime.datetime):
+            date = date.date()
+        count = 0
+        for separation in self.animalseparation_set.all():
+            if separation.date < date:
+                if separation.end_date is not None:
+                    if separation.end_date > date:
+                        count += 1
+                else:
+                    count += 1
+
+        return count
 
     @property
     def estimated_avg_weight(self):
@@ -190,6 +221,15 @@ class AnimalSeparation(models.Model):
     @property
     def active(self):
         return (self.death is None) and (self.exit is None)
+
+    @property
+    def end_date(self):
+        if self.death is not None:
+            return self.death.date
+        elif self.exit is not None:
+            return self.exit.date
+        else:
+            return None
 
     def __str__(self):
         return 'Animal separation: ' + str(self.flock) + ' on ' + str(self.date) + ' with reason ' + self.reason
