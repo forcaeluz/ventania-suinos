@@ -14,6 +14,8 @@ from .forms import EasyFatForm, AnimalDeathForm, AnimalExitRoomFormset, AnimalSe
 from .forms import SingleAnimalExitForm, AnimalDeathUpdateForm
 
 from .forms import TreatmentRoomAndSymptomsForm, DosageConfirmationForm, MedicationChoiceForm
+from .forms import AnimalTransferFromForm, AnimalTransferFromDetailedFormset, AnimalTransferToForm
+
 
 from .models import AnimalEntry, AnimalExit, NewTreatment
 
@@ -540,3 +542,21 @@ class StartNewTreatment(EasyFatWizard):
                                             ' being treated in the flock when it exits.']})
 
         return context
+
+
+class RegisterAnimalTransferWizard(EasyFatWizard):
+
+    """ Wizard for registering transfers inside the farm."""
+
+    form_list = [
+        ('generic', AnimalTransferFromForm),
+        ('detailed', formset_factory(form=AnimalExitRoomForm, formset=AnimalTransferFromDetailedFormset, extra=0)),
+        ('destination', AnimalTransferToForm)
+    ]
+
+    title_dict = {'generic': _('Transfer information'),
+                  'detailed': _('Detailed origin information'),
+                  'destination': _('Destination information')}
+
+    def done(self, form_list, **kwargs):
+        pass

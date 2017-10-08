@@ -673,3 +673,49 @@ class DosageConfirmationForm(EasyFatForm):
     confirm_application = BooleanField(required=False)
     separate = BooleanField(required=False)
     destination_room = ModelChoiceField(queryset=Room.objects.filter(is_separation=True), required=False)
+
+
+class AnimalTransferFromForm(EasyFatForm):
+
+    """ First step in the Animal Transfer Wizard. """
+
+    date = DateField()
+    number_of_animals = IntegerField(min_value=1)
+    rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
+
+
+class AnimalTransferFromDetailedFormset(BaseFormSet):
+
+    """ Second step, with detailed information for each room selected in the previous step."""
+
+    def __init__(self, *args, **kwargs):
+        self.number_of_animals = int(kwargs.pop('number_of_animals', 0))
+        self.date = kwargs.pop('date', datetime.today().date())
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        flocks = set()
+        if any(self.errors):
+            return
+        count = 0
+        for form in self.forms:
+            flocks.union(self.get_flock_for_room_form(form))
+            nof_animals = form.cleaned_data['number_of_animals']
+            count += nof_animals
+
+        if count != self.__n_of_animals:
+            raise ValidationError('Number of animals out in form is different than in the exit.')
+
+        if len(flocks) > 1:
+            raise ValidationError('It is not possible to mix flocks in a transfer.')
+
+    def get_flock_for_room_form(self, form):
+        room = form.cleaned_data['room']  # Room
+        return room.get_flocks_present_at(self.date)
+
+
+class AnimalTransferToForm(EasyFatForm):
+
+    """ Last step in the Animal Transfer Wizard. """
+
+    room = ModelChoiceField(queryset=Room.objects.filter(is_separation=True))
