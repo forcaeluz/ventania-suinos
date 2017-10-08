@@ -902,3 +902,60 @@ class TestFarmIndexView(FarmTestClass):
     def test_get(self):
         response = self.client.get(reverse('farm:index'))
         self.assertEquals(200, response.status_code)
+
+
+class TestSingleExitWizard(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get(self):
+        response = self.client.get(reverse('farm:single_animal_exit'))
+        self.assertEquals(200, response.status_code)
+        print(response)
+
+    def test_post_valid_first_step(self):
+        data = {'register_single_animal_exit-current_step': 'exit_information',
+                'exit_information-date': '2017-01-16',
+                'exit_information-weight': '75',
+                'exit_information-room': self.normal_room1.id}
+
+        response = self.client.post(reverse('farm:single_animal_exit'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'overview')
+
+    def test_post_valid_first_step_separation_room(self):
+        data = {'register_single_animal_exit-current_step': 'exit_information',
+                'exit_information-date': '2017-01-16',
+                'exit_information-weight': '75',
+                'exit_information-room': self.separation_room.id}
+
+        response = self.client.post(reverse('farm:single_animal_exit'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'animal_distinction')
+
+    def test_post_valid_animal_distinction(self):
+        data = {'register_single_animal_exit-current_step': 'exit_information',
+                'exit_information-date': '2017-01-16',
+                'exit_information-weight': '75',
+                'exit_information-room': self.separation_room.id}
+
+        response = self.client.post(reverse('farm:single_animal_exit'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'animal_distinction')
+
+        data = {'register_single_animal_exit-current_step': 'animal_distinction',
+                'animal_distinction-separation': self.separation1.id,
+                }
+
+        response = self.client.post(reverse('farm:single_animal_exit'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'overview')
+
+        data = {'register_single_animal_exit-current_step': 'overview'}
+
+        response = self.client.post(reverse('farm:single_animal_exit'), data)
+        self.assertEquals(302, response.status_code)
+        self.separation1.refresh_from_db()
+        self.assertFalse(self.separation1.active)
