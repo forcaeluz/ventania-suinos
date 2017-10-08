@@ -236,10 +236,6 @@ class RegisterNewAnimalExit(EasyFatWizard):
         saver.set_room_exit_information(self.get_cleaned_data_for_step('building_information'))
         saver.clean()
         saver.save()
-        # group_form = kwargs.get('form_dict')['general_information']
-        # building_form = kwargs.get('form_dict')['building_information']
-        # saver = AnimalExitWizardSaver(group_form, building_form)
-        # saver.save()
         return HttpResponseRedirect(reverse('farm:index'))
 
     @staticmethod

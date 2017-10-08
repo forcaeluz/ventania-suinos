@@ -179,16 +179,20 @@ class SingleAnimalExitForm(EasyFatForm):
         data = self.cleaned_data
         date = data['date']
         room = data['room']  # Room
-        if not self.flock:
+
+        # For separation rooms, the clean function should not raise an error if flock distinction is not possible
+        if room.is_separation:
+            if room.get_occupancy_at_date(date) < 0:
+                raise ValidationError('Separation room was empty at date')
+        elif not self.flock:
             if len(room.get_flocks_present_at(date)) == 1:
                 self.flock = next(iter(room.get_flocks_present_at(date)))
             elif len(room.get_flocks_present_at(date)) > 1:
                 raise ValidationError('No flock distinction possible')
             else:
                 raise ValidationError('Room was empty at death date')
-
-        if room.get_animals_for_flock(self.flock, date) <= 0:
-            raise ValidationError('No animals from flock in room at death date')
+            if room.get_animals_for_flock(self.flock, date) <= 0:
+                raise ValidationError('No animals from flock in room at death date')
 
     def save(self):
         data = self.cleaned_data
