@@ -113,39 +113,45 @@ class RoomDistributionChart(Chart):
         super().__init__()
         self.flock = flock
         room_entries = self.flock.animalroomentry_set.all()
-        self.current_rooms = [obj.room for obj in room_entries if obj.room.get_animals_for_flock(self.flock.id) > 0]
+        self.current_rooms = set([obj.room for obj in room_entries if obj.room.get_animals_for_flock(self.flock.id) > 0])
+        self.data = []
+        self.labels = []
+        self.colors = []
+        self.setup_labels_colors_and_data()
 
-    def get_labels(self, **kwargs):
-        room_labels = [obj.__str__() for obj in self.current_rooms]
-        return room_labels
-
-    def get_datasets(self, **kwargs):
+    def setup_labels_colors_and_data(self):
         base_colors = ['green', 'blue', 'yellow', 'red']
-        # data = [obj.get_animals_for_flock(self.flock.id) for obj in self.current_rooms]
         groups = {}
         group_count = {}
+
         for room in self.current_rooms:
             groups.setdefault(room.group, []).append(room)
             group_count.update({room.group: group_count.get(room.group, 0) + room.get_animals_for_flock(self.flock.id)})
-        inner_data = []
-        outer_data = []
-        inner_colors = []
-        outer_colors = []
+        data = []
+        labels = []
+        chosen_colors = []
         color_counter = 0
         for room_group, rooms in groups.items():
-            inner_data.append(group_count.get(room_group))
-            inner_colors.append(colors[base_colors[color_counter]])
-            outer_color_counter = 1
+            sub_color_counter = 1
             for room in rooms:
-                outer_data.append(room.get_animals_for_flock(self.flock.id))
-                outer_colors.append(colors[base_colors[color_counter] + '-{0}'.format((10-outer_color_counter)*100)])
-                outer_color_counter += 1
+                data.append(room.get_animals_for_flock(self.flock.id))
+                labels.append(room.__str__())
+                chosen_colors.append(colors[base_colors[color_counter] + '-{0}'.format((10-sub_color_counter)*100)])
+                sub_color_counter += 1
             color_counter += 1
 
-        return [DataSet(data=outer_data,
+        self.labels = labels
+        self.colors = chosen_colors
+        self.data = data
+
+    def get_labels(self, **kwargs):
+        return self.labels
+
+    def get_datasets(self, **kwargs):
+        return [DataSet(data=self.data,
                         label="Current Animal Distribution",
-                        backgroundColor=outer_colors,
-                        hoverBackgroundColor=outer_colors)
+                        backgroundColor=self.colors,
+                        hoverBackgroundColor=self.colors)
                 ]
 
 

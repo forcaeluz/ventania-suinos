@@ -11,40 +11,38 @@
         {% endfor %}
     </div>
     <div class="row">
-        <div class="col-sm-6 col-md-9">
-            <div class="col-sm-12">
-                <div class="panel panel-info">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">{% trans 'Time Line' %}</h3>
-                    </div>
-                    <div class="panel-body">
-                        {{ time_chart.as_html }}
-                    </div>
+        <div class="col-sm-12 col-md-9">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans 'Time Line' %}</h3>
+                </div>
+                <div class="panel-body">
+                    {{ time_chart.as_html }}
                 </div>
             </div>
         </div>
-
-
-        <div class="col-sm-6 col-md-3">
+        <div class="col-xs-6 col-md-3">
             {% if state_chart %}
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Animals Status' %}</h3>
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Animals Status' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {{ state_chart.as_html }}
+                    </div>
                 </div>
-                <div class="panel-body">
-                    {{ state_chart.as_html }}
-                </div>
-            </div>
             {% endif %}
+        </div>
+        <div class="col-xs-6 col-md-3">
             {% if distribution_chart %}
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{% trans 'Room Distribution' %}</h3>
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{% trans 'Room Distribution' %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {{ distribution_chart.as_html }}
+                    </div>
                 </div>
-                <div class="panel-body">
-                    {{ distribution_chart.as_html }}
-                </div>
-            </div>
             {% endif %}
         </div>
     </div>
