@@ -373,6 +373,11 @@ class AnimalRoomExit(models.Model):
     farm_exit = models.ForeignKey(AnimalFarmExit, null=True)
 
 
+class AnimalRoomTransfer(models.Model):
+    room_entry = models.ForeignKey(AnimalRoomEntry)
+    room_exit = models.ForeignKey(AnimalRoomExit)
+
+
 class DeathInRoom(models.Model):
     """
         Model only used for statistics, to couple a death to a certain room.

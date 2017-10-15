@@ -7,7 +7,7 @@ from django.shortcuts import HttpResponseRedirect
 from formtools.wizard.views import SessionWizardView
 
 from flocks.models import Flock
-from buildings.models import Room
+from buildings.models import Room, AnimalRoomExit, AnimalRoomEntry, AnimalRoomTransfer
 
 from .forms import AnimalEntryForm, AnimalEntryRoomForm, AnimalEntryRoomFormset, GroupExitForm, AnimalExitRoomForm
 from .forms import EasyFatForm, AnimalDeathForm, AnimalExitRoomFormset, AnimalSeparationDistinctionForm
@@ -548,6 +548,8 @@ class RegisterAnimalTransferWizard(EasyFatWizard):
 
     """ Wizard for registering transfers inside the farm."""
 
+    wizard_name = _('Register animal transfer')
+
     form_list = [
         ('generic', AnimalTransferFromForm),
         ('detailed', formset_factory(form=AnimalExitRoomForm, formset=AnimalTransferFromDetailedFormset, extra=0)),
@@ -559,4 +561,45 @@ class RegisterAnimalTransferWizard(EasyFatWizard):
                   'destination': _('Destination information')}
 
     def done(self, form_list, **kwargs):
-        pass
+        date = self.get_cleaned_data_for_step('generic').get('date')
+        number_of_animals = self.get_cleaned_data_for_step('generic').get('number_of_animals')
+        destiny_rooom = self.get_cleaned_data_for_step('destination').get('room')
+        room_exits_list = self.get_cleaned_data_for_step('detailed')
+        exit_objects = []
+        for room_exit in room_exits_list:
+            number_of_animals_in_room = room_exit.get('number_of_animals')
+            room = room_exit.get('room')
+            flock = next(iter(room.get_flocks_present_at(date)))
+            exit_object = AnimalRoomExit(date=date, number_of_animals=number_of_animals_in_room, room=room,
+                                         flock=flock)
+            exit_object.save()
+            exit_objects.append(exit_object)
+
+        entry_object = AnimalRoomEntry(room=destiny_rooom, number_of_animals=number_of_animals, date=date, flock=flock)
+        entry_object.save()
+
+        for exit_object in exit_objects:
+            transfer_object = AnimalRoomTransfer(room_entry=entry_object, room_exit=exit_object)
+            transfer_object.save()
+
+        return HttpResponseRedirect(reverse('farm:index'))
+
+    def get_form_initial(self, step):
+        initial = []
+        if step == 'detailed':
+            date = self.get_cleaned_data_for_step('generic').get('date')
+            selected_rooms = self.get_cleaned_data_for_step('generic').get('rooms')
+            for room in selected_rooms:
+                diff = room.get_occupancy_at_date(date) - room.capacity
+                initial.append({'room': room, 'number_of_animals': max([0, diff])})
+
+        return initial
+
+    def get_form_kwargs(self, step=None):
+        kwargs = super().get_form_kwargs(step)
+        if step == 'detailed':
+            number_of_animals = self.get_cleaned_data_for_step('generic').get('number_of_animals')
+            date = self.get_cleaned_data_for_step('generic').get('date')
+            kwargs.update({'number_of_animals': number_of_animals})
+            kwargs.update({'date': date})
+        return kwargs

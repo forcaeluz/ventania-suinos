@@ -683,6 +683,25 @@ class AnimalTransferFromForm(EasyFatForm):
     number_of_animals = IntegerField(min_value=1)
     rooms = ModelMultipleChoiceField(queryset=Room.objects.filter(is_separation=False), widget=RoomSelectionWidget)
 
+    def clean(self):
+        flock_count = {}
+        selected_rooms = self.cleaned_data['rooms']
+        date = self.cleaned_data['date']
+        number_of_animals = self.cleaned_data['number_of_animals']
+        max_total = 0
+        for room in selected_rooms:
+            max_total += room.get_occupancy_at_date(date)
+            flocks = room.get_flocks_present_at(date)
+            if len(flocks) == 0:
+                raise ValidationError('No animals in room: ' + room.__str__() + ' at the selected date.')
+            for flock, occupancy in flocks.items():
+                flock_count.update({flock: flock_count.get(flock, 0) + occupancy})
+
+        if len(flock_count) > 1:
+            raise ValidationError('Trying to mix multiple flocks in the transfer.')
+        if number_of_animals > max_total:
+            raise ValidationError('Number of animals is higher that occupancy of rooms at date.')
+
 
 class AnimalTransferFromDetailedFormset(BaseFormSet):
 
@@ -690,7 +709,7 @@ class AnimalTransferFromDetailedFormset(BaseFormSet):
 
     def __init__(self, *args, **kwargs):
         self.number_of_animals = int(kwargs.pop('number_of_animals', 0))
-        self.date = kwargs.pop('date', datetime.today().date())
+        self.date = kwargs.pop('date')
         super().__init__(*args, **kwargs)
 
     def clean(self):
@@ -703,7 +722,7 @@ class AnimalTransferFromDetailedFormset(BaseFormSet):
             nof_animals = form.cleaned_data['number_of_animals']
             count += nof_animals
 
-        if count != self.__n_of_animals:
+        if count != self.number_of_animals:
             raise ValidationError('Number of animals out in form is different than in the exit.')
 
         if len(flocks) > 1:
@@ -718,4 +737,4 @@ class AnimalTransferToForm(EasyFatForm):
 
     """ Last step in the Animal Transfer Wizard. """
 
-    room = ModelChoiceField(queryset=Room.objects.filter(is_separation=True))
+    room = ModelChoiceField(queryset=Room.objects.all())
