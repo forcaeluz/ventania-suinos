@@ -964,6 +964,8 @@ class TestSingleExitWizard(FarmTestClass):
 class TestTransferWizard(FarmTestClass):
     def setUp(self):
         super().setUp()
+        super().setUpEmptyBuilding()
+
         response = self.client.login(username='NormalUser', password='Password')
         self.assertTrue(response)
 
@@ -1002,11 +1004,10 @@ class TestTransferWizard(FarmTestClass):
 
         response = self.client.post(reverse('farm:new_transfer'), data)
         self.assertEquals(200, response.status_code)
-        self.assertEquals(response.context['wizard']['steps'].current, 'overview')
+        self.assertEquals(response.context['wizard']['steps'].current, 'destination')
 
-        data = {'register_single_animal_exit-current_step': 'overview'}
+        data = {'register_animal_transfer_wizard-current_step': 'destination',
+                'destination-room': self.empty_building.room_set.first().id}
 
-        response = self.client.post(reverse('farm:single_animal_exit'), data)
+        response = self.client.post(reverse('farm:new_transfer'), data)
         self.assertEquals(302, response.status_code)
-        self.separation1.refresh_from_db()
-        self.assertFalse(self.separation1.active)
