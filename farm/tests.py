@@ -959,3 +959,55 @@ class TestSingleExitWizard(FarmTestClass):
         self.assertEquals(302, response.status_code)
         self.separation1.refresh_from_db()
         self.assertFalse(self.separation1.active)
+
+
+class TestTransferWizard(FarmTestClass):
+    def setUp(self):
+        super().setUp()
+        super().setUpEmptyBuilding()
+
+        response = self.client.login(username='NormalUser', password='Password')
+        self.assertTrue(response)
+
+    def test_get(self):
+        response = self.client.get(reverse('farm:new_transfer'))
+        self.assertEquals(200, response.status_code)
+
+    def test_post_valid_first_step(self):
+        data = {'register_animal_transfer_wizard-current_step': 'generic',
+                'generic-date': '2017-01-16',
+                'generic-number_of_animals': 5,
+                'generic-rooms': [self.normal_room1.id]}
+
+        response = self.client.post(reverse('farm:new_transfer'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'detailed')
+
+    def test_post_valid_detailed(self):
+        data = {'register_animal_transfer_wizard-current_step': 'generic',
+                'generic-date': '2017-01-16',
+                'generic-number_of_animals': 5,
+                'generic-rooms': [self.normal_room1.id]}
+
+        response = self.client.post(reverse('farm:new_transfer'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'detailed')
+
+        data = {'register_animal_transfer_wizard-current_step': 'detailed',
+                'detailed-TOTAL_FORMS': 1,
+                'detailed-INITIAL_FORMS': 1,
+                'detailed-MIN_NUM_FORMS': 0,
+                'detailed-MAX_NUM_FORMS': 1000,
+                'detailed-0-room': self.normal_room1.id,
+                'detailed-0-number_of_animals': '5',
+                }
+
+        response = self.client.post(reverse('farm:new_transfer'), data)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(response.context['wizard']['steps'].current, 'destination')
+
+        data = {'register_animal_transfer_wizard-current_step': 'destination',
+                'destination-room': self.empty_building.room_set.first().id}
+
+        response = self.client.post(reverse('farm:new_transfer'), data)
+        self.assertEquals(302, response.status_code)
